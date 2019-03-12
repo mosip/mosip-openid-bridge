@@ -1,33 +1,20 @@
 /**
  * 
  */
-package io.mosip.kernel.auth.exception;
+package io.mosip.kernel.auth.adapter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import io.mosip.kernel.core.exception.ServiceError;
 
 /**
  * @author M1049825
  *
  */
-public class AuthManagerException extends RuntimeException{
+public class AuthManagerException extends Exception{
 
 	/**
 	 * 
 	 */
 	
 	private String errorCode;
-	
-	public String getErrorCode() {
-		return errorCode;
-	}
-
-	public void setErrorCode(String errorCode) {
-		this.errorCode = errorCode;
-	}
-
 	private static final long serialVersionUID = 4060346018688709387L;
 	
 	/**
@@ -41,5 +28,18 @@ public class AuthManagerException extends RuntimeException{
 	public AuthManagerException(String errorCode, String errorMessage) {
 		super(errorMessage);
 		this.errorCode = errorCode;
+	}
+
+	/**
+	 * Constructor the initialize Handler exception
+	 * 
+	 * @param errorCode
+	 *            The error code for this exception
+	 * @param errorMessage
+	 *            The error message for this exception
+	 * @param rootCause
+	 *            the specified cause
+	 */
+	public AuthManagerException(String errorCode, String errorMessage, Throwable rootCause) {
 	}
 }
