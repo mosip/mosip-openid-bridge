@@ -14,18 +14,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthNResponseDto {
-
-	private String token;
-
-	private String message;
-
-	private String refreshToken;
-
-	private long expiryTime;
-
+public class UserDetailsSalt {
+	
 	private String userId;
-
-	private String status;
+	private String salt;
 
 }
