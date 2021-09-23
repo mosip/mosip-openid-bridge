@@ -744,10 +744,11 @@ public class AuthController {
 			@RequestParam(required = false, name = "email") String email,
 			@RequestParam(required = false, name = "firstName") String firstName,
 			@RequestParam(required = false, name = "lastName") String lastName,
-			@RequestParam(required = false, name = "userName") String userName) throws Exception {
+			@RequestParam(required = false, name = "userName") String userName,
+			@RequestParam(required = false, name = "search") String search) throws Exception {
 		ResponseWrapper<MosipUserListDto> responseWrapper = new ResponseWrapper<>();
 		MosipUserListDto mosipUsers = authService.getListOfUsersDetails(appId, roleName, pageStart, pageFetch, email,
-				firstName, lastName, userName);
+				firstName, lastName, userName,search);
 		LOGGER.info("Get userdetails for " + appId + ". Total users:  " + mosipUsers.getMosipUserDtoList().size());
 		responseWrapper.setResponse(mosipUsers);
 		return responseWrapper;
