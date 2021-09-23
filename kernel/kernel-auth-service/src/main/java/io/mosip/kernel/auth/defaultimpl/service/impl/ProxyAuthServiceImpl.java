@@ -486,7 +486,7 @@ public class ProxyAuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public MosipUserListDto getListOfUsersDetails(String realmId, String roleName,int pageStart, int pageFetch, String email, String firstName, String lastName, String username) {
+	public MosipUserListDto getListOfUsersDetails(String realmId, String roleName,int pageStart, int pageFetch, String email, String firstName, String lastName, String username,String search) {
 		throw new UnsupportedOperationException("This openeration is not supported");
 	}
 
