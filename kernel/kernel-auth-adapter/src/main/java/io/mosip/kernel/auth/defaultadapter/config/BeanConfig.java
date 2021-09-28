@@ -5,6 +5,9 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -17,18 +20,23 @@ import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.server.context.ReactorContextWebFilter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
+import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
 import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
 
@@ -48,6 +56,13 @@ public class BeanConfig {
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 
+	@Autowired
+	private TokenValidationHelper tokenValidationHelper;
+
+	@Autowired(required = false)
+	private LoadBalancerClient loadBalancerClient;
+
+	
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
@@ -89,8 +104,7 @@ public class BeanConfig {
 	public RestTemplate selfTokenRestTemplate(
 			@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
 			@Autowired TokenHolder<String> cachedTokenObject
-			)
-			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+			) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
@@ -104,24 +118,37 @@ public class BeanConfig {
 			});
 			httpClientBuilder.setSSLSocketFactory(csf);
 		}
+		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		restTemplate = new RestTemplate(requestFactory);
 		restTemplate.setInterceptors(Collections
-				.singletonList(new SelfTokenRestInterceptor(environment, plainRestTemplate, cachedTokenObject,tokenHelper)));
+				.singletonList(new SelfTokenRestInterceptor(environment, plainRestTemplate, cachedTokenObject, tokenHelper, 
+					tokenValidationHelper, applName)));
 		// interceptor added in RestTemplatePostProcessor
 		return restTemplate;
 	}
 
 	@Bean
+	public WebClient plainWebClient() {
+		ExchangeFilterFunction filterFunction = (loadBalancerClient != null) ? new LoadBalancerExchangeFilterFunction(loadBalancerClient) :
+												(req, next) -> {
+													return next.exchange(req);
+												};
+		return WebClient.builder().filter(filterFunction).build();
+	}
+
+	@Bean
 	public SelfTokenRenewalTaskExecutor selfTokenRenewTaskExecutor(@Autowired TokenHolder<String> cachedTokenObject,
-			@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate)
+			@Autowired @Qualifier("plainWebClient") WebClient plainWebClient)
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		return new SelfTokenRenewalTaskExecutor(cachedTokenObject, plainRestTemplate,tokenHelper);
+		String applName = getApplicationName();
+		return new SelfTokenRenewalTaskExecutor(cachedTokenObject, plainWebClient, tokenHelper, environment, applName);
 	}
 
 	@Bean
 	public WebClient webClient() {
+		
 		return WebClient.builder().filter((req, next) -> {
 			ClientRequest filtered = null;
 			if (SecurityContextHolder.getContext() != null
@@ -131,9 +158,24 @@ public class BeanConfig {
 				AuthUserDetails userDetail = (AuthUserDetails) SecurityContextHolder.getContext().getAuthentication()
 						.getPrincipal();
 				filtered = ClientRequest.from(req).header(AuthAdapterConstant.AUTH_HEADER_COOKIE,
-						AuthAdapterConstant.AUTH_HEADER + userDetail.getToken()).build();
+						AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER + userDetail.getToken()).build();
 			}
 			return next.exchange(filtered);
 		}).build();
+	}
+
+	@Bean
+	public WebClient selfTokenWebClient(
+			@Autowired @Qualifier("plainWebClient") WebClient plainWebClient,
+			@Autowired TokenHolder<String> cachedTokenObject) {
+		String applName = getApplicationName();
+		return WebClient.builder().filter(new SelfTokenExchangeFilterFunction(environment, plainWebClient, cachedTokenObject, 
+				tokenHelper, tokenValidationHelper, applName)).build();
+	}
+
+	private String getApplicationName() {
+		String appNames = environment.getProperty("spring.application.name");
+		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+		return appNamesList.get(0);
 	}
 }

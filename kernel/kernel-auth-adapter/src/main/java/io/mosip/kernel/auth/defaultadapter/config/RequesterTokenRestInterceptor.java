@@ -2,7 +2,6 @@ package io.mosip.kernel.auth.defaultadapter.config;
 
 import java.io.IOException;
 
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -14,7 +13,6 @@ import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
 
 public class RequesterTokenRestInterceptor implements ClientHttpRequestInterceptor {
-
 
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
