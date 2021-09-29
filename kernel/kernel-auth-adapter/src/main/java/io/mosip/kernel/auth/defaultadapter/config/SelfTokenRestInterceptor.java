@@ -2,35 +2,25 @@ package io.mosip.kernel.auth.defaultadapter.config;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthAdapterException;
-import io.mosip.kernel.auth.defaultadapter.exception.AuthRestException;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
+import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
-import io.mosip.kernel.core.authmanager.model.ClientSecret;
-import io.mosip.kernel.core.exception.ExceptionUtils;
-import io.mosip.kernel.core.exception.ServiceError;
-import io.mosip.kernel.core.http.RequestWrapper;
 
 /**
  * This class intercepts and renew client token.
@@ -48,8 +38,6 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 
 	private String tokenURL;
 	
-	private String validateTokenURL;
-
 	private TokenHolder<String> cachedToken;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SelfTokenRestInterceptor.class);
@@ -58,19 +46,20 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 	
 	private TokenHelper tokenHelper;
 
+	private TokenValidationHelper tokenValidationHelper;
+
 	public SelfTokenRestInterceptor(Environment environment, RestTemplate restTemplate,
-			TokenHolder<String> cachedToken,TokenHelper tokenHelper) {
-		clientID = environment.getProperty("mosip.iam.adapter.clientid", "");
-		clientSecret = environment.getProperty("mosip.iam.adapter.clientsecret", "");
-		appID = environment.getProperty("mosip.iam.adapter.appid", "");
+			TokenHolder<String> cachedToken, TokenHelper tokenHelper, TokenValidationHelper tokenValidationHelper,
+			String applName) {
+		clientID = environment.getProperty("mosip.iam.adapter.clientid." + applName, environment.getProperty("mosip.iam.adapter.clientid", ""));
+		clientSecret = environment.getProperty("mosip.iam.adapter.clientsecret." + applName, environment.getProperty("mosip.iam.adapter.clientsecret", ""));
+		appID = environment.getProperty("mosip.iam.adapter.appid." + applName, environment.getProperty("mosip.iam.adapter.appid", ""));
 		tokenURL = environment.getProperty("mosip.authmanager.client-token-endpoint", "");
-		validateTokenURL = environment.getProperty("auth.server.admin.validate.url", "");
 		this.cachedToken = cachedToken;
 		this.restTemplate = restTemplate;
 		this.tokenHelper = tokenHelper;
+		this.tokenValidationHelper = tokenValidationHelper;
 	}
-
-	ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
@@ -88,11 +77,12 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 		if(clientHttpResponse.getStatusCode() != HttpStatus.UNAUTHORIZED) {
 			return clientHttpResponse;
 		}
+		
 		synchronized (this) {
 			// online validation
 			if(!isTokenValid(cachedToken.getToken())) {
-			String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID,restTemplate,tokenURL);
-			cachedToken.setToken(authToken);		
+				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate, tokenURL);
+				cachedToken.setToken(authToken);		
 			}
 		}
 		
@@ -107,36 +97,8 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 
 	}
 
-	
-
-	
-	
-
+	// Updated to use common code to validate the token online.
 	private boolean isTokenValid(String authToken) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(AuthAdapterConstant.AUTH_HEADER_COOKIE, AuthAdapterConstant.AUTH_HEADER + authToken);
-		HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-		HttpEntity<String> response = null;
-		try {
-			response = restTemplate.exchange(validateTokenURL, HttpMethod.GET, requestEntity, String.class);
-		} catch (HttpServerErrorException | HttpClientErrorException e) {
-			if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-				LOGGER.error("Token not valid {}", e.getResponseBodyAsString());
-				return false;
-			}
-			throw new AuthAdapterException(AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorCode(),
-					e.getResponseBodyAsString());
-		}
-		if (response == null) {
-			throw new AuthAdapterException(AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorCode(),
-					AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
-		}
-		String responseBody = response.getBody();
-		List<ServiceError> validationErrorList = ExceptionUtils.getServiceErrorList(responseBody);
-		if (!validationErrorList.isEmpty()) {
-			throw new AuthRestException(validationErrorList);
-		}
-
-		return true;
+		return Objects.nonNull(tokenValidationHelper.getOnlineTokenValidatedUserResponse(authToken, restTemplate));
 	}
 }

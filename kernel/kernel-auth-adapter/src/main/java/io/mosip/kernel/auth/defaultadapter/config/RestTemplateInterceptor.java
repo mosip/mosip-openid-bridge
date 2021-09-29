@@ -1,26 +1,19 @@
 package io.mosip.kernel.auth.defaultadapter.config;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
-import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
 
 
 /***********************************************************************************************************************
@@ -61,9 +54,6 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 		ClientHttpResponse response = clientHttpRequestExecution.execute(httpRequest, bytes);
 		return response;
 	}
-
-
-	
 
 	private HttpRequest resolveServiceId(HttpRequest request) {
 		try {
