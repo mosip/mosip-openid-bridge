@@ -62,21 +62,36 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	@Override
 	protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {
 		// To check the global end-points
-		if (isPresent(request, this.noAuthenticationEndPoint.getGlobal().getEndPoints())) {
+		if (isPresent(request, noAuthenticationEndPoint.getGlobal().getEndPoints())) {
 			return false;
 		}
 		// As the request not a part of the global end-points, check in master data
 		// end-points
-		return request.getRequestURI().contains(this.noAuthenticationEndPoint.getAdminMasterContext())
-				&& request.getMethod().equalsIgnoreCase(HttpMethod.GET.toString())
-				&& isPresent(request, this.noAuthenticationEndPoint.getAdminMaster().getEndPoints())
-						? false
-						: true;
+		boolean isValid = isValid(noAuthenticationEndPoint);
+		if (isValid) {
+			if (request.getServletPath().equalsIgnoreCase(noAuthenticationEndPoint.getServiceContext())) {
+				return request.getMethod().equalsIgnoreCase(HttpMethod.GET.toString())
+						&& isPresent(request, noAuthenticationEndPoint.getService().getEndPoints())
+						? false : true;
+			}
+		}
+		return true;
 	}
 
 	private boolean isPresent(HttpServletRequest request, List<String> endPoints) {
 		return endPoints.stream().filter(pattern -> new AntPathRequestMatcher(pattern).matches(request)).findFirst()
 				.isPresent();
+	}
+
+	private boolean isValid(NoAuthenticationEndPoint noAuthenticationEndPoint) {
+		if (noAuthenticationEndPoint.getServiceContext() == null
+				|| noAuthenticationEndPoint.getServiceContext().isEmpty())
+			return false;
+		if (noAuthenticationEndPoint.getService() == null
+				&& noAuthenticationEndPoint.getService().getEndPoints() == null
+				&& noAuthenticationEndPoint.getService().getEndPoints().isEmpty())
+			return false;
+		return true;
 	}
 
 	@Override
@@ -90,14 +105,14 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			if (cookies != null) {
 				for (Cookie cookie : cookies) {
 					if (cookie.getName().contains(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER)) {
-						LOGGER.debug("extract token from cookie named "  + cookie.getName() );
+						LOGGER.debug("extract token from cookie named " + cookie.getName());
 						token = cookie.getValue();
 					}
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI() );
-			//e.printStackTrace();
+			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
+			// e.printStackTrace();
 		}
 
 		if (token == null) {
