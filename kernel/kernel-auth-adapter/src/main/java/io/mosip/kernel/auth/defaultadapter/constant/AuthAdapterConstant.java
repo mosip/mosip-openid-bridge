@@ -45,4 +45,18 @@ public class AuthAdapterConstant {
 
 	public static final String AUTH_HEADER = "Authorization=";
 
+	public static final String EMAIL = "email";
+
+	public static final String MOBILE = "mobile";
+
+	public static final String ROLES = "roles";
+
+	public static final String ROUTING_CONTEXT_USER = "RoutingCtxUserName";
+
+	public static final String REALM_ACCESS = "realm_access";
+
+	public static final String COMMA = ",";
+
+	public static final String AZP = "azp";
+
 }
