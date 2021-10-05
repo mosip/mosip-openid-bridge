@@ -462,6 +462,7 @@
 					<dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
 					<!-- <format>json</format> -->
 				</configuration>
+				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
@@ -494,7 +495,6 @@
 						</execution>
 					</executions>
 				</plugin>
-			</plugin>
 		</plugins>
 	</build>
 	<scm>
