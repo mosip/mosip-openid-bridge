@@ -59,4 +59,6 @@ public class AuthAdapterConstant {
 
 	public static final String AZP = "azp";
 
+	public static final String PREFERRED_USERNAME = "preferred_username";
+
 }
