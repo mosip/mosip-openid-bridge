@@ -205,6 +205,7 @@ public class TokenValidationHelper {
 		mosipUserDto.setToken(jwtToken);
 		mosipUserDto.setMail(decodedJWT.getClaim(AuthAdapterConstant.EMAIL).asString());
 		mosipUserDto.setMobile(decodedJWT.getClaim(AuthAdapterConstant.MOBILE).asString());
+        mosipUserDto.setUserId(decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString());
         Claim realmAccess = decodedJWT.getClaim(AuthAdapterConstant.REALM_ACCESS);
         if (!realmAccess.isNull()) {
             List<String> roles = (List<String>) realmAccess.asMap().get("roles");
@@ -216,12 +217,9 @@ public class TokenValidationHelper {
             }
             mosipUserDto.setRole(strBuilder.toString());
             mosipUserDto.setName(user);
-		    mosipUserDto.setUserId(user);
         } else {
-            String azp = decodedJWT.getClaim(AuthAdapterConstant.AZP).asString();
             mosipUserDto.setRole(decodedJWT.getClaim(AuthAdapterConstant.ROLES).asString());
             mosipUserDto.setName(user);
-		    mosipUserDto.setUserId(azp);
         }
 		
         LOGGER.info("user (offline verificate): " + mosipUserDto.getUserId());
