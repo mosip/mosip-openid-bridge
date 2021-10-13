@@ -1,0 +1,43 @@
+#Global endpoints to access without authentication
+mosip:
+  global:
+    end-points:
+      - /**/assets/**
+      - /**/icons/**
+      - /**/screenshots/**
+      - /favicon**
+      - /**/favicon**
+      - /**/css/**
+      - /**/js/**
+      - /**/error**
+      - /**/webjars/**
+      - /**/csrf
+      - /*/
+      - /**/authenticate/**
+      - /**/actuator/**
+      - /sendOtp
+      - /validateOtp
+      - /invalidateToken
+      - /config
+      - /login
+      - /logout
+      - /validateOTP
+      - /sendOTP
+      - /**/login
+      - /**/login/**
+      - /**/login-redirect/**
+      - /**/logout
+      - /**/h2-console/**
+      - /**/**/license/**
+      - /**/callback/**
+      - /**/authenticate/**
+#Swagger 2.0
+      - /**/authmanager/**
+      - /**/v2/api-docs
+      - /**/swagger-resources/**
+      - /**/configuration/ui
+      - /**/configuration/security
+#Swagger 3.0
+      - /**/v3/api-docs/**
+      - /**/swagger-ui.html
+      - /**/swagger-ui/**

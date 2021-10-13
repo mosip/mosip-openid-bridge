@@ -72,6 +72,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private AuthHandler authProvider;
+	
+	/**
+	 * It's inject the end-points.
+	 */
+	@Autowired
+	private NoAuthenticationEndPoint noAuthenticationEndPoint;
 
 	//@ConditionalOnMissingBean(AuthenticationManager.class)
 	@Bean
@@ -83,7 +89,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	public AbstractAuthenticationProcessingFilter authFilter() {
 		RequestMatcher requestMatcher = new AntPathRequestMatcher("*");
-		AuthFilter filter = new AuthFilter(requestMatcher);
+		AuthFilter filter = new AuthFilter(requestMatcher, noAuthenticationEndPoint);
 		filter.setAuthenticationManager(authenticationManager());
 		filter.setAuthenticationSuccessHandler(new AuthSuccessHandler());
 		return filter;
