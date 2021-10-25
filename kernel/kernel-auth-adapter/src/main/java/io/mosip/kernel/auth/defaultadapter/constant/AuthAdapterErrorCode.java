@@ -30,7 +30,9 @@ public enum AuthAdapterErrorCode {
 	
 	IO_EXCEPTION("KER-ATH-004", "IO Exception occured"),
 	
-	SELF_AUTH_TOKEN_NULL("KER-ATH-005","Self cached auth token is null");
+	SELF_AUTH_TOKEN_NULL("KER-ATH-005","Self cached auth token is null"),
+	
+	REALM_NOT_FOUND("KER-ATH-006", "RealM Not found in configured map.");
 
 	/**
 	 * The error code
