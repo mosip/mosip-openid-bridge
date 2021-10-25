@@ -36,8 +36,6 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 
 	private String appID;
 
-	private String tokenURL;
-	
 	private TokenHolder<String> cachedToken;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SelfTokenRestInterceptor.class);
@@ -54,7 +52,6 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 		clientID = environment.getProperty("mosip.iam.adapter.clientid." + applName, environment.getProperty("mosip.iam.adapter.clientid", ""));
 		clientSecret = environment.getProperty("mosip.iam.adapter.clientsecret." + applName, environment.getProperty("mosip.iam.adapter.clientsecret", ""));
 		appID = environment.getProperty("mosip.iam.adapter.appid." + applName, environment.getProperty("mosip.iam.adapter.appid", ""));
-		tokenURL = environment.getProperty("mosip.authmanager.client-token-endpoint", "");
 		this.cachedToken = cachedToken;
 		this.restTemplate = restTemplate;
 		this.tokenHelper = tokenHelper;
@@ -81,7 +78,7 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 		synchronized (this) {
 			// online validation
 			if(!isTokenValid(cachedToken.getToken())) {
-				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate, tokenURL);
+				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate);
 				cachedToken.setToken(authToken);		
 			}
 		}

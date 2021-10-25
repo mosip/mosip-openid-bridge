@@ -61,4 +61,23 @@ public class AuthAdapterConstant {
 
 	public static final String PREFERRED_USERNAME = "preferred_username";
 
+	public static final String ISSUER = "iss";
+
+	public static final String AUDIENCE = "aud";
+
+	public static final String BEARER_STR = "Bearer ";
+
+	public static final String ERROR_DESC = "error_description";
+
+	public static final String ERROR = "error";
+
+	public static final String GRANT_TYPE = "grant_type";
+
+	public static final String CLIENT_SECRET = "client_secret";
+
+	public static final String CLIENT_ID = "client_id";
+
+	public static final String CLIENT_CREDENTIALS = "client_credentials";
+
+	public static final String ACCESS_TOKEN = "access_token";
 }
