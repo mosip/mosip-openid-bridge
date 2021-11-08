@@ -82,7 +82,6 @@ public class TokenHelper {
 			LOGGER.error("error connecting to auth service {}", AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 			return null;
 		}
-		LOGGER.info("Got Response for new Token for the provided OIDC Service: {}", issuerURI);
 		String responseBody = response.getBody();
 		List<ServiceError> validationErrorList = ExceptionUtils.getServiceErrorList(responseBody);
 		if (!validationErrorList.isEmpty()) {
@@ -92,7 +91,7 @@ public class TokenHelper {
 			JsonNode jsonNode = mapper.readTree(responseBody);
 			String accessToken = jsonNode.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
 			if (Objects.nonNull(accessToken)) {
-				LOGGER.info("Found Token in response body and returning the Token: {}", accessToken);
+				LOGGER.info("Found Token in response body and returning the Token");
 				return accessToken;
 			}
 		} catch (IOException e) {
@@ -123,13 +122,11 @@ public class TokenHelper {
 										   .contentType(MediaType.APPLICATION_FORM_URLENCODED)
 										   .body(BodyInserters.fromFormData(valueMap))
 										   .exchange().block();
-
-		LOGGER.info("Got Response for new Token for the provided OIDC Service(WebClient): {}", issuerURI);
 		if (response.statusCode() == HttpStatus.OK) {
 			ObjectNode responseBody = response.bodyToMono(ObjectNode.class).block();
 			String accessToken = responseBody.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
 			if (Objects.nonNull(accessToken)) {
-				LOGGER.info("Found Token in response body and returning the Token(WebClient): {}", accessToken);
+				LOGGER.info("Found Token in response body and returning the Token(WebClient)");
 				return accessToken;
 			}
 		} 
