@@ -112,7 +112,6 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			}
 		} catch (Exception e) {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
-			// e.printStackTrace();
 		}
 
 		if (token == null) {

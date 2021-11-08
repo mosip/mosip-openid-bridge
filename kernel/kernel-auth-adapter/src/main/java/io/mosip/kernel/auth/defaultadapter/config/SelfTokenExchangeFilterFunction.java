@@ -38,8 +38,6 @@ public class SelfTokenExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private String appID;
 
-	private String tokenURL;
-	
 	private TokenHolder<String> cachedToken;
 	
 	private TokenHelper tokenHelper;
@@ -54,7 +52,6 @@ public class SelfTokenExchangeFilterFunction implements ExchangeFilterFunction {
         clientID = environment.getProperty("mosip.iam.adapter.clientid." + applName, environment.getProperty("mosip.iam.adapter.clientid", ""));
         clientSecret = environment.getProperty("mosip.iam.adapter.clientsecret." + applName, environment.getProperty("mosip.iam.adapter.clientsecret", ""));
         appID = environment.getProperty("mosip.iam.adapter.appid." + applName, environment.getProperty("mosip.iam.adapter.appid", ""));
-        tokenURL = environment.getProperty("mosip.authmanager.client-token-endpoint", "");
         this.cachedToken = cachedToken;
         this.webClient = webClient;
         this.tokenHelper = tokenHelper;
@@ -81,7 +78,7 @@ public class SelfTokenExchangeFilterFunction implements ExchangeFilterFunction {
         synchronized (this) {
 			// online validation
 			if(!isTokenValid(cachedToken.getToken())) {
-				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, webClient, tokenURL);
+				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, webClient);
 				cachedToken.setToken(authToken);		
 			}
 		}

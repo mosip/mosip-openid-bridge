@@ -19,7 +19,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
-import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.util.DateUtils;
@@ -31,9 +30,6 @@ public class SelfTokenRenewalTaskExecutor {
 	private String clientID;
 
 	private String clientSecret;
-
-	@Value("${mosip.iam.adapter.issuer-url:}")
-	private String issuerURL;
 
 	private String appID;
 
@@ -80,7 +76,7 @@ public class SelfTokenRenewalTaskExecutor {
 
 		public void run() {
 			if (cachedTokenObject.getToken() == null || !isTokenValid(cachedTokenObject.getToken())) {
-				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, webClient, tokenURL);
+				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, webClient);
 				cachedTokenObject.setToken(authToken);
 			}
 		}
