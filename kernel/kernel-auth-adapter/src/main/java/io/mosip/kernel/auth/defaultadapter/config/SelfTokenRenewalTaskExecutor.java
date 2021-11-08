@@ -31,9 +31,6 @@ public class SelfTokenRenewalTaskExecutor {
 
 	private String clientSecret;
 
-	@Value("${mosip.iam.adapter.issuer-url:}")
-	private String issuerURL;
-
 	private String appID;
 
 	@Value("${mosip.authmanager.client-token-endpoint:}")

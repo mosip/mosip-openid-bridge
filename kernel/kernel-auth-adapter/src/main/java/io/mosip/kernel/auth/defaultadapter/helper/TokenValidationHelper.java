@@ -66,7 +66,7 @@ public class TokenValidationHelper {
 
     private MosipUserDto doOfflineTokenValidation(String token, RestTemplate restTemplate) {
 
-        if(activeProfile.equalsIgnoreCase("local1")) {
+        if(activeProfile.equalsIgnoreCase("local")) {
             return validateTokenHelper.doOfflineLocalTokenValidation(token);
         }
         return doOfflineEnvTokenValidation(token, restTemplate);
