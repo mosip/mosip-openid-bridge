@@ -58,7 +58,7 @@ public class TokenHelper {
 			LOGGER.warn("OIDC Service URL is not available in config file, not requesting for new auth token.");
 			return null;
 		}
-		
+		LOGGER.info("Requesting for new Token for the provided OIDC Service: {}", issuerURI);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -71,6 +71,8 @@ public class TokenHelper {
 		try {
 			HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(valueMap, headers);
 			String realm = getRealmIdFromAppId(appId);
+			if (Objects.isNull(realm))
+				return null;
 			String tokenUrl = new StringBuilder(issuerURI).append(realm).append(tokenPath).toString();
 			response = restTemplate.postForEntity(tokenUrl, request, String.class);
 		} catch (HttpServerErrorException | HttpClientErrorException e) {
@@ -80,6 +82,7 @@ public class TokenHelper {
 			LOGGER.error("error connecting to auth service {}", AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 			return null;
 		}
+		LOGGER.info("Got Response for new Token for the provided OIDC Service: {}", issuerURI);
 		String responseBody = response.getBody();
 		List<ServiceError> validationErrorList = ExceptionUtils.getServiceErrorList(responseBody);
 		if (!validationErrorList.isEmpty()) {
@@ -89,6 +92,7 @@ public class TokenHelper {
 			JsonNode jsonNode = mapper.readTree(responseBody);
 			String accessToken = jsonNode.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
 			if (Objects.nonNull(accessToken)) {
+				LOGGER.info("Found Token in response body and returning the Token: {}", accessToken);
 				return accessToken;
 			}
 		} catch (IOException e) {
@@ -104,23 +108,28 @@ public class TokenHelper {
 			LOGGER.warn("OIDC Service URL is not available in config file, not requesting for new auth token.");
 			return null;
 		}
-		
+		LOGGER.info("Requesting for new Token for the provided OIDC Service(WebClient): {}", issuerURI);
 		MultiValueMap<String, String> valueMap = new LinkedMultiValueMap<String, String>();
 		valueMap.add(AuthAdapterConstant.GRANT_TYPE, AuthAdapterConstant.CLIENT_CREDENTIALS);
 		valueMap.add(AuthAdapterConstant.CLIENT_ID, clientId);
 		valueMap.add(AuthAdapterConstant.CLIENT_SECRET, clientSecret);
 
 		String realm = getRealmIdFromAppId(appId);
+		if (Objects.isNull(realm))
+			return null;
 		String tokenUrl = new StringBuilder(issuerURI).append(realm).append(tokenPath).toString();
 		ClientResponse response = webClient.method(HttpMethod.POST)
 										   .uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())
 										   .contentType(MediaType.APPLICATION_FORM_URLENCODED)
 										   .body(BodyInserters.fromFormData(valueMap))
 										   .exchange().block();
+
+		LOGGER.info("Got Response for new Token for the provided OIDC Service(WebClient): {}", issuerURI);
 		if (response.statusCode() == HttpStatus.OK) {
 			ObjectNode responseBody = response.bodyToMono(ObjectNode.class).block();
 			String accessToken = responseBody.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
 			if (Objects.nonNull(accessToken)) {
+				LOGGER.info("Found Token in response body and returning the Token(WebClient): {}", accessToken);
 				return accessToken;
 			}
 		} 
@@ -129,13 +138,13 @@ public class TokenHelper {
 		return null;
 	}
 
-	public String getRealmIdFromAppId(String appId) {
+	private String getRealmIdFromAppId(String appId) {
 
-		if (realmMap.get(appId)!= null) {
+		if (realmMap.get(appId) != null) {
 			return realmMap.get(appId).toLowerCase();
 		} 
 
-		throw new AuthAdapterException(AuthAdapterErrorCode.REALM_NOT_FOUND.getErrorCode(),
-					String.format(AuthAdapterErrorCode.REALM_NOT_FOUND.getErrorMessage(), appId));
+		LOGGER.warn("Realm not configured in configuration for appId: " + appId + ", not requesting for new auth token.");
+		return null;
 	}
 }

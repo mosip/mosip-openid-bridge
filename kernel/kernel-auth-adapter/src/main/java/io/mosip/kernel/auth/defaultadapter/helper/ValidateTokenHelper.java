@@ -238,7 +238,7 @@ public class ValidateTokenHelper {
             mosipUserDto.setName(user);
         }
 		
-        LOGGER.info("user (offline verificate): " + mosipUserDto.getUserId());
+        LOGGER.info("user (offline verification done): " + mosipUserDto.getUserId());
 		return mosipUserDto;
     }
 
