@@ -536,7 +536,7 @@
 	<url>https://github.com/mosip/commons</url>
 	<profiles>
 		<profile>
-			<id>local</id>
+			<id>openapi-doc-generate-profile</id>
 			<dependencies>
 				<dependency>
 					<groupId>io.mosip.kernel</groupId>
