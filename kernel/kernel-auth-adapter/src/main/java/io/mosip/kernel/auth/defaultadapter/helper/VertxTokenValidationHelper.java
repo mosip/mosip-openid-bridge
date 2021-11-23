@@ -42,7 +42,7 @@ public class VertxTokenValidationHelper {
     @Value("${auth.server.admin.validate.url:}")
 	private String adminValidateUrl;
 
-    @Value("${auth.server.admin.offline.token.validate:true}")
+    @Value("${auth.server.admin.offline.vertx.token.validate:true}")
 	private boolean offlineTokenValidate;
 
     @Value("${spring.profiles.active:}")
@@ -124,7 +124,7 @@ public class VertxTokenValidationHelper {
                 RoutingContext routingContext) throws JsonParseException, JsonMappingException, 
                 IOException {
 
-        if(!activeProfile.equalsIgnoreCase("local")) {
+        if(activeProfile.equalsIgnoreCase("local")) {
             return validateTokenHelper.doOfflineLocalTokenValidation(token);
         }
         return doOfflineEnvTokenValidation(token, restTemplate, routingContext);
