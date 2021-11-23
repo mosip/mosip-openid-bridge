@@ -21,7 +21,7 @@ import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
 @Component
 public class TokenValidationHelper {
     
-    @Value("${auth.server.admin.offline.token.validate:true}")
+    @Value("${auth.server.admin.offline.comp.token.validate:true}")
 	private boolean offlineTokenValidate;
 
     @Value("${spring.profiles.active:}")
@@ -108,6 +108,4 @@ public class TokenValidationHelper {
 
 		return validateResp.getRight();
 	}
-}   
-
-
+}  
