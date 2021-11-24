@@ -12,6 +12,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -72,7 +73,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private AuthHandler authProvider;
-	
+
+	@Autowired
+	private Environment environment;
+
 	/**
 	 * It's inject the end-points.
 	 */
@@ -89,7 +93,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	public AbstractAuthenticationProcessingFilter authFilter() {
 		RequestMatcher requestMatcher = new AntPathRequestMatcher("*");
-		AuthFilter filter = new AuthFilter(requestMatcher, noAuthenticationEndPoint);
+		AuthFilter filter = new AuthFilter(requestMatcher, noAuthenticationEndPoint, environment);
 		filter.setAuthenticationManager(authenticationManager());
 		filter.setAuthenticationSuccessHandler(new AuthSuccessHandler());
 		return filter;
