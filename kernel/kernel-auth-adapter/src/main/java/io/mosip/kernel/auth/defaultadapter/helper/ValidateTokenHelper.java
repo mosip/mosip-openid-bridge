@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class ValidateTokenHelper {
 	private void init(){
         String applName = getApplicationName();
         this.allowedAudience = (List<String>) environment.getProperty("auth.server.admin.allowed.audience." + applName, List.class,
-                    environment.getProperty("auth.server.admin.allowed.audience", List.class, null));
+                    environment.getProperty("auth.server.admin.allowed.audience", List.class, Collections.EMPTY_LIST));
     }
 
     private String getApplicationName() {

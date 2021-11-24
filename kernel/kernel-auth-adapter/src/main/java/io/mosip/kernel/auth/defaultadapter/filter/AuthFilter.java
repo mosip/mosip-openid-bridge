@@ -69,9 +69,10 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		// end-points
 		boolean isValid = isValid(noAuthenticationEndPoint);
 		if (isValid) {
-			if (request.getServletPath().equalsIgnoreCase(noAuthenticationEndPoint.getServiceContext())) {
-				return request.getMethod().equalsIgnoreCase(HttpMethod.GET.toString())
-						&& isPresent(request, noAuthenticationEndPoint.getService().getEndPoints())
+			if (request.getServletContext().getContextPath().equalsIgnoreCase(noAuthenticationEndPoint.getServiceContext())) {
+				return ((request.getMethod().equalsIgnoreCase(HttpMethod.GET.toString()) ||
+						 request.getMethod().equalsIgnoreCase(HttpMethod.POST.toString()))
+						&& isPresent(request, noAuthenticationEndPoint.getService().getEndPoints()))
 						? false : true;
 			}
 		}

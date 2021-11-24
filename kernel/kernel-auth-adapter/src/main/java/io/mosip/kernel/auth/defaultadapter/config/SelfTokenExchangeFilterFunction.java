@@ -63,9 +63,14 @@ public class SelfTokenExchangeFilterFunction implements ExchangeFilterFunction {
         
         // null check if job is not able to fetch client id secret
 		if (cachedToken.getToken() == null) {
-			LOGGER.error("there is some issue with getting token with clienid and secret");
-			throw new AuthAdapterException(AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorCode(),
+            // try requesting new token. Added because IDA need the token before it gets created by the scheduler thread.
+            String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, webClient);
+			if (Objects.isNull(authToken)) {
+			    LOGGER.error("there is some issue with getting token with clienid and secret");
+			    throw new AuthAdapterException(AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorCode(),
 					AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorMessage());
+            }
+            cachedToken.setToken(authToken);
 		}
         
         ClientRequest newReq = ClientRequest.from(request).header(AuthAdapterConstant.AUTH_HEADER_COOKIE,

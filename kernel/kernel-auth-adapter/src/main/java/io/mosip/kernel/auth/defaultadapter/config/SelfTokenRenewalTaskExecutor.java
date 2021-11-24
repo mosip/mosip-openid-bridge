@@ -33,9 +33,6 @@ public class SelfTokenRenewalTaskExecutor {
 
 	private String appID;
 
-	@Value("${mosip.authmanager.client-token-endpoint:}")
-	private String tokenURL;
-
 	@Value("${mosip.iam.adapter.token-expiry-check-frequency:5}")
 	private int tokenExpiryCheckFrequency;
 	
