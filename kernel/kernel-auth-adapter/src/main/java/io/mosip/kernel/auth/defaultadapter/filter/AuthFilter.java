@@ -6,7 +6,10 @@ package io.mosip.kernel.auth.defaultadapter.filter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -14,9 +17,14 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -24,11 +32,6 @@ import org.springframework.security.web.authentication.AbstractAuthenticationPro
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
@@ -53,10 +56,16 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 	private NoAuthenticationEndPoint noAuthenticationEndPoint;
 
+	private List<String> allowedHttpMethods;
+
+	@SuppressWarnings("unchecked")
 	public AuthFilter(RequestMatcher requiresAuthenticationRequestMatcher,
-			NoAuthenticationEndPoint noAuthenticationEndPoint) {
+			NoAuthenticationEndPoint noAuthenticationEndPoint, Environment environment) {
 		super(requiresAuthenticationRequestMatcher);
 		this.noAuthenticationEndPoint = noAuthenticationEndPoint;
+		String applName = getApplicationName(environment);
+		allowedHttpMethods = (List<String>) environment.getProperty("mosip.service.exclude.auth.allowed.method." + applName, List.class,
+					environment.getProperty("mosip.service.exclude.auth.allowed.method",  List.class, Collections.singletonList("GET")));
 	}
 
 	@Override
@@ -70,8 +79,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		boolean isValid = isValid(noAuthenticationEndPoint);
 		if (isValid) {
 			if (request.getServletContext().getContextPath().equalsIgnoreCase(noAuthenticationEndPoint.getServiceContext())) {
-				return ((request.getMethod().equalsIgnoreCase(HttpMethod.GET.toString()) ||
-						 request.getMethod().equalsIgnoreCase(HttpMethod.POST.toString()))
+				return (allowedHttpMethods.contains(request.getMethod())
 						&& isPresent(request, noAuthenticationEndPoint.getService().getEndPoints()))
 						? false : true;
 			}
@@ -184,6 +192,12 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.registerModule(new JavaTimeModule());
 		return mapper.writeValueAsString(object);
+	}
+
+	private String getApplicationName(Environment environment) {
+		String appNames = environment.getProperty("spring.application.name");
+		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+		return appNamesList.get(0);
 	}
 
 }
