@@ -76,8 +76,9 @@ public class SelfTokenExchangeFilterFunction implements ExchangeFilterFunction {
         ClientRequest newReq = ClientRequest.from(request).header(AuthAdapterConstant.AUTH_HEADER_COOKIE,
 						AuthAdapterConstant.AUTH_HEADER + cachedToken.getToken()).build();
         Mono<ClientResponse>  clientResponse = next.exchange(newReq);
-        if (clientResponse.block().statusCode() != HttpStatus.UNAUTHORIZED) {
-            return clientResponse;
+        ClientResponse response = clientResponse.block();
+		if (response.statusCode() != HttpStatus.UNAUTHORIZED) {
+            return Mono.just(response);
         }
 
         synchronized (this) {
