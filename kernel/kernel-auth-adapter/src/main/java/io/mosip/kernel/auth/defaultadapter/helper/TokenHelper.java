@@ -35,8 +35,6 @@ import io.mosip.kernel.auth.defaultadapter.exception.AuthRestException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 
-import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
-
 @Component
 public class TokenHelper {
 
