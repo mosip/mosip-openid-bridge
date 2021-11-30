@@ -580,7 +580,11 @@ public class AuthServiceImpl implements AuthService {
 		if (EmptyCheckUtils.isNullEmpty(token)) {
 			throw new AuthenticationServiceException(AuthErrorCode.INVALID_TOKEN.getErrorMessage());
 		}
-		String realm = tokenValidator.getKeycloakRealm(token);
+		
+		DecodedJWT decodedJWT = JWT.decode(token);
+		String issuer=decodedJWT.getClaim("iss").asString();	
+		String realm = issuer.substring(issuer.lastIndexOf("/")+1);
+		
 		ResponseEntity<String> response = null;
 		MosipUserDto mosipUserDto = null;
 		StringBuilder urlBuilder = new StringBuilder().append(keycloakBaseURL).append("/auth/realms/").append(realm).append("/protocol/openid-connect/userinfo");
@@ -612,7 +616,7 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		if (response.getStatusCode().is2xxSuccessful()) {			
-			mosipUserDto = getClaims(token);
+			mosipUserDto = getClaims(decodedJWT,token);
 			LOGGER.info("Response received for user id " + mosipUserDto.getUserId() + " is " + response.getStatusCode().toString());
 		}
 		return mosipUserDto;
@@ -661,8 +665,7 @@ public class AuthServiceImpl implements AuthService {
 		return authResponseDto;
 	}
 
-	private MosipUserDto getClaims(String cookie) {
-		DecodedJWT decodedJWT = JWT.decode(cookie);
+	private MosipUserDto getClaims(DecodedJWT decodedJWT,String cookie) {
 
 		Claim realmAccess = decodedJWT.getClaim(AuthConstant.REALM_ACCESS);
 
