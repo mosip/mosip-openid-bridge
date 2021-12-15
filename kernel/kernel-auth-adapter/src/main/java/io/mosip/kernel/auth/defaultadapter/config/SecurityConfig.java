@@ -1,20 +1,28 @@
 package io.mosip.kernel.auth.defaultadapter.config;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -62,6 +70,8 @@ import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
 @Order(2)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
+
 	@Value("${mosip.security.csrf-enable:false}")
 	private boolean isCSRFEnable;
 
@@ -70,6 +80,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Value("${mosip.security.origins:localhost:8080}")
 	private String origins;
+
+	@Value("${mosip.security.authentication.provider.beans.list:}")
+	private List<String> otherAuthProviders;
+
+	@Autowired
+	private ApplicationContext applicationContext;
 
 	@Autowired
 	private AuthHandler authProvider;
@@ -86,7 +102,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	//@ConditionalOnMissingBean(AuthenticationManager.class)
 	@Bean
 	public AuthenticationManager authenticationManager() {
-		return new ProviderManager(Collections.singletonList(authProvider));
+		List<AuthenticationProvider> authProviders = new ArrayList<>();
+		otherAuthProviders.stream().forEach(beanName -> {
+			try {
+				if (Objects.nonNull(beanName) && !beanName.equals("")) {
+					authProviders.add(applicationContext.getBean(beanName, AbstractUserDetailsAuthenticationProvider.class));
+				}
+					
+			} catch (Exception ex) {
+				LOGGER.error("Error Adding bean to providers list: " + beanName, ex);
+			}
+		});
+		authProviders.add(authProvider);
+		return new ProviderManager(authProviders);
 	}
 
 	//@ConditionalOnMissingBean(AbstractAuthenticationProcessingFilter.class)
