@@ -107,8 +107,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			try {
 				if (Objects.nonNull(beanName) && !beanName.equals("")) {
 					authProviders.add(applicationContext.getBean(beanName, AbstractUserDetailsAuthenticationProvider.class));
+					LOGGER.info("Added Custom Auth Provider Bean in the list {} ", beanName);
 				}
-					
 			} catch (Exception ex) {
 				LOGGER.error("Error Adding bean to providers list: " + beanName, ex);
 			}
