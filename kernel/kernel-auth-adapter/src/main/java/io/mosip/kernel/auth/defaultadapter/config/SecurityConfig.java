@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -81,9 +83,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Value("${mosip.security.origins:localhost:8080}")
 	private String origins;
 
-	@Value("${mosip.security.authentication.provider.beans.list:}")
-	private List<String> otherAuthProviders;
-
 	@Autowired
 	private ApplicationContext applicationContext;
 
@@ -101,8 +100,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	//@ConditionalOnMissingBean(AuthenticationManager.class)
 	@Bean
+	@SuppressWarnings("unchecked")
 	public AuthenticationManager authenticationManager() {
 		List<AuthenticationProvider> authProviders = new ArrayList<>();
+		String applName = getApplicationName();
+		List<String> otherAuthProviders = (List<String>) environment.getProperty("mosip.security.authentication.provider.beans.list." 
+							+ applName, List.class, Collections.EMPTY_LIST);
 		otherAuthProviders.stream().forEach(beanName -> {
 			try {
 				if (Objects.nonNull(beanName) && !beanName.equals("")) {
@@ -150,6 +153,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		}
 		http.headers().cacheControl();
 		http.headers().frameOptions().sameOrigin();
+	}
+
+	private String getApplicationName() {
+		String appNames = environment.getProperty("spring.application.name");
+		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+		return appNamesList.get(0);
 	}
 
 }
