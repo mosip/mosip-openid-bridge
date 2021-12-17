@@ -60,6 +60,10 @@ public class CustomJWTAuthHandler extends AbstractUserDetailsAuthenticationProvi
 			LOGGER.error("exception while parsing the token {}", ExceptionUtils.getStackTrace(e));
 			throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(), 
                             AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
+		} catch(Throwable t) {
+			LOGGER.error("exception while parsing the token(throwable) {}", ExceptionUtils.getStackTrace(t));
+			throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(), 
+                            AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
 		}
 
 		AuthUserDetails authUserDetails = new AuthUserDetails(mosipUserDto, token.toString());
