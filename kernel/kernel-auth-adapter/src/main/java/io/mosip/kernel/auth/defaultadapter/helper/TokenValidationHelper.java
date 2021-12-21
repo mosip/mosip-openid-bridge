@@ -83,9 +83,9 @@ public class TokenValidationHelper {
             return doOnlineTokenValidation(jwtToken, restTemplate);
         }
 
-        boolean tokenValid = validateTokenHelper.isTokenValid(decodedJWT, publicKey);
-        if (!tokenValid) {
-            throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(), AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
+        ImmutablePair<Boolean, AuthAdapterErrorCode> validateResp = validateTokenHelper.isTokenValid(decodedJWT, publicKey);
+        if (validateResp.getLeft() == Boolean.FALSE) { 
+            throw new AuthManagerException(validateResp.getRight().getErrorCode(), validateResp.getRight().getErrorMessage());
         }
         return validateTokenHelper.buildMosipUser(decodedJWT, jwtToken);
     }
