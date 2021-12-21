@@ -50,6 +50,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
+import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
 import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
@@ -106,19 +107,20 @@ public class ValidateTokenHelper {
 		return buildMosipUser(decodedJWT, jwtToken);
     }
 
-    public boolean isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {
+    public ImmutablePair<Boolean, AuthAdapterErrorCode> isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {
         // First, token expire    
         LocalDateTime expiryTime = DateUtils.convertUTCToLocalDateTime(DateUtils.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
+        String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
         if (!DateUtils.before(DateUtils.getUTCCurrentDateTime(), expiryTime)) {
-            LOGGER.error("Provided Auth Token expired. Throwing Authorizaion Exception");
-            return false;
+            LOGGER.error("Provided Auth Token expired. Throwing Authentication Exception. UserName: " + userName);
+            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
         }
 
         // Second, issuer domain check.
         boolean tokenDomainMatch = getTokenIssuerDomain(decodedJWT);
         if (validateIssuerDomain && !tokenDomainMatch){
-            LOGGER.error("Provided Auth Token Issue domain does not match. Throwing Authorizaion Exception");
-            return false;
+            LOGGER.error("Provided Auth Token Issue domain does not match. Throwing Authentication Exception. UserName: " + userName);
+            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
         }
 
         // Third, signature validation.
@@ -127,18 +129,18 @@ public class ValidateTokenHelper {
             Algorithm algorithm = getVerificationAlgorithm(tokenAlgo, publicKey);
             algorithm.verify(decodedJWT);
         } catch(SignatureVerificationException signatureException) {
-            LOGGER.error("Signature validation failed, Throwing Authorization Exception.", signatureException);
-            return false;
+            LOGGER.error("Signature validation failed, Throwing Authentication Exception. UserName: " + userName, signatureException);
+            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
         }
 
         // Fourth, audience | azp validation.
         boolean matchFound = validateAudience(decodedJWT);
         // No match found after comparing audience & azp
         if (!matchFound) {
-            LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception");
-            return false;
+            LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception. UserName: " + userName);
+            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.FORBIDDEN);
         }
-        return true;
+        return ImmutablePair.of(Boolean.TRUE, null);
     }
 
     private boolean validateAudience(DecodedJWT decodedJWT){
@@ -170,7 +172,8 @@ public class ValidateTokenHelper {
     }
 
     public PublicKey getPublicKey(DecodedJWT decodedJWT) {
-        LOGGER.info("offline verification for environment profile.");
+        String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
+        LOGGER.info("offline verification for environment profile. UserName: " + userName);
         
         String keyId = decodedJWT.getKeyId();
         PublicKey publicKey = publicKeys.get(keyId);

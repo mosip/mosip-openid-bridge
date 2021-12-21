@@ -143,9 +143,11 @@ public class VertxTokenValidationHelper {
             return doOnlineTokenValidation(jwtToken, restTemplate, routingContext);
         }
 
-        boolean tokenValid = validateTokenHelper.isTokenValid(decodedJWT, publicKey);
-        if (!tokenValid) {
-            sendErrors(routingContext, AuthAdapterErrorCode.UNAUTHORIZED, AuthAdapterConstant.UNAUTHORIZED);
+        ImmutablePair<Boolean, AuthAdapterErrorCode> validateResp = validateTokenHelper.isTokenValid(decodedJWT, publicKey);
+        if (validateResp.getLeft() == Boolean.FALSE) {
+            int httpStatusCode = validateResp.getRight() == AuthAdapterErrorCode.UNAUTHORIZED ? 
+                                    AuthAdapterConstant.NOTAUTHENTICATED : AuthAdapterConstant.UNAUTHORIZED;
+            sendErrors(routingContext, validateResp.getRight(), httpStatusCode);
             return null;
         }
         return validateTokenHelper.buildMosipUser(decodedJWT, jwtToken);
