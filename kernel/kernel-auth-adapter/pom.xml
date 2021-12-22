@@ -12,7 +12,7 @@
 	<version>1.2.0-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
+		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
 		<!-- maven -->
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
@@ -41,7 +41,7 @@
 		<!-- vertx -->
 		<vertx.version>3.6.2</vertx.version>
 		<vertx.health.check.version>3.7.0</vertx.health.check.version>
-		
+
 		<!-- javax -->
 		<javax.interceptor.version>1.2</javax.interceptor.version>
 		<javax.el-api.version>3.0.0</javax.el-api.version>
@@ -49,7 +49,7 @@
 		<javax.persistence.api.version>2.2</javax.persistence.api.version>
 		<javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
 		<glassfish.javax.el>2.2.6</glassfish.javax.el>
-		
+
 		<!-- data -->
 		<h2.version>1.4.197</h2.version>
 		<mysql.connector.version>5.1.46</mysql.connector.version>
@@ -57,19 +57,19 @@
 		<eclipselink.version>2.5.0</eclipselink.version>
 		<hibernate.version>5.2.17.Final</hibernate.version>
 		<hibernate.validator.version>6.0.12.Final</hibernate.validator.version>
-		
+
 		<!-- test -->
 		<junit.version>4.12</junit.version>
 		<mockito.version>2.23.4</mockito.version>
 		<powermock.version>1.7.4</powermock.version>
 		<powermock.beta.version>2.0.7</powermock.beta.version>
-		
+
 		<!-- logger -->
 		<logback.version>1.2.3</logback.version>
 		<slf4j.version>1.7.19</slf4j.version>
 		<log4j-over-slf4j>1.7.7</log4j-over-slf4j>
 		<jcl.to.slf4j.version>1.7.25</jcl.to.slf4j.version>
-		
+
 		<!-- json -->
 		<jackson.version>2.9.5</jackson.version>
 		<jackson.datatype.version>2.9.8</jackson.datatype.version>
@@ -78,7 +78,7 @@
 		<json.schema.validator.version>2.2.10</json.schema.validator.version>
 		<json.version>20180813</json.version>
 		<jsonsimple.version>1.1.1</jsonsimple.version>
-		
+
 		<!-- utilities -->
 		<commons-math3>3.6.1</commons-math3>
 		<commons-lang3>3.7</commons-lang3>
@@ -140,7 +140,7 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 			<version>${spring.boot.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -288,23 +288,11 @@
 				</executions>
 			</plugin>
 
-			<!-- <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<doclint>none</doclint>
-					<sourcepath>src/main/java</sourcepath>
-				</configuration>
-			</plugin> -->
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-javadoc-plugin</artifactId> 
+				<version>3.2.0</version> <executions> <execution> <id>attach-javadocs</id> 
+				<goals> <goal>jar</goal> </goals> </execution> </executions> <configuration> 
+				<doclint>none</doclint> <sourcepath>src/main/java</sourcepath> </configuration> 
+				</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
@@ -349,6 +337,39 @@
 					<dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
 					<!-- <format>json</format> -->
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.0</version>
+				<configuration>
+					<skipTests>false</skipTests>
+					<skip>false</skip>
+					<argLine>
+						${argLine} --add-opens
+						java.xml/jdk.xml.internal=ALL-UNNAMED
+						--illegal-access=permit
+					</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.maven.plugin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
