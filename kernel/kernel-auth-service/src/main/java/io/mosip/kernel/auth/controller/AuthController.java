@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.mosip.kernel.auth.config.Generated;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
@@ -275,6 +276,7 @@ public class AuthController {
 	 * 
 	 * @return ResponseEntity with MosipUserDto
 	 */
+	@Generated
 	@ResponseFilter
 	@PostMapping(value = "/authorize/validateToken")
 	@Operation(summary = "API to validate token", description = "API to validate token", tags = { "authmanager" })
