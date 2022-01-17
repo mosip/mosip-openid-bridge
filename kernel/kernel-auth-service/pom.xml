@@ -569,7 +569,7 @@
 									</profiles>
 									<arguments>
 										<argument>--server.port=8090</argument>
-										<argument>--server.servlet.path=/app/generic</argument>
+										<argument>--server.servlet.context-path=/app/generic</argument>
 									</arguments>
 
 								</configuration>
@@ -602,7 +602,7 @@
 						</executions>
 						<configuration>
 							<apiDocsUrl>http://localhost:8090/app/generic/v3/api-docs</apiDocsUrl>
-							<outputFileName>${name}-openapi.json</outputFileName>
+							<outputFileName>${artifactId}-openapi.json</outputFileName>
 							<outputDir>${project.build.directory}</outputDir>
 							<skip>false</skip>
 						</configuration>
