@@ -41,6 +41,7 @@ import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.helper.VertxTokenValidationHelper;
 import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
 import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
+import io.mosip.kernel.core.authmanager.authadapter.spi.VertxAuthenticationProvider;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -52,7 +53,7 @@ import io.vertx.ext.web.RoutingContext;
 
 @Lazy
 @Component
-public class VertxAuthHandler {
+public class VertxAuthHandler implements VertxAuthenticationProvider {
     
     @Autowired
 	private RestTemplateInterceptor restInterceptor;
@@ -89,6 +90,7 @@ public class VertxAuthHandler {
 		restTemplate.setInterceptors(list);
 	}
 
+	@Override
     public void addCorsFilter(HttpServer httpServer, Vertx vertx) {
 		Router router = Router.router(vertx);
 		
@@ -106,6 +108,7 @@ public class VertxAuthHandler {
 		httpServer.requestHandler(router);
 	}
 
+	@Override
 	public void addAuthFilter(Router router, String path, HttpMethod httpMethod,
 			String commaSepratedRoles) {
 		Objects.requireNonNull(httpMethod, AuthAdapterConstant.HTTP_METHOD_NOT_NULL);
@@ -148,6 +151,7 @@ public class VertxAuthHandler {
 		return mosipUserDto.getToken();
 	}
 
+	@Override
 	public String getContextUser(RoutingContext routingContext) {
 		MosipUserDto mosipUser = routingContext.get(AuthAdapterConstant.ROUTING_CONTEXT_USER);
 		return mosipUser == null ? DEFAULTADMIN_MOSIP_IO : mosipUser.getUserId();
