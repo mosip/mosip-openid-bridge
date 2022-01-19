@@ -27,6 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.auth.config.Generated;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
@@ -63,6 +64,7 @@ import io.mosip.kernel.core.http.ResponseWrapper;
  * @author Urvil Joshi
  *
  */
+
 
 @Profile("local")
 @Service
