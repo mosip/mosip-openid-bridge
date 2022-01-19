@@ -68,7 +68,7 @@ import io.mosip.kernel.core.authmanager.spi.AuthService;
  * @author Srinivasan
  *
  */
-@Generated
+
 @Profile("local")
 @Service
 public class ProxyAuthServiceImpl implements AuthService {
