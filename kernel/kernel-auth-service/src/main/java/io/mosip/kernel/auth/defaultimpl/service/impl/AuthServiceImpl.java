@@ -268,7 +268,7 @@ public class AuthServiceImpl implements AuthService {
 		authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
 		authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
 		authNResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
-		authNResponseDto.setMessage(AuthConstant.USERPWD_SUCCESS_MESSAGE);
+ 		authNResponseDto.setMessage(AuthConstant.USERPWD_SUCCESS_MESSAGE);
 		authNResponseDto.setRefreshExpiryTime(Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
 		return authNResponseDto;
 	}
@@ -514,18 +514,21 @@ public class AuthServiceImpl implements AuthService {
 		return userStoreFactory.getDataStoreBasedOnApp(appId).unBlockAccount(userId);
 	}
 
+	
 	@Deprecated
 	@Override
 	public AuthZResponseDto changePassword(String appId, PasswordDto passwordDto) throws Exception {
 		return userStoreFactory.getDataStoreBasedOnApp(appId).changePassword(passwordDto);
 	}
 
+	
 	@Deprecated
 	@Override
 	public AuthZResponseDto resetPassword(String appId, PasswordDto passwordDto) throws Exception {
 		return userStoreFactory.getDataStoreBasedOnApp(appId).resetPassword(passwordDto);
 	}
 
+	
 	@Deprecated
 	@Override
 	public UserNameDto getUserNameBasedOnMobileNumber(String appId, String mobileNumber) throws Exception {
@@ -539,6 +542,7 @@ public class AuthServiceImpl implements AuthService {
 		return keycloakImpl.registerUser(userCreationRequestDto);
 	}
 
+	
 	@Deprecated
 	@Override
 	public UserPasswordResponseDto addUserPassword(UserPasswordRequestDto userPasswordRequestDto) {
