@@ -1,4 +1,4 @@
-package io.mosip.kernel.auth.test.integration;
+package io.mosip.kernel.auth.integration.test;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.SearchResult;

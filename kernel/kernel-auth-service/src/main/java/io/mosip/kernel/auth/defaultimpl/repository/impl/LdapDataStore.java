@@ -125,13 +125,13 @@ public class LdapDataStore implements DataStore {
 	@Value("${mosip.kernel.ldap-security-credentials:#{null}}")
 	private String ldapSecurityCredentials;
 
-	private LdapConnection createAnonymousConnection() throws Exception {
+	public LdapConnection createAnonymousConnection() throws Exception {
 		LdapConnection connection = new LdapNetworkConnection(dataBaseConfig.getUrl(),
 				Integer.valueOf(dataBaseConfig.getPort()));
 		return connection;
 	}
 
-	private LdapContext getContext() throws NamingException {
+	public LdapContext getContext() throws NamingException {
 
 		Hashtable<String, String> env = new Hashtable<String, String>();
 		if (!env.containsKey(Context.INITIAL_CONTEXT_FACTORY))
@@ -762,7 +762,7 @@ public class LdapDataStore implements DataStore {
 
 	}
 
-	private DirContext getDirContext() throws NamingException {
+	public DirContext getDirContext() throws NamingException {
 		Hashtable<String, String> env = new Hashtable<>();
 		env.put(Context.INITIAL_CONTEXT_FACTORY, AuthConstant.LDAP_INITAL_CONTEXT_FACTORY);
 		env.put(Context.PROVIDER_URL, ldapProviderURL);

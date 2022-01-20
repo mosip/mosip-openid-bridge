@@ -1,4 +1,4 @@
-package io.mosip.kernel.auth.test;
+package io.mosip.kernel.auth.defaultadapter.test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * The Class AuthTestBootApplication.
  */
-@SpringBootApplication(scanBasePackages = { "io.mosip.kernel.auth.*" })
+@SpringBootApplication(scanBasePackages = { "io.mosip.kernel.auth.defaultadapter.*" })
 public class AuthTestBootApplication {
 
 	/**
