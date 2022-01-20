@@ -32,7 +32,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
+import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.dto.AccessTokenResponse;
+import io.mosip.kernel.auth.defaultimpl.dto.AuthToken;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
 import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
@@ -49,6 +51,7 @@ import io.mosip.kernel.core.authmanager.model.AuthNResponse;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
 import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
 import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
+import io.mosip.kernel.core.authmanager.model.LoginUserWithClientId;
 import io.mosip.kernel.core.authmanager.model.MosipUserDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserSalt;
@@ -87,7 +90,7 @@ public class AuthServiceTest {
 	@Autowired
 	TokenGenerator tokenGenerator;
 
-	@Autowired
+	@MockBean
 	TokenValidator tokenValidator;
 
 	@MockBean
@@ -422,6 +425,90 @@ public class AuthServiceTest {
 				Charset.defaultCharset()));
 		authService.loginRedirect("mock-state","mock-sessionState", "mock-code", "mock-state",
 				"mock-redirectURI");
+	}
+	
+	
+	
+	@Test
+	public void validateTokenTest() throws Exception {
+		MosipUserTokenDto mosipUserTokenDto = new MosipUserTokenDto();
+		mosipUserTokenDto.setToken("eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJzNmYxcDYwYWVDTTBrNy1NaW9sN0Zib2FTdXlRYm95UC03S1RUTmVWLWZNIn0.eyJqdGkiOiJmYTU4Y2NjMC00ZDRiLTQ2ZjAtYjgwOC0yMWI4ZTdhNmMxNDMiLCJleHAiOjE2NDAxODc3MTksIm5iZiI6MCwiaWF0IjoxNjQwMTUxNzE5LCJpc3MiOiJodHRwczovL2Rldi5tb3NpcC5uZXQva2V5Y2xvYWsvYXV0aC9yZWFsbXMvbW9zaXAiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiOWRiZTE0MDEtNTQ1NC00OTlhLTlhMWItNzVhZTY4M2Q0MjZhIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibW9zaXAtcmVzaWRlbnQtY2xpZW50IiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiY2QwYjU5NjEtOTYzMi00NmE0LWIzMzgtODc4MWEzNDVmMTZiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL2Rldi5tb3NpcC5uZXQiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIkNSRURFTlRJQUxfUkVRVUVTVCIsIlJFU0lERU5UIiwib2ZmbGluZV9hY2Nlc3MiLCJQQVJUTkVSX0FETUlOIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJtb3NpcC1yZXNpZGVudC1jbGllbnQiOnsicm9sZXMiOlsidW1hX3Byb3RlY3Rpb24iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImNsaWVudEhvc3QiOiIxMC4yNDQuNS4xNDgiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudElkIjoibW9zaXAtcmVzaWRlbnQtY2xpZW50IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW1vc2lwLXJlc2lkZW50LWNsaWVudCIsImNsaWVudEFkZHJlc3MiOiIxMC4yNDQuNS4xNDgifQ.xZq1m3mBTEvFDENKFOI59QsSl3sd_TSDNbhTAOq4x_x_4voPc4hh08gIxUdsVHfXY4T0P8DdZ1xNt8xd1VWc33Hc4b_3kK7ksGY4wwqtb0-pDLQGajCGuG6vebC1rYcjsGRbJ1Gnrj_F2RNY4Ky6Nq5SAJ1Lh_NVKNKFghAXb3YrlmqlmCB1fCltC4XBqNnF5_k4uzLCu_Wr0lt_M87X97DktaRGLOD2_HY1Ire9YPsWkoO8y7X_DRCY59yQDVgYs2nAiR6Am-c55Q0fEQ0HuB4IJHlhtMHm27dXPdOEhFhR8ZPOyeO6ZIcIm0ZTDjusrruqWy2_yO5fe3XIHkCOAw");
+		mosipUserTokenDto.setExpTime(3000);
+		MosipUserDto mosipUserDto = new MosipUserDto();
+		mosipUserDto.setUserId("mock-user");
+		mosipUserDto.setMail("mock-user@mosip.io");
+		mosipUserDto.setMobile("9999999999");
+		mosipUserDto.setRole("MOCK-ROLE");
+		mosipUserTokenDto.setMosipUserDto(mosipUserDto);	
+		AuthToken authToken = new AuthToken("mock-user", "mock-token", 3000, null);
+		when(tokenValidator.validateToken(Mockito.anyString())).thenReturn(mosipUserTokenDto);
+		when(customTokenServices.getTokenDetails(Mockito.anyString())).thenReturn(authToken);
+		MosipUserTokenDto dto=authService.validateToken("mock-token");
+		assertThat(dto.getMosipUserDto().getUserId(),is(mosipUserDto.getUserId()));
+	}
+	
+	@Test(expected = AuthManagerException.class)
+	public void validateTokenAuthManagerExceptionTest() throws Exception {
+		MosipUserTokenDto mosipUserTokenDto = new MosipUserTokenDto();
+		mosipUserTokenDto.setToken("eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJzNmYxcDYwYWVDTTBrNy1NaW9sN0Zib2FTdXlRYm95UC03S1RUTmVWLWZNIn0.eyJqdGkiOiJmYTU4Y2NjMC00ZDRiLTQ2ZjAtYjgwOC0yMWI4ZTdhNmMxNDMiLCJleHAiOjE2NDAxODc3MTksIm5iZiI6MCwiaWF0IjoxNjQwMTUxNzE5LCJpc3MiOiJodHRwczovL2Rldi5tb3NpcC5uZXQva2V5Y2xvYWsvYXV0aC9yZWFsbXMvbW9zaXAiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiOWRiZTE0MDEtNTQ1NC00OTlhLTlhMWItNzVhZTY4M2Q0MjZhIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibW9zaXAtcmVzaWRlbnQtY2xpZW50IiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiY2QwYjU5NjEtOTYzMi00NmE0LWIzMzgtODc4MWEzNDVmMTZiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL2Rldi5tb3NpcC5uZXQiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIkNSRURFTlRJQUxfUkVRVUVTVCIsIlJFU0lERU5UIiwib2ZmbGluZV9hY2Nlc3MiLCJQQVJUTkVSX0FETUlOIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJtb3NpcC1yZXNpZGVudC1jbGllbnQiOnsicm9sZXMiOlsidW1hX3Byb3RlY3Rpb24iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImNsaWVudEhvc3QiOiIxMC4yNDQuNS4xNDgiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudElkIjoibW9zaXAtcmVzaWRlbnQtY2xpZW50IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW1vc2lwLXJlc2lkZW50LWNsaWVudCIsImNsaWVudEFkZHJlc3MiOiIxMC4yNDQuNS4xNDgifQ.xZq1m3mBTEvFDENKFOI59QsSl3sd_TSDNbhTAOq4x_x_4voPc4hh08gIxUdsVHfXY4T0P8DdZ1xNt8xd1VWc33Hc4b_3kK7ksGY4wwqtb0-pDLQGajCGuG6vebC1rYcjsGRbJ1Gnrj_F2RNY4Ky6Nq5SAJ1Lh_NVKNKFghAXb3YrlmqlmCB1fCltC4XBqNnF5_k4uzLCu_Wr0lt_M87X97DktaRGLOD2_HY1Ire9YPsWkoO8y7X_DRCY59yQDVgYs2nAiR6Am-c55Q0fEQ0HuB4IJHlhtMHm27dXPdOEhFhR8ZPOyeO6ZIcIm0ZTDjusrruqWy2_yO5fe3XIHkCOAw");
+		mosipUserTokenDto.setExpTime(3000);
+		MosipUserDto mosipUserDto = new MosipUserDto();
+		mosipUserDto.setUserId("mock-user");
+		mosipUserDto.setMail("mock-user@mosip.io");
+		mosipUserDto.setMobile("9999999999");
+		mosipUserDto.setRole("MOCK-ROLE");
+		mosipUserTokenDto.setMosipUserDto(mosipUserDto);	
+		AuthToken authToken = new AuthToken("mock-user", "mock-token", 3000, null);
+		when(tokenValidator.validateToken(Mockito.anyString())).thenReturn(mosipUserTokenDto);
+		when(customTokenServices.getTokenDetails(Mockito.anyString())).thenReturn(null);
+		MosipUserTokenDto dto=authService.validateToken("mock-token");
+		assertThat(dto.getMosipUserDto().getUserId(),is(mosipUserDto.getUserId()));
+	}
+	
+	
+	@Test
+	public void authenticateUserwithClientIDTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("mock-access-token");
+		accessTokenResponse.setExpires_in("111");
+		accessTokenResponse.setRefresh_token("mock-ref-token");
+		accessTokenResponse.setRefresh_expires_in("111");
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(accessTokenResponse));
+		LoginUserWithClientId loginUserWithClientId = new LoginUserWithClientId();
+		loginUserWithClientId.setAppId("ida");
+		loginUserWithClientId.setClientId("ida-client");
+		loginUserWithClientId.setClientSecret("client-secret");
+		loginUserWithClientId.setUserName("mock-user");
+		loginUserWithClientId.setPassword("mock-pass");
+		AuthNResponseDto authNResponseDto= authService.authenticateUser(loginUserWithClientId);
+		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
+	}
+	
+	@Test(expected = AuthManagerException.class)
+	public void authenticateUserwithClientIDUnAuthTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("mock-access-token");
+		accessTokenResponse.setExpires_in("111");
+		accessTokenResponse.setRefresh_token("mock-ref-token");
+		accessTokenResponse.setRefresh_expires_in("111");
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "not auth".getBytes(),
+						Charset.defaultCharset()));
+		LoginUserWithClientId loginUserWithClientId = new LoginUserWithClientId();
+		loginUserWithClientId.setAppId("ida");
+		loginUserWithClientId.setClientId("ida-client");
+		loginUserWithClientId.setClientSecret("client-secret");
+		loginUserWithClientId.setUserName("mock-user");
+		loginUserWithClientId.setPassword("mock-pass");
+		AuthNResponseDto authNResponseDto= authService.authenticateUser(loginUserWithClientId);
+		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
 	}
 
 }
