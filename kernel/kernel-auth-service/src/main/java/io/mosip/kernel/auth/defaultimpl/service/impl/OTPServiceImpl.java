@@ -27,7 +27,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.kernel.auth.config.Generated;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
@@ -133,7 +132,6 @@ public class OTPServiceImpl implements OTPService {
 	@Autowired
 	private MemoryCache<String, AccessTokenResponse> memoryCache;
 
-	@Generated
 	@Override
 	public AuthNResponseDto sendOTP(MosipUserDto mosipUserDto, List<String> otpChannel, String appId) {
 		AuthNResponseDto authNResponseDto = null;
@@ -205,7 +203,6 @@ public class OTPServiceImpl implements OTPService {
 		return authNResponseDto;
 	}
 
-	@Generated
 	private String getOtpEmailMessage(OtpGenerateResponseDto otpGenerateResponseDto, String appId, String token) {
 		String template = null;
 		OtpTemplateResponseDto otpTemplateResponseDto = null;
@@ -244,7 +241,6 @@ public class OTPServiceImpl implements OTPService {
 		return template;
 	}
 
-	@Generated
 	private String getOtpSmsMessage(OtpGenerateResponseDto otpGenerateResponseDto, String appId, String token) {
 		try {
 			final String url = mosipEnvironment.getMasterDataTemplateApi() + "/" + mosipEnvironment.getPrimaryLanguage()
@@ -287,7 +283,6 @@ public class OTPServiceImpl implements OTPService {
 		}
 	}
 
-	@Generated
 	private OtpEmailSendResponseDto sendOtpByEmail(String message, String email, String token) {
 		ResponseEntity<String> response = null;
 		String url = mosipEnvironment.getOtpSenderEmailApi();

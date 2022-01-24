@@ -35,7 +35,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.kernel.auth.config.Generated;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
@@ -203,7 +202,6 @@ public class AuthServiceImpl implements AuthService {
 	 */
 
 	@Override
-	@Generated
 	public MosipUserTokenDto validateToken(String token) throws Exception {
 		LOGGER.debug("invoked validate token");
 		MosipUserTokenDto mosipUserDtoToken = tokenValidator.validateToken(token);
