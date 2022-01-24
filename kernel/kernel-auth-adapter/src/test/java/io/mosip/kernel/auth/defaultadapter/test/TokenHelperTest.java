@@ -12,26 +12,26 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClient.RequestBodyUriSpec;
+import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.kernel.auth.defaultadapter.config.RestTemplateInterceptor;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthRestException;
-import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
-import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
-import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
-import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
+import reactor.core.publisher.Mono;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
 @RunWith(SpringRunner.class)
@@ -54,6 +54,7 @@ public class TokenHelperTest {
 	
 	
 	private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
+	private WebClient webClient = Mockito.mock(WebClient.class);
 
 	public void init() {
 		
@@ -98,6 +99,35 @@ public class TokenHelperTest {
 	}
 	
 	
+	@Test
+	public void getClientTokenWebClientTest() throws Exception {
+		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String resp= "{\"access_token\":\"mock-token\"}";
+		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
+		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
+		when(webClient.method(HttpMethod.POST)).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.body(Mockito.any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.exchange()).thenReturn(Mono.just(ClientResponse.create(HttpStatus.OK).header("Content-type", "application/json").body(resp).build()));
+		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
+	    assertTrue(token.equals("mock-token"));
+	}
+	
+	@Test
+	public void getClientTokenWebClientErrorTest() throws Exception {
+		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String resp= "{\"access_token\":\"mock-token\"}";
+		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
+		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
+		when(webClient.method(HttpMethod.POST)).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.body(Mockito.any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.exchange()).thenReturn(Mono.just(ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).header("Content-type", "application/json").body(resp).build()));
+		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
+	    assertNull(token);
+	}
 	
 	
 }

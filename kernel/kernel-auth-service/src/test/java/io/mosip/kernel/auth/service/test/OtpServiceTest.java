@@ -166,7 +166,7 @@ public class OtpServiceTest {
 		
 	}
 	
-	@Test(expected = AuthNException.class)
+	@Test(expected = AuthZException.class)
 	public void sendOTPForUinAuthZExceptionTest() throws Exception  {
 		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
 				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
@@ -175,7 +175,7 @@ public class OtpServiceTest {
 		pathParams.put(AuthConstant.REALM_ID, "mosip");
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
 		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", resp.getBytes(),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN, "403", resp.getBytes(),
 								Charset.defaultCharset()));
 		MosipUserDto mosipUserDto = new MosipUserDto();
 		mosipUserDto.setName("112211");
