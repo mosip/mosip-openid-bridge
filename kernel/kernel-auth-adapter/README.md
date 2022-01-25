@@ -1,27 +1,14 @@
-## kernel-auth-adapter
+# Kernel Auth Adapter
 
+## Overview
+Auth adapter is a package that needs to be injected into Mosip's applications exposing REST API's inorder to secure them.
 
-[Background & Design](https://github.com/mosip/mosip/wiki/Auth-Adapter)
-
-
- **Maven Dependency**
- 
- ```
- 	<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-auth-adapter</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
- ```
-
-**Application Properties**
-
-
+## Usage
+Add the Auth Adapter module to your project as a maven dependency
 ```
-auth.server.validate.url=http://localhost:8091/v1/authmanager/authorize/validateToken
-auth.role.prefix=ROLE_
-auth.header.name=Authorization
-#auth.server.refreshToken.url=http://localhost:8091/v1/authmanager/authorize/refreshToken
-
+	<dependency>
+   		<groupId>io.mosip.kernel</groupId>
+   		<artifactId>kernel-auth-adapter</artifactId>
+   		<version>${project.version}</version>
+   	</dependency>
 ```
