@@ -12,3 +12,6 @@ Contains the following components:
 -  Validate token.
 -  Refresh token.
 -  Invalidate token on token expiry.
+
+## License
+This project is licensed under the terms of [Mozilla Public License 2.0](LICENSE)
