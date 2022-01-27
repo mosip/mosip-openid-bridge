@@ -326,17 +326,11 @@
 					</execution>
 				</executions>
 				<configuration>
-					<additionalDependencies>
-            			<additionalDependency>
-							<groupId>io.mosip.kernel</groupId>
-							<artifactId>kernel-core</artifactId>
-							<version>1.2.0-prerel</version>
-			 			</additionalDependency>
-          			</additionalDependencies>
 					<doclint>none</doclint>
 					<sourcepath>src/main/java</sourcepath>
 				</configuration>
 			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
 				<version>1.5</version>
