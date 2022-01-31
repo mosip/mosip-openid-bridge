@@ -8,7 +8,7 @@
 
 	<artifactId>kernel-auth-service</artifactId>
 	<packaging>jar</packaging>
-	<version>1.2.0-SNAPSHOT</version>
+	<version>1.2.0</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
@@ -228,7 +228,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
-			<version>1.2.0-SNAPSHOT</version>
+			<version>1.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -278,7 +278,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-templatemanager-velocity</artifactId>
-			<version>1.2.0-SNAPSHOT</version>
+			<version>1.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -299,7 +299,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.0-SNAPSHOT</version>
+			<version>1.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
