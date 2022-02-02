@@ -247,6 +247,412 @@ public class IntegrationTests {
 				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isOk())
 				.andExpect(jsonPath("$.response.status", is("SUCCESS")));
 	}
+	
+	
+	@Test
+	public void sendOTPUINEmailAuthZEmailTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+		accessTokenResponse.setExpires_in("3600");
+		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
+		// uin
+		Map<String, String> uriParams = new HashMap<String, String>();
+		uriParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "112211");
+		String uinEntityURL = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uriParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+		when(authRestTemplate.exchange(Mockito.eq(uinEntityURL), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+
+		final String url = mosipEnvironment.getGenerateOtpApi();
+		String otpResponse = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"otp\": \"820121\",\r\n" + "    \"status\": \"SUCCESS\"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		ResponseEntity<String> getOTPRespo = ResponseEntity.ok(otpResponse);
+		when(authRestTemplate.postForEntity(Mockito.eq(url), Mockito.any(), Mockito.eq(String.class)))
+				.thenReturn(getOTPRespo);
+		// email and Template
+		OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+		emailTemplate.setEmailContent("mock-email");
+		emailTemplate.setEmailSubject("mock-subject");
+		emailTemplate.setEmailTo("mock@mosip.io");
+		when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emailTemplate);
+		String emailUrl = mosipEnvironment.getOtpSenderEmailApi();
+		String emailResp = "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": { },\r\n" + "  \"errors\": [{ \"errorCode\": \"KER-ATH-403\", \"message\": \"Forbidden\" } ]\r\n" + "}";
+		ResponseEntity<String> getEmailRespo = ResponseEntity.ok(emailResp);
+		when(authRestTemplate.exchange(Mockito.eq(emailUrl), Mockito.eq(HttpMethod.POST), Mockito.any(),
+				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN, "403", resp.getBytes(),
+						Charset.defaultCharset()));
+		List<String> channel = new ArrayList<>();
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("112211");
+		otpUser.setAppId("ida");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("UIN");
+		otpUser.setContext("uin");
+		RequestWrapper<OtpUser> otpUserDto = new RequestWrapper<OtpUser>();
+		otpUserDto.setRequest(otpUser);
+		mockMvc.perform(post("/authenticate/sendotp").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isInternalServerError())
+				.andExpect(jsonPath("$.errors[0].errorCode", is("500")));
+	}
+	
+	@Test
+	public void sendOTPUINEmailAuthZPlainRespEmailTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+		accessTokenResponse.setExpires_in("3600");
+		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
+		// uin
+		Map<String, String> uriParams = new HashMap<String, String>();
+		uriParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "112211");
+		String uinEntityURL = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uriParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+		when(authRestTemplate.exchange(Mockito.eq(uinEntityURL), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+
+		final String url = mosipEnvironment.getGenerateOtpApi();
+		String otpResponse = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"otp\": \"820121\",\r\n" + "    \"status\": \"SUCCESS\"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		ResponseEntity<String> getOTPRespo = ResponseEntity.ok(otpResponse);
+		when(authRestTemplate.postForEntity(Mockito.eq(url), Mockito.any(), Mockito.eq(String.class)))
+				.thenReturn(getOTPRespo);
+		// email and Template
+		OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+		emailTemplate.setEmailContent("mock-email");
+		emailTemplate.setEmailSubject("mock-subject");
+		emailTemplate.setEmailTo("mock@mosip.io");
+		when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emailTemplate);
+		String emailUrl = mosipEnvironment.getOtpSenderEmailApi();
+		String emailResp = "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": { },\r\n" + "  \"errors\": [{ \"errorCode\": \"KER-ATH-403\", \"message\": \"Forbidden\" } ]\r\n" + "}";
+		ResponseEntity<String> getEmailRespo = ResponseEntity.ok(emailResp);
+		when(authRestTemplate.exchange(Mockito.eq(emailUrl), Mockito.eq(HttpMethod.POST), Mockito.any(),
+				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN, "403", "forbidden".getBytes(),
+						Charset.defaultCharset()));
+		List<String> channel = new ArrayList<>();
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("112211");
+		otpUser.setAppId("ida");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("UIN");
+		otpUser.setContext("uin");
+		RequestWrapper<OtpUser> otpUserDto = new RequestWrapper<OtpUser>();
+		otpUserDto.setRequest(otpUser);
+		mockMvc.perform(post("/authenticate/sendotp").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isOk());
+	}
+	
+	@Test
+	public void sendOTPUINEmailAuthNEmailTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+		accessTokenResponse.setExpires_in("3600");
+		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
+		// uin
+		Map<String, String> uriParams = new HashMap<String, String>();
+		uriParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "112211");
+		String uinEntityURL = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uriParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+		when(authRestTemplate.exchange(Mockito.eq(uinEntityURL), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+
+		final String url = mosipEnvironment.getGenerateOtpApi();
+		String otpResponse = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"otp\": \"820121\",\r\n" + "    \"status\": \"SUCCESS\"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		ResponseEntity<String> getOTPRespo = ResponseEntity.ok(otpResponse);
+		when(authRestTemplate.postForEntity(Mockito.eq(url), Mockito.any(), Mockito.eq(String.class)))
+				.thenReturn(getOTPRespo);
+		// email and Template
+		OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+		emailTemplate.setEmailContent("mock-email");
+		emailTemplate.setEmailSubject("mock-subject");
+		emailTemplate.setEmailTo("mock@mosip.io");
+		when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emailTemplate);
+		String emailUrl = mosipEnvironment.getOtpSenderEmailApi();
+		String emailResp = "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": { },\r\n" + "  \"errors\": [{ \"errorCode\": \"KER-ATH-401\", \"message\": \"Forbidden\" } ]\r\n" + "}";
+		ResponseEntity<String> getEmailRespo = ResponseEntity.ok(emailResp);
+		when(authRestTemplate.exchange(Mockito.eq(emailUrl), Mockito.eq(HttpMethod.POST), Mockito.any(),
+				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", resp.getBytes(),
+						Charset.defaultCharset()));
+		List<String> channel = new ArrayList<>();
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("112211");
+		otpUser.setAppId("ida");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("UIN");
+		otpUser.setContext("uin");
+		RequestWrapper<OtpUser> otpUserDto = new RequestWrapper<OtpUser>();
+		otpUserDto.setRequest(otpUser);
+		mockMvc.perform(post("/authenticate/sendotp").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isInternalServerError())
+				.andExpect(jsonPath("$.errors[0].errorCode", is("500")));
+	}
+	
+	@Test
+	public void sendOTPUINEmailAuthNPlainRespEmailTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+		accessTokenResponse.setExpires_in("3600");
+		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
+		// uin
+		Map<String, String> uriParams = new HashMap<String, String>();
+		uriParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "112211");
+		String uinEntityURL = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uriParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+		when(authRestTemplate.exchange(Mockito.eq(uinEntityURL), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+
+		final String url = mosipEnvironment.getGenerateOtpApi();
+		String otpResponse = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"otp\": \"820121\",\r\n" + "    \"status\": \"SUCCESS\"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		ResponseEntity<String> getOTPRespo = ResponseEntity.ok(otpResponse);
+		when(authRestTemplate.postForEntity(Mockito.eq(url), Mockito.any(), Mockito.eq(String.class)))
+				.thenReturn(getOTPRespo);
+		// email and Template
+		OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+		emailTemplate.setEmailContent("mock-email");
+		emailTemplate.setEmailSubject("mock-subject");
+		emailTemplate.setEmailTo("mock@mosip.io");
+		when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emailTemplate);
+		String emailUrl = mosipEnvironment.getOtpSenderEmailApi();
+		String emailResp = "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": { },\r\n" + "  \"errors\": [{ \"errorCode\": \"KER-ATH-401\", \"message\": \"Forbidden\" } ]\r\n" + "}";
+		ResponseEntity<String> getEmailRespo = ResponseEntity.ok(emailResp);
+		when(authRestTemplate.exchange(Mockito.eq(emailUrl), Mockito.eq(HttpMethod.POST), Mockito.any(),
+				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "unauth".getBytes(),
+						Charset.defaultCharset()));
+		List<String> channel = new ArrayList<>();
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("112211");
+		otpUser.setAppId("ida");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("UIN");
+		otpUser.setContext("uin");
+		RequestWrapper<OtpUser> otpUserDto = new RequestWrapper<OtpUser>();
+		otpUserDto.setRequest(otpUser);
+		mockMvc.perform(post("/authenticate/sendotp").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isOk());
+	}
+	
+	@Test
+	public void sendOTPUINEmailAuthServiceEmailTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+		accessTokenResponse.setExpires_in("3600");
+		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
+		// uin
+		Map<String, String> uriParams = new HashMap<String, String>();
+		uriParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "112211");
+		String uinEntityURL = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uriParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+		when(authRestTemplate.exchange(Mockito.eq(uinEntityURL), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+
+		final String url = mosipEnvironment.getGenerateOtpApi();
+		String otpResponse = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"otp\": \"820121\",\r\n" + "    \"status\": \"SUCCESS\"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		ResponseEntity<String> getOTPRespo = ResponseEntity.ok(otpResponse);
+		when(authRestTemplate.postForEntity(Mockito.eq(url), Mockito.any(), Mockito.eq(String.class)))
+				.thenReturn(getOTPRespo);
+		// email and Template
+		OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+		emailTemplate.setEmailContent("mock-email");
+		emailTemplate.setEmailSubject("mock-subject");
+		emailTemplate.setEmailTo("mock@mosip.io");
+		when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emailTemplate);
+		String emailUrl = mosipEnvironment.getOtpSenderEmailApi();
+		String emailResp = "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": { },\r\n" + "  \"errors\": [{ \"errorCode\": \"KER-ATH-404\", \"message\": \"Forbidden\" } ]\r\n" + "}";
+		ResponseEntity<String> getEmailRespo = ResponseEntity.ok(emailResp);
+		when(authRestTemplate.exchange(Mockito.eq(emailUrl), Mockito.eq(HttpMethod.POST), Mockito.any(),
+				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "404", resp.getBytes(),
+						Charset.defaultCharset()));
+		List<String> channel = new ArrayList<>();
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("112211");
+		otpUser.setAppId("ida");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("UIN");
+		otpUser.setContext("uin");
+		RequestWrapper<OtpUser> otpUserDto = new RequestWrapper<OtpUser>();
+		otpUserDto.setRequest(otpUser);
+		mockMvc.perform(post("/authenticate/sendotp").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isOk())
+				.andExpect(jsonPath("$.errors[0].errorCode", is("KER-ATH-404")));
+	}
+	
+	@Test
+	public void sendOTPUINEmailAuthServiceEmailPlainRespTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+		accessTokenResponse.setExpires_in("3600");
+		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, "mosip");
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
+				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
+		// uin
+		Map<String, String> uriParams = new HashMap<String, String>();
+		uriParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "112211");
+		String uinEntityURL = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uriParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+		when(authRestTemplate.exchange(Mockito.eq(uinEntityURL), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+
+		final String url = mosipEnvironment.getGenerateOtpApi();
+		String otpResponse = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"otp\": \"820121\",\r\n" + "    \"status\": \"SUCCESS\"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		ResponseEntity<String> getOTPRespo = ResponseEntity.ok(otpResponse);
+		when(authRestTemplate.postForEntity(Mockito.eq(url), Mockito.any(), Mockito.eq(String.class)))
+				.thenReturn(getOTPRespo);
+		// email and Template
+		OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+		emailTemplate.setEmailContent("mock-email");
+		emailTemplate.setEmailSubject("mock-subject");
+		emailTemplate.setEmailTo("mock@mosip.io");
+		when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emailTemplate);
+		String emailUrl = mosipEnvironment.getOtpSenderEmailApi();
+		String emailResp = "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": {\r\n" + "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n"
+				+ "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}";
+		String resp = "{\r\n" + "  \"id\": \"string\", \"version\": \"string\",\r\n"
+				+ "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" + "  \"metadata\": {},\r\n"
+				+ "  \"response\": { },\r\n" + "  \"errors\": [{ \"errorCode\": \"KER-ATH-404\", \"message\": \"Forbidden\" } ]\r\n" + "}";
+		ResponseEntity<String> getEmailRespo = ResponseEntity.ok(emailResp);
+		when(authRestTemplate.exchange(Mockito.eq(emailUrl), Mockito.eq(HttpMethod.POST), Mockito.any(),
+				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "404", "clientError".getBytes(),
+						Charset.defaultCharset()));
+		List<String> channel = new ArrayList<>();
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("112211");
+		otpUser.setAppId("ida");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("UIN");
+		otpUser.setContext("uin");
+		RequestWrapper<OtpUser> otpUserDto = new RequestWrapper<OtpUser>();
+		otpUserDto.setRequest(otpUser);
+		mockMvc.perform(post("/authenticate/sendotp").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(otpUserDto))).andExpect(status().isOk());
+	}
 
 	@Test
 	public void sendOTPUINEmailPhoneTest() throws Exception {

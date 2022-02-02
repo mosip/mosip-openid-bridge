@@ -14,10 +14,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -35,6 +31,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
+import io.mosip.kernel.auth.defaultadapter.config.Generated;
 import io.mosip.kernel.auth.defaultadapter.config.RestTemplateInterceptor;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
@@ -90,6 +91,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 		restTemplate.setInterceptors(list);
 	}
 
+	@Generated // coverage exclusion as this is a filter
 	@Override
     public void addCorsFilter(HttpServer httpServer, Vertx vertx) {
 		Router router = Router.router(vertx);
@@ -108,6 +110,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 		httpServer.requestHandler(router);
 	}
 
+	@Generated // coverage exclusion as this is a filter
 	@Override
 	public void addAuthFilter(Router router, String path, HttpMethod httpMethod,
 			String commaSepratedRoles) {

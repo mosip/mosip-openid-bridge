@@ -575,4 +575,98 @@ public class UinServiceTest {
 		otpUser.setContext("USERID");
 		uinService.getDetailsFromUin(otpUser);
 	}
+	
+	
+	
+	@Test(expected = AuthManagerException.class)
+	public void getDetailsForValidateOtpRegistrationTest() throws Exception {
+		// getDetailsForValidateOtp
+		Map<String, String> uinValidateParams = new HashMap<String, String>();
+		uinValidateParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "8202098910");
+		String uinValidateUrl = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uinValidateParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+
+		when(tokenService.getUINBasedToken()).thenReturn("MOCK-TOKEN");
+		when(authRestTemplate.exchange(Mockito.eq(uinValidateUrl), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+		List<String> channel = new ArrayList<>();
+		channel.add("phone");
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("8202098910");
+		otpUser.setAppId("prereg");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("USERID");
+		otpUser.setContext("USERID");
+		MosipUserDto nus = uinService.getDetailsFromUin(otpUser);
+		
+		assertThat(nus.getUserId(), is("8202098910"));
+	}
+	
+	@Test(expected = AuthManagerException.class)
+	public void getDetailsForValidateOtpEmailRegistrationTest() throws Exception {
+		// getDetailsForValidateOtp
+		Map<String, String> uinValidateParams = new HashMap<String, String>();
+		uinValidateParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "8202098910");
+		String uinValidateUrl = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uinValidateParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("phone", "8287382923");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+
+		when(tokenService.getUINBasedToken()).thenReturn("MOCK-TOKEN");
+		when(authRestTemplate.exchange(Mockito.eq(uinValidateUrl), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+		List<String> channel = new ArrayList<>();
+		channel.add("phone");
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("8202098910");
+		otpUser.setAppId("prereg");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("USERID");
+		otpUser.setContext("USERID");
+		MosipUserDto nus = uinService.getDetailsFromUin(otpUser);
+		
+		assertThat(nus.getUserId(), is("8202098910"));
+	}
+	
+	@Test(expected = AuthManagerException.class)
+	public void getDetailsForValidateOtpPhoneRegistrationTest() throws Exception {
+		// getDetailsForValidateOtp
+		Map<String, String> uinValidateParams = new HashMap<String, String>();
+		uinValidateParams.put(AuthConstant.APPTYPE_UIN.toLowerCase(), "8202098910");
+		String uinValidateUrl = UriComponentsBuilder.fromHttpUrl(mosipEnvironment.getUinGetDetailsUrl())
+				.buildAndExpand(uinValidateParams).toUriString();
+		ResponseWrapper<ResponseDTO> repw = new ResponseWrapper<>();
+		ResponseDTO uinResDTO = new ResponseDTO();
+		Map<String, String> res = new LinkedHashMap<String, String>();
+		res.put("email", "mock@mosip.io");
+		uinResDTO.setIdentity(res);
+		repw.setResponse(uinResDTO);
+
+		when(tokenService.getUINBasedToken()).thenReturn("MOCK-TOKEN");
+		when(authRestTemplate.exchange(Mockito.eq(uinValidateUrl), Mockito.eq(HttpMethod.GET), Mockito.any(),
+				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(repw)));
+		List<String> channel = new ArrayList<>();
+		channel.add("phone");
+		channel.add("email");
+		OtpUser otpUser = new OtpUser();
+		otpUser.setUserId("8202098910");
+		otpUser.setAppId("prereg");
+		otpUser.setOtpChannel(channel);
+		otpUser.setUseridtype("USERID");
+		otpUser.setContext("USERID");
+		MosipUserDto nus = uinService.getDetailsFromUin(otpUser);
+		
+		assertThat(nus.getUserId(), is("8202098910"));
+	}
 }
