@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mosip/mosip-openid-bridge.svg?branch=release-1.2.0)](https://travis-ci.org/mosip/mosip-openid-bridge?branch=release-1.2.0)
+[![Maven Package upon a push](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push_trigger.yml/badge.svg?branch=release-1.2.0)](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push_trigger.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mosip_mosip-openid-bridge&metric=alert_status)](https://sonarcloud.io/dashboard?branch=release-1.2.0&id=mosip_mosip-openid-bridge)
 
 # MOSIP OpenID Bridge
