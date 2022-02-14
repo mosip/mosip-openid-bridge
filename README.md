@@ -1,4 +1,7 @@
-# MOSIP Openid Bridge
+[![Maven Package upon a push](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push_trigger.yml/badge.svg?branch=release-1.2.0)](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push_trigger.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mosip_mosip-openid-bridge&metric=alert_status)](https://sonarcloud.io/dashboard?branch=release-1.2.0&id=mosip_mosip-openid-bridge)
+
+# MOSIP OpenID Bridge
 
 ## Overview
 Contains the following components:
@@ -12,3 +15,6 @@ Contains the following components:
 -  Validate token.
 -  Refresh token.
 -  Invalidate token on token expiry.
+
+## License
+This project is licensed under the terms of [Mozilla Public License 2.0](LICENSE)
