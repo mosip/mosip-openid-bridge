@@ -1472,7 +1472,7 @@ public class IntegrationTests {
 		loginUser.setUserName("mosckuser");
 		Cookie cookie = new Cookie("refresh_token", "MOCK_REFRESH_TOKEN");
 		mockMvc.perform(post("/authorize/refreshToken/ida").contentType(MediaType.APPLICATION_JSON).cookie(cookie)
-				.content(objectMapper.writeValueAsString(loginUser))).andExpect(status().isOk())
+				.content(objectMapper.writeValueAsString(refreshTokenRequest))).andExpect(status().isOk())
 				.andExpect(jsonPath("$.response.status", is("SUCCESS")));
 	}
 	
@@ -1505,7 +1505,7 @@ public class IntegrationTests {
 		loginUser.setUserName("mosckuser");
 		Cookie cookie = new Cookie("refresh_token", "MOCK_REFRESH_TOKEN");
 		mockMvc.perform(post("/authorize/refreshToken/ida").contentType(MediaType.APPLICATION_JSON).cookie(cookie)
-				.content(objectMapper.writeValueAsString(loginUser))).andExpect(status().isInternalServerError())
+				.content(objectMapper.writeValueAsString(refreshTokenRequest))).andExpect(status().isInternalServerError())
 				.andExpect(jsonPath("$.errors[0].errorCode", is("500")));
 	}
 }
