@@ -3,8 +3,6 @@ package io.mosip.kernel.auth.config;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
-import io.mosip.kernel.core.logger.spi.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -17,12 +15,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.mosip.kernel.auth.defaultimpl.config.LoggerConfiguration;
+import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.kernel.core.http.ResponseWrapper;
+import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 
 /**
@@ -36,7 +35,7 @@ public class ResponseBodyAdviceConfig implements ResponseBodyAdvice<ResponseWrap
 
 	@Autowired
 	private ObjectMapper objectMapper;
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -77,7 +76,6 @@ public class ResponseBodyAdviceConfig implements ResponseBodyAdvice<ResponseWrap
 						((ContentCachingRequestWrapper) ((HttpServletRequestWrapper) httpServletRequest).getRequest())
 								.getContentAsByteArray());
 			}
-			objectMapper.registerModule(new JavaTimeModule());
 			if (!EmptyCheckUtils.isNullEmpty(requestBody)) {
 				requestWrapper = objectMapper.readValue(requestBody, RequestWrapper.class);
 				body.setId(requestWrapper.getId());
