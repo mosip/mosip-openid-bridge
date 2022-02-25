@@ -61,6 +61,9 @@ public class VertxTokenValidationHelperTest {
 	    @Value("${auth.server.admin.issuer.uri:}")
 	    private String issuerURI;
 
+		@Value("${auth.server.admin.issuer.internal.uri:}")
+	    private String issuerInternalURI;
+
 	    @Value("${auth.server.admin.audience.claim.validate:true}")
 	    private boolean validateAudClaim;
 
@@ -96,7 +99,7 @@ public class VertxTokenValidationHelperTest {
 		when(routingContext.request()).thenReturn(httpServerRequest);
 		when(httpServerRequest.getHeader(AuthAdapterConstant.AUTH_HEADER_COOKIE)).thenReturn(cookie);
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(""));
 		String[] roles= {"PARTNER_ADMIN"};
 		MosipUserDto md=vertxTokenValidationHelper.getTokenValidatedVertxUserResponse(restTemplate, routingContext, roles);
@@ -116,7 +119,7 @@ public class VertxTokenValidationHelperTest {
 		when(httpServerResponse.setStatusCode(Mockito.anyInt())).thenReturn(httpServerResponse);
 		doNothing().when(httpServerResponse).end(Mockito.anyString());
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.EXPECTATION_FAILED, "417", resp.getBytes(),
 				Charset.defaultCharset()));
 		String[] roles= {"PARTNER_ADMIN"};
@@ -136,7 +139,7 @@ public class VertxTokenValidationHelperTest {
 		when(httpServerResponse.setStatusCode(Mockito.anyInt())).thenReturn(httpServerResponse);
 		doNothing().when(httpServerResponse).end(Mockito.anyString());
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", resp.getBytes(),
 				Charset.defaultCharset()));
 		String[] roles= {"PARTNER_ADMIN"};
@@ -156,7 +159,7 @@ public class VertxTokenValidationHelperTest {
 		when(httpServerResponse.setStatusCode(Mockito.anyInt())).thenReturn(httpServerResponse);
 		doNothing().when(httpServerResponse).end(Mockito.anyString());
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN, "403", resp.getBytes(),
 				Charset.defaultCharset()));
 		String[] roles= {"PARTNER_ADMIN"};
@@ -176,7 +179,7 @@ public class VertxTokenValidationHelperTest {
 		when(httpServerResponse.setStatusCode(Mockito.anyInt())).thenReturn(httpServerResponse);
 		doNothing().when(httpServerResponse).end(Mockito.anyString());
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "500", resp.getBytes(),
 				Charset.defaultCharset()));
 		String[] roles= {"PARTNER_ADMIN"};
@@ -196,7 +199,7 @@ public class VertxTokenValidationHelperTest {
 		when(httpServerResponse.setStatusCode(403)).thenReturn(httpServerResponse);
 		doNothing().when(httpServerResponse).end(Mockito.anyString());
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(""));
 		String[] roles= {"PARTNER_PROCESSOR"};
 		MosipUserDto md=vertxTokenValidationHelper.getTokenValidatedVertxUserResponse(restTemplate, routingContext, roles);
@@ -216,7 +219,7 @@ public class VertxTokenValidationHelperTest {
 		when(httpServerResponse.setStatusCode(Mockito.anyInt())).thenReturn(httpServerResponse);
 		doNothing().when(httpServerResponse).end(Mockito.anyString());
 		ReflectionTestUtils.setField(vertxTokenValidationHelper, "offlineTokenValidate", false);
-		String userInfoPath = issuerURI + "mosip" + userInfo;
+		String userInfoPath = issuerInternalURI + "mosip" + userInfo;
 		when(restTemplate.exchange(Mockito.eq(userInfoPath), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(""));
 		String[] roles= {"PARTNER_PROCESSOR"};
 		MosipUserDto md=vertxTokenValidationHelper.getTokenValidatedVertxUserResponse(restTemplate, routingContext, roles);

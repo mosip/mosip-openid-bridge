@@ -72,8 +72,17 @@ public class ValidateTokenHelper {
     @Value("${auth.server.admin.issuer.domain.validate:true}")
     private boolean validateIssuerDomain;
 
+    /**
+     * This should be same as the value in the token
+     */
     @Value("${auth.server.admin.issuer.uri:}")
     private String issuerURI;
+
+    /**
+     * When we validate a token we use the issuerURL. In case you want us to validate using an internal URL then the same has to be configured here.
+     */
+    @Value("${auth.server.admin.issuer.internal.uri:}")
+    private String issuerInternalURI;
 
     @Value("${auth.server.admin.audience.claim.validate:true}")
     private boolean validateAudClaim;
@@ -93,6 +102,7 @@ public class ValidateTokenHelper {
         String applName = getApplicationName();
         this.allowedAudience = (List<String>) environment.getProperty("auth.server.admin.allowed.audience." + applName, List.class,
                     environment.getProperty("auth.server.admin.allowed.audience", List.class, Collections.EMPTY_LIST));
+        issuerInternalURI = issuerInternalURI==""?issuerURI:issuerInternalURI;
     }
 
     private String getApplicationName() {
@@ -159,6 +169,11 @@ public class ValidateTokenHelper {
         return matchFound;
     }
 
+    /**
+     * This method validates if the issuer domain in the JWT matches the issuerURI configured in the properties.
+     * @param decodedJWT
+     * @return
+     */
     private boolean getTokenIssuerDomain(DecodedJWT decodedJWT) {
         String domain = decodedJWT.getClaim(AuthAdapterConstant.ISSUER).asString();
         try {
@@ -194,7 +209,7 @@ public class ValidateTokenHelper {
     private PublicKey getIssuerPublicKey(String keyId, String certsPath, String realm) {
         try {
             
-            URI uri = new URI(issuerURI + realm + certsPath).normalize();
+            URI uri = new URI(issuerInternalURI + realm + certsPath).normalize();
             JwkProvider provider = new UrlJwkProvider(uri.toURL());
             Jwk jwk = provider.get(keyId);
             return jwk.getPublicKey();
@@ -247,7 +262,7 @@ public class ValidateTokenHelper {
     }
 
     public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, RestTemplate restTemplate) {
-        if ("".equals(issuerURI)) {
+        if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
             LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
             return ImmutablePair.of(HttpStatus.EXPECTATION_FAILED, null);
         }
@@ -260,7 +275,7 @@ public class ValidateTokenHelper {
         HttpStatusCodeException statusCodeException = null;
 		try {
             String realm = getRealM(decodedJWT);
-            String userInfoPath = issuerURI + realm + userInfo;
+            String userInfoPath = issuerInternalURI + realm + userInfo;
 			response = restTemplate.exchange(userInfoPath, HttpMethod.GET, entity, String.class);
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			LOGGER.error("Token validation failed for accessToken {}", jwtToken, e);
@@ -293,7 +308,7 @@ public class ValidateTokenHelper {
 	}
 
     public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, WebClient webClient) {
-        if ("".equals(issuerURI)) {
+        if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
             LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
             return ImmutablePair.of(HttpStatus.EXPECTATION_FAILED, null);
         }
@@ -302,7 +317,7 @@ public class ValidateTokenHelper {
         HttpHeaders headers = new HttpHeaders();
 		headers.add(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER, AuthAdapterConstant.BEARER_STR + jwtToken);
 		String realm = getRealM(decodedJWT);
-        String userInfoPath = issuerURI + realm + userInfo;
+        String userInfoPath = issuerInternalURI + realm + userInfo;
         ClientResponse response = webClient.method(HttpMethod.GET)
                                            .uri(userInfoPath)
                                            .headers(httpHeaders -> {
