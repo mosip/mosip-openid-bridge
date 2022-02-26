@@ -43,6 +43,9 @@ public class TokenHelper {
 	@Value("${auth.server.admin.issuer.uri:}")
     private String issuerURI;
 	
+	@Value("${auth.server.admin.issuer.internal.uri:}")
+	    private String issuerInternalURI;
+
 	@Autowired
 	private ObjectMapper mapper;
 
@@ -57,7 +60,8 @@ public class TokenHelper {
 			LOGGER.warn("OIDC Service URL is not available in config file, not requesting for new auth token.");
 			return null;
 		}
-		LOGGER.info("Requesting for new Token for the provided OIDC Service: {}", issuerURI);
+		issuerInternalURI = issuerInternalURI==""?issuerURI:issuerInternalURI;
+		LOGGER.info("Requesting for new Token for the provided OIDC Service: {}", issuerInternalURI);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -72,7 +76,7 @@ public class TokenHelper {
 			String realm = getRealmIdFromAppId(appId);
 			if (Objects.isNull(realm))
 				return null;
-			String tokenUrl = new StringBuilder(issuerURI).append(realm).append(tokenPath).toString();
+			String tokenUrl = new StringBuilder(issuerInternalURI).append(realm).append(tokenPath).toString();
 			response = restTemplate.postForEntity(tokenUrl, request, String.class);
 		} catch (HttpServerErrorException | HttpClientErrorException e) {
 			LOGGER.error("error connecting to auth service {}", e.getResponseBodyAsString());
@@ -106,7 +110,8 @@ public class TokenHelper {
 			LOGGER.warn("OIDC Service URL is not available in config file, not requesting for new auth token.");
 			return null;
 		}
-		LOGGER.info("Requesting for new Token for the provided OIDC Service(WebClient): {}", issuerURI);
+		issuerInternalURI = issuerInternalURI==""?issuerURI:issuerInternalURI;
+		LOGGER.info("Requesting for new Token for the provided OIDC Service(WebClient): {}", issuerInternalURI);
 		MultiValueMap<String, String> valueMap = new LinkedMultiValueMap<String, String>();
 		valueMap.add(AuthAdapterConstant.GRANT_TYPE, AuthAdapterConstant.CLIENT_CREDENTIALS);
 		valueMap.add(AuthAdapterConstant.CLIENT_ID, clientId);
@@ -115,7 +120,7 @@ public class TokenHelper {
 		String realm = getRealmIdFromAppId(appId);
 		if (Objects.isNull(realm))
 			return null;
-		String tokenUrl = new StringBuilder(issuerURI).append(realm).append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append(realm).append(tokenPath).toString();
 		ClientResponse response = webClient.method(HttpMethod.POST)
 										   .uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())
 										   .contentType(MediaType.APPLICATION_FORM_URLENCODED)
