@@ -40,6 +40,9 @@ public class TokenHelperTest {
 	@Value("${auth.server.admin.issuer.uri:}")
     private String issuerURI;
 	
+	@Value("${auth.server.admin.issuer.internal.uri:}")
+    private String issuerInternalURI;
+
 	@Autowired
 	private ObjectMapper mapper;
 
@@ -63,7 +66,7 @@ public class TokenHelperTest {
 	
 	@Test
 	public void getClientTokenTest() throws Exception {
-		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{\"access_token\":\"mock-token\"}";
 		when(restTemplate.postForEntity(Mockito.eq(tokenUrl),Mockito.any(),Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(resp));
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", restTemplate);
@@ -72,7 +75,7 @@ public class TokenHelperTest {
 	
 	@Test
 	public void getClientTokenHttpExceptionTest() throws Exception {
-		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{\"error\":\"not found\"}";
 		when(restTemplate.postForEntity(Mockito.eq(tokenUrl),Mockito.any(),Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "404", resp.getBytes(),
 				Charset.defaultCharset()));;
@@ -82,7 +85,7 @@ public class TokenHelperTest {
 	
 	@Test(expected = AuthRestException.class)
 	public void getClientTokenAuthRestExceptionTest() throws Exception {
-		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp="{ \"errors\": [{\"errorCode\":\"KER-ATH-001\",\"message\":\"no token\"}]}";
 		when(restTemplate.postForEntity(Mockito.eq(tokenUrl),Mockito.any(),Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(resp));
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", restTemplate);
@@ -91,7 +94,7 @@ public class TokenHelperTest {
 	
 	@Test
 	public void getTokenValidatedVertxUserResponse() throws Exception {
-		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{error\":\"not found\"}";
 		when(restTemplate.postForEntity(Mockito.eq(tokenUrl),Mockito.any(),Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(resp));
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", restTemplate);
@@ -101,7 +104,7 @@ public class TokenHelperTest {
 	
 	@Test
 	public void getClientTokenWebClientTest() throws Exception {
-		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{\"access_token\":\"mock-token\"}";
 		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
 		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
@@ -116,7 +119,7 @@ public class TokenHelperTest {
 	
 	@Test
 	public void getClientTokenWebClientErrorTest() throws Exception {
-		String tokenUrl = new StringBuilder(issuerURI).append("mosip").append(tokenPath).toString();
+		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{\"access_token\":\"mock-token\"}";
 		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
 		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
