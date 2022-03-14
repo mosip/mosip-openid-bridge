@@ -5,7 +5,6 @@
 
 ## Overview
 Contains the following components:
-
 1. [Kernel Auth Adapater](kernel/kernel-auth-adapter)
 2. [Kernel Auth Service](kernel/kernel-auth-service)
 
