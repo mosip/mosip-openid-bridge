@@ -257,10 +257,10 @@ public class UinServiceImpl implements UinService {
 				&& (channelList!=null && channelList.contains(AuthConstant.PHONE) && channelList.contains(AuthConstant.EMAIL))) {
 			throw new AuthManagerException(OTPErrorCode.EMAILPHONENOTREGISTERED.getErrorCode(),
 					OTPErrorCode.EMAILPHONENOTREGISTERED.getErrorMessage());
-		} else if (StringUtils.isBlank(phone) && channelList.contains(AuthConstant.PHONE)) {
+		} else if (StringUtils.isBlank(phone) && channelList!=null && channelList.contains(AuthConstant.PHONE)) {
 			throw new AuthManagerException(OTPErrorCode.PHONENOTREGISTERED.getErrorCode(),
 					OTPErrorCode.PHONENOTREGISTERED.getErrorMessage());
-		} else if (StringUtils.isBlank(email) && channelList.contains(AuthConstant.EMAIL)) {
+		} else if (StringUtils.isBlank(email) && channelList!=null && channelList.contains(AuthConstant.EMAIL)) {
 			throw new AuthManagerException(OTPErrorCode.EMAILNOTREGISTERED.getErrorCode(),
 					OTPErrorCode.EMAILNOTREGISTERED.getErrorMessage());
 		}

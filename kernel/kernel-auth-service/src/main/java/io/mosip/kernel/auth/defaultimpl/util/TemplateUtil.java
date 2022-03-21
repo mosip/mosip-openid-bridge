@@ -141,8 +141,8 @@ public class TemplateUtil {
 			return otpEmailTemplate;
 		} else if (SECONDARY.equals(environment.getProperty(MOSIP_NOTIFICATION_LANGUAGE_TYPE))) {
 			otpEmailTemplate = new OTPEmailTemplate();
-			primaryLanguage = environment.getProperty(ENV_SECONDARY_LANGUAGE);
-			if (primaryLanguage == null) {
+			secondaryLanguage = environment.getProperty(ENV_SECONDARY_LANGUAGE);
+			if (secondaryLanguage == null) {
 				throw new AuthManagerException(OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorCode(),
 						OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorMessage());
 			}
