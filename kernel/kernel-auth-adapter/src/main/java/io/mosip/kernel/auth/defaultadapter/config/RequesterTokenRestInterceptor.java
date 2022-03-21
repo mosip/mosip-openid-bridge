@@ -21,7 +21,6 @@ public class RequesterTokenRestInterceptor implements ClientHttpRequestIntercept
 		return execution.execute(request, body);
 	}
  
-	// TODO need to add support for vertx context
 	private void addHeadersToRequest(HttpRequest httpRequest, byte[] bytes) {
 		HttpHeaders headers = httpRequest.getHeaders();
 		AuthUserDetails authUserDetails = getAuthUserDetails();
@@ -37,14 +36,6 @@ public class RequesterTokenRestInterceptor implements ClientHttpRequestIntercept
 
 			authUserDetails = (AuthUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		return authUserDetails;
-	}
-
-	// This methods set token send by resource server to context
-	private void getHeadersFromResponse(ClientHttpResponse clientHttpResponse) {
-		HttpHeaders headers = clientHttpResponse.getHeaders();
-		String responseToken = headers.get(AuthAdapterConstant.AUTH_HEADER_COOKIE).get(0)
-				.replaceAll(AuthAdapterConstant.AUTH_HEADER_COOKIE, "");
-		getAuthUserDetails().setToken(responseToken);
 	}
 
 }

@@ -41,10 +41,10 @@ public class TokenHelper {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TokenHelper.class);
 
 	@Value("${auth.server.admin.issuer.uri:}")
-    private String issuerURI;
-	
+	private String issuerURI;
+
 	@Value("${auth.server.admin.issuer.internal.uri:}")
-	    private String issuerInternalURI;
+	private String issuerInternalURI;
 
 	@Autowired
 	private ObjectMapper mapper;
@@ -53,14 +53,14 @@ public class TokenHelper {
 	private Map<String, String> realmMap;
 
 	@Value("${auth.server.admin.oidc.token.path:/protocol/openid-connect/token}")
-    private String tokenPath;
+	private String tokenPath;
 
 	public String getClientToken(String clientId, String clientSecret, String appId, RestTemplate restTemplate) {
 		if ("".equals(issuerURI)) {
 			LOGGER.warn("OIDC Service URL is not available in config file, not requesting for new auth token.");
 			return null;
 		}
-		issuerInternalURI = issuerInternalURI==""?issuerURI:issuerInternalURI;
+		issuerInternalURI = issuerInternalURI.trim().isEmpty() ? issuerURI : issuerInternalURI;
 		LOGGER.info("Requesting for new Token for the provided OIDC Service: {}", issuerInternalURI);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -82,7 +82,8 @@ public class TokenHelper {
 			LOGGER.error("error connecting to auth service {}", e.getResponseBodyAsString());
 		}
 		if (response == null) {
-			LOGGER.error("error connecting to auth service {}", AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
+			LOGGER.error("error connecting to auth service {}",
+					AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 			return null;
 		}
 		String responseBody = response.getBody();
@@ -92,7 +93,7 @@ public class TokenHelper {
 		}
 		try {
 			JsonNode jsonNode = mapper.readTree(responseBody);
-			String accessToken = jsonNode.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
+			String accessToken = jsonNode.get(AuthAdapterConstant.ACCESS_TOKEN).asText();
 			if (Objects.nonNull(accessToken)) {
 				LOGGER.info("Found Token in response body and returning the Token");
 				return accessToken;
@@ -100,8 +101,9 @@ public class TokenHelper {
 		} catch (IOException e) {
 			LOGGER.error("Error Parsing Response data {}", e.getMessage(), e);
 		}
-		
-		LOGGER.error("Error connecting to OIDC service (RestTemplate) {} or UNKNOWN Error.", AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
+
+		LOGGER.error("Error connecting to OIDC service (RestTemplate) {} or UNKNOWN Error.",
+				AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 		return null;
 	}
 
@@ -110,7 +112,7 @@ public class TokenHelper {
 			LOGGER.warn("OIDC Service URL is not available in config file, not requesting for new auth token.");
 			return null;
 		}
-		issuerInternalURI = issuerInternalURI==""?issuerURI:issuerInternalURI;
+		issuerInternalURI = issuerInternalURI.trim().isEmpty()?issuerURI:issuerInternalURI;
 		LOGGER.info("Requesting for new Token for the provided OIDC Service(WebClient): {}", issuerInternalURI);
 		MultiValueMap<String, String> valueMap = new LinkedMultiValueMap<String, String>();
 		valueMap.add(AuthAdapterConstant.GRANT_TYPE, AuthAdapterConstant.CLIENT_CREDENTIALS);
@@ -126,9 +128,11 @@ public class TokenHelper {
 										   .contentType(MediaType.APPLICATION_FORM_URLENCODED)
 										   .body(BodyInserters.fromFormData(valueMap))
 										   .exchange().block();
-		if (response.statusCode() == HttpStatus.OK) {
+		if (response !=null && response.statusCode() == HttpStatus.OK) {
 			ObjectNode responseBody = response.bodyToMono(ObjectNode.class).block();
-			String accessToken = responseBody.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
+			String accessToken = null;
+			if(responseBody!=null)
+				accessToken = responseBody.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
 			if (Objects.nonNull(accessToken)) {
 				LOGGER.info("Found Token in response body and returning the Token(WebClient)");
 				return accessToken;
@@ -143,9 +147,10 @@ public class TokenHelper {
 
 		if (realmMap.get(appId) != null) {
 			return realmMap.get(appId).toLowerCase();
-		} 
+		}
 
-		LOGGER.warn("Realm not configured in configuration for appId: " + appId + ", not requesting for new auth token.");
+		LOGGER.warn(
+				"Realm not configured in configuration for appId: " + appId + ", not requesting for new auth token.");
 		return null;
 	}
 }

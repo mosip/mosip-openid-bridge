@@ -244,6 +244,9 @@ public class UinServiceImpl implements UinService {
 
 	private void validate(Map<String, String> res, List<String> channelList) {
 		String notficationType = en.getProperty(MOSIP_NOTIFICATIONTYPE);
+		if(notficationType == null) {
+			throw new AuthManagerException(AuthErrorCode.SERVER_ERROR.getErrorCode(), "notification type null config is null");
+		}
 		String phone, email;
 		String[] notificationArray = notficationType.split("[\\|\\s]+");
 		List<String> notifyList = Arrays.asList(notificationArray);
@@ -251,7 +254,7 @@ public class UinServiceImpl implements UinService {
 		email = (String) res.get("email");
 		validateConfigChannel(notifyList, channelList);
 		if ((StringUtils.isBlank(phone) && StringUtils.isBlank(email))
-				&& (channelList.contains(AuthConstant.PHONE) && channelList.contains(AuthConstant.EMAIL))) {
+				&& (channelList!=null && channelList.contains(AuthConstant.PHONE) && channelList.contains(AuthConstant.EMAIL))) {
 			throw new AuthManagerException(OTPErrorCode.EMAILPHONENOTREGISTERED.getErrorCode(),
 					OTPErrorCode.EMAILPHONENOTREGISTERED.getErrorMessage());
 		} else if (StringUtils.isBlank(phone) && channelList.contains(AuthConstant.PHONE)) {

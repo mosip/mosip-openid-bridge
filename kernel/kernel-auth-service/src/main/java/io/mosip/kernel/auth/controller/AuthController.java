@@ -76,7 +76,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  *
  */
 
-@CrossOrigin
 @RestController
 @Tag(name = "authmanager", description = "Operation related to Authentication and Authorization")
 public class AuthController {
@@ -397,7 +396,10 @@ public class AuthController {
 		LOGGER.info("New refresh token obtained for app " + appId + " expires (access token) by " + mosipUserDtoToken.getAccessTokenExpTime() + " refresh token expires in " + mosipUserDtoToken.getRefreshTokenExpTime() );
 		Cookie cookie = createCookie(mosipUserDtoToken.getAccesstoken(), mosipEnvironment.getTokenExpiry());
 		res.addCookie(cookie);
-		res.addCookie(new Cookie("refresh_token", mosipUserDtoToken.getRefreshToken()));
+		Cookie refreshTokenCookie = new Cookie("refresh_token", mosipUserDtoToken.getRefreshToken());
+		refreshTokenCookie.setHttpOnly(true);
+		refreshTokenCookie.setSecure(isSecureCookie);
+		res.addCookie(refreshTokenCookie);
 		responseWrapper.setResponse(mosipUserDtoToken.getAuthNResponse());
 		return responseWrapper;
 	}
