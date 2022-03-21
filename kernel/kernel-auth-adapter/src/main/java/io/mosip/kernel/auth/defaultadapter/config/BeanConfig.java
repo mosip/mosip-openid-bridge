@@ -38,14 +38,15 @@ import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
 import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
+import io.mosip.kernel.core.util.EmptyCheckUtils;
 
 @Configuration
 @EnableScheduling
 public class BeanConfig {
-	
-	@Autowired 
-	private TokenHelper tokenHelper; 
-	
+
+	@Autowired
+	private TokenHelper tokenHelper;
+
 	@Autowired
 	private Environment environment;
 
@@ -61,7 +62,6 @@ public class BeanConfig {
 	@Autowired(required = false)
 	private LoadBalancerClient loadBalancerClient;
 
-	
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
@@ -100,10 +100,9 @@ public class BeanConfig {
 	}
 
 	@Bean
-	public RestTemplate selfTokenRestTemplate(
-			@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
-			@Autowired TokenHolder<String> cachedTokenObject
-			) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+	public RestTemplate selfTokenRestTemplate(@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
+			@Autowired TokenHolder<String> cachedTokenObject)
+			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
@@ -121,19 +120,19 @@ public class BeanConfig {
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		restTemplate = new RestTemplate(requestFactory);
-		restTemplate.setInterceptors(Collections
-				.singletonList(new SelfTokenRestInterceptor(environment, plainRestTemplate, cachedTokenObject, tokenHelper, 
-					tokenValidationHelper, applName)));
+		restTemplate.setInterceptors(Collections.singletonList(new SelfTokenRestInterceptor(environment,
+				plainRestTemplate, cachedTokenObject, tokenHelper, tokenValidationHelper, applName)));
 		// interceptor added in RestTemplatePostProcessor
 		return restTemplate;
 	}
 
 	@Bean
 	public WebClient plainWebClient() {
-		ExchangeFilterFunction filterFunction = (loadBalancerClient != null) ? new LoadBalancerExchangeFilterFunction(loadBalancerClient) :
-												(req, next) -> {
-													return next.exchange(req);
-												};
+		ExchangeFilterFunction filterFunction = (loadBalancerClient != null)
+				? new LoadBalancerExchangeFilterFunction(loadBalancerClient)
+				: (req, next) -> {
+					return next.exchange(req);
+				};
 		return WebClient.builder().filter(filterFunction).build();
 	}
 
@@ -147,7 +146,7 @@ public class BeanConfig {
 
 	@Bean
 	public WebClient webClient() {
-		
+
 		return WebClient.builder().filter((req, next) -> {
 			ClientRequest filtered = null;
 			if (SecurityContextHolder.getContext() != null
@@ -164,17 +163,20 @@ public class BeanConfig {
 	}
 
 	@Bean
-	public WebClient selfTokenWebClient(
-			@Autowired @Qualifier("plainWebClient") WebClient plainWebClient,
+	public WebClient selfTokenWebClient(@Autowired @Qualifier("plainWebClient") WebClient plainWebClient,
 			@Autowired TokenHolder<String> cachedTokenObject) {
 		String applName = getApplicationName();
-		return WebClient.builder().filter(new SelfTokenExchangeFilterFunction(environment, plainWebClient, cachedTokenObject, 
-				tokenHelper, tokenValidationHelper, applName)).build();
+		return WebClient.builder().filter(new SelfTokenExchangeFilterFunction(environment, plainWebClient,
+				cachedTokenObject, tokenHelper, tokenValidationHelper, applName)).build();
 	}
 
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
-		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
-		return appNamesList.get(0);
+		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+			return appNamesList.get(0);
+		} else {
+			throw new RuntimeException("Property spring.application.name not found");
+		}
 	}
 }

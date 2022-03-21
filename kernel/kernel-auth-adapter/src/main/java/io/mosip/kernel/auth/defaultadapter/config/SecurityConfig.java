@@ -41,6 +41,7 @@ import io.mosip.kernel.auth.defaultadapter.filter.AuthFilter;
 import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
+import io.mosip.kernel.core.util.EmptyCheckUtils;
 
 /**
  * Holds the main configuration for authentication and authorization using
@@ -98,18 +99,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private NoAuthenticationEndPoint noAuthenticationEndPoint;
 
-	//@ConditionalOnMissingBean(AuthenticationManager.class)
+	// @ConditionalOnMissingBean(AuthenticationManager.class)
 	@Bean
 	@SuppressWarnings("unchecked")
 	public AuthenticationManager authenticationManager() {
 		List<AuthenticationProvider> authProviders = new ArrayList<>();
 		String applName = getApplicationName();
-		List<String> otherAuthProviders = (List<String>) environment.getProperty("mosip.security.authentication.provider.beans.list." 
-							+ applName, List.class, Collections.EMPTY_LIST);
+		List<String> otherAuthProviders = (List<String>) environment.getProperty(
+				"mosip.security.authentication.provider.beans.list." + applName, List.class, Collections.EMPTY_LIST);
 		otherAuthProviders.stream().forEach(beanName -> {
 			try {
 				if (Objects.nonNull(beanName) && !beanName.equals("")) {
-					authProviders.add(applicationContext.getBean(beanName, AbstractUserDetailsAuthenticationProvider.class));
+					authProviders
+							.add(applicationContext.getBean(beanName, AbstractUserDetailsAuthenticationProvider.class));
 					LOGGER.info("Added Custom Auth Provider Bean in the list {} ", beanName);
 				}
 			} catch (Exception ex) {
@@ -120,7 +122,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		return new ProviderManager(authProviders);
 	}
 
-	//@ConditionalOnMissingBean(AbstractAuthenticationProcessingFilter.class)
+	// @ConditionalOnMissingBean(AbstractAuthenticationProcessingFilter.class)
 	@Bean
 	public AbstractAuthenticationProcessingFilter authFilter() {
 		RequestMatcher requestMatcher = new AntPathRequestMatcher("*");
@@ -131,8 +133,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	@Bean
-	public FilterRegistrationBean<AbstractAuthenticationProcessingFilter> registration(AbstractAuthenticationProcessingFilter filter) {
-		FilterRegistrationBean<AbstractAuthenticationProcessingFilter> registration = new FilterRegistrationBean<>(filter);
+	public FilterRegistrationBean<AbstractAuthenticationProcessingFilter> registration(
+			AbstractAuthenticationProcessingFilter filter) {
+		FilterRegistrationBean<AbstractAuthenticationProcessingFilter> registration = new FilterRegistrationBean<>(
+				filter);
 		registration.setEnabled(false);
 		return registration;
 	}
@@ -157,8 +161,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
-		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
-		return appNamesList.get(0);
+		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+			return appNamesList.get(0);
+		} else {
+			throw new RuntimeException("property spring.application.name is not found");
+		}
 	}
 
 }

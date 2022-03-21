@@ -109,10 +109,14 @@ public class TemplateUtil {
 			}
 			String emailSubject = getEmailData(otpUser, "email-subject-template", token, primaryLanguage,
 					secondaryLanguage);
-			String mergedEmailSubject = getMergedEmailContent(otp, emailSubject, otpUser.getTemplateVariables());
+			String mergedEmailSubject = null;
+			if (emailSubject != null)
+				mergedEmailSubject = getMergedEmailContent(otp, emailSubject, otpUser.getTemplateVariables());
 			String emailContent = getEmailData(otpUser, "email-content-template", token, primaryLanguage,
 					secondaryLanguage);
-			String mergedEmailContent = getMergedEmailContent(otp, emailContent, otpUser.getTemplateVariables());
+			String mergedEmailContent = null;
+			if (emailContent != null)
+				mergedEmailContent = getMergedEmailContent(otp, emailContent, otpUser.getTemplateVariables());
 			otpEmailTemplate.setEmailSubject(mergedEmailSubject);
 			otpEmailTemplate.setEmailContent(mergedEmailContent);
 			return otpEmailTemplate;
@@ -124,12 +128,14 @@ public class TemplateUtil {
 				throw new AuthManagerException(OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorCode(),
 						OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorMessage());
 			}
-			String emailSubject = getEmailData(otpUser, "email-subject-template", token, primaryLanguage,
-					null);
-			String mergedEmailSubject = getMergedEmailContent(otp, emailSubject, otpUser.getTemplateVariables());
-			String emailContent = getEmailData(otpUser, "email-content-template", token, primaryLanguage,
-					null);
-			String mergedEmailContent = getMergedEmailContent(otp, emailContent, otpUser.getTemplateVariables());
+			String emailSubject = getEmailData(otpUser, "email-subject-template", token, primaryLanguage, null);
+			String mergedEmailSubject = null;
+			if (emailSubject != null)
+				mergedEmailSubject = getMergedEmailContent(otp, emailSubject, otpUser.getTemplateVariables());
+			String emailContent = getEmailData(otpUser, "email-content-template", token, primaryLanguage, null);
+			String mergedEmailContent = null;
+			if (emailContent != null)
+				mergedEmailContent = getMergedEmailContent(otp, emailContent, otpUser.getTemplateVariables());
 			otpEmailTemplate.setEmailSubject(mergedEmailSubject);
 			otpEmailTemplate.setEmailContent(mergedEmailContent);
 			return otpEmailTemplate;
@@ -140,12 +146,14 @@ public class TemplateUtil {
 				throw new AuthManagerException(OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorCode(),
 						OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorMessage());
 			}
-			String emailSubject = getEmailData(otpUser, "email-subject-template", token, null,
-					secondaryLanguage);
-			String mergedEmailSubject = getMergedEmailContent(otp, emailSubject, otpUser.getTemplateVariables());
-			String emailContent = getEmailData(otpUser, "email-content-template", token, null,
-					secondaryLanguage);
-			String mergedEmailContent = getMergedEmailContent(otp, emailContent, otpUser.getTemplateVariables());
+			String emailSubject = getEmailData(otpUser, "email-subject-template", token, null, secondaryLanguage);
+			String mergedEmailSubject = null;
+			if (emailSubject != null)
+				mergedEmailSubject = getMergedEmailContent(otp, emailSubject, otpUser.getTemplateVariables());
+			String emailContent = getEmailData(otpUser, "email-content-template", token, null, secondaryLanguage);
+			String mergedEmailContent = null;
+			if (emailContent != null)
+				mergedEmailContent = getMergedEmailContent(otp, emailContent, otpUser.getTemplateVariables());
 			otpEmailTemplate.setEmailSubject(mergedEmailSubject);
 			otpEmailTemplate.setEmailContent(mergedEmailContent);
 			return otpEmailTemplate;
@@ -264,10 +272,14 @@ public class TemplateUtil {
 		}
 		String templateText = null;
 		OtpTemplateDto templateDto = null;
-		List<OtpTemplateDto> otpTemplateList = otpTemplateResponseDto.getTemplates();
-		if (otpTemplateList != null && otpTemplateList.size() > 0) {
-			templateDto = otpTemplateList.get(0);
-			templateText = templateDto.getFileText();
+		if (otpTemplateResponseDto != null) {
+			List<OtpTemplateDto> otpTemplateList = otpTemplateResponseDto.getTemplates();
+			if (otpTemplateList != null && otpTemplateList.size() > 0) {
+				templateDto = otpTemplateList.get(0);
+				templateText = templateDto.getFileText();
+			}
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
 		}
 		return templateText;
 	}
@@ -286,7 +298,10 @@ public class TemplateUtil {
 						OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorMessage());
 			}
 			String smsMessage = getEmailData(otpUser, "sms-template", token, primaryLanguage, secondaryLanguage);
-			String mergedMessage = getMergedEmailContent(otp, smsMessage, otpUser.getTemplateVariables());
+
+			String mergedMessage = null;
+			if (smsMessage != null)
+				mergedMessage = getMergedEmailContent(otp, smsMessage, otpUser.getTemplateVariables());
 			return mergedMessage;
 
 		} else if (PRIMARY.equals(environment.getProperty(MOSIP_NOTIFICATION_LANGUAGE_TYPE))) {
@@ -296,7 +311,9 @@ public class TemplateUtil {
 						OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorMessage());
 			}
 			String smsMessage = getEmailData(otpUser, "sms-template", token, primaryLanguage, secondaryLanguage);
-			String mergedMessage = getMergedEmailContent(otp, smsMessage, otpUser.getTemplateVariables());
+			String mergedMessage = null;
+			if (smsMessage != null)
+				mergedMessage = getMergedEmailContent(otp, smsMessage, otpUser.getTemplateVariables());
 			return mergedMessage;
 
 		} else if (SECONDARY.equals(environment.getProperty(MOSIP_NOTIFICATION_LANGUAGE_TYPE))) {
@@ -306,7 +323,9 @@ public class TemplateUtil {
 						OTPErrorCode.LANGUAGENOTCONFIGURED.getErrorMessage());
 			}
 			String smsMessage = getEmailData(otpUser, "sms-template", token, primaryLanguage, secondaryLanguage);
-			String mergedMessage = getMergedEmailContent(otp, smsMessage, otpUser.getTemplateVariables());
+			String mergedMessage = null;
+			if (smsMessage != null)
+				mergedMessage = getMergedEmailContent(otp, smsMessage, otpUser.getTemplateVariables());
 			return mergedMessage;
 		}
 		return null;

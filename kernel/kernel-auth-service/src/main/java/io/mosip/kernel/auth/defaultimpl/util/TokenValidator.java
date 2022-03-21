@@ -104,13 +104,15 @@ public class TokenValidator {
 	}
 
 	public String getKeycloakRealm(String token) {
-		String issuer=getissuer(token);
-		return issuer.substring(issuer.lastIndexOf("/")+1);
+		String issuer = getissuer(token);
+		return issuer.substring(issuer.lastIndexOf("/") + 1);
 	}
+
 	public String getissuer(String token) {
 		DecodedJWT decodedJWT = JWT.decode(token);
 		return decodedJWT.getClaim("iss").asString();
 	}
+
 	private Claims getClaims(String token) throws Exception {
 		String token_base = mosipEnvironment.getTokenBase();
 		String secret = mosipEnvironment.getJwtSecret();
@@ -201,13 +203,10 @@ public class TokenValidator {
 				LOGGER.debug("Token Valid " + claims.getId());
 				return true;
 			}
+			LOGGER.debug("Token Invalid " + claims.getId());
 		}
-		LOGGER.debug("Token Invalid " + claims.getId());
+
 		return false;
 	}
-	
-	
-	public static void main(String[] args) {
 
-	}
 }
