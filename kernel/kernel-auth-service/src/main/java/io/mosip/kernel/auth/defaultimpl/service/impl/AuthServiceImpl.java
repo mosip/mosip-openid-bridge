@@ -395,11 +395,7 @@ public class AuthServiceImpl implements AuthService {
 		ResponseEntity<AccessTokenResponse> response = authRestTemplate.postForEntity(
 				uriComponentsBuilder.buildAndExpand(pathParams).toUriString(), request, AccessTokenResponse.class);
 		AccessTokenResponse accessTokenResponse = null;
-		if (response != null) {
 			accessTokenResponse = response.getBody();
-		} else {
-			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
-		}
 		if (accessTokenResponse != null) {
 			LOGGER.info("secret key based authentication " + clientSecret.getClientId() + " realm " + realmId
 					+ " accesstoken expires in " + accessTokenResponse.getExpires_in() + " refresh token expires in "
