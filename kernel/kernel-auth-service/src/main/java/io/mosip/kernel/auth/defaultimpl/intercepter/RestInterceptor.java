@@ -28,10 +28,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
+import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
 import io.mosip.kernel.auth.defaultimpl.dto.AccessTokenResponse;
+import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.util.MemoryCache;
 import io.mosip.kernel.auth.defaultimpl.util.TokenValidator;
-
 
 /**
  * RestInterceptor for getting admin token
@@ -40,30 +41,24 @@ import io.mosip.kernel.auth.defaultimpl.util.TokenValidator;
  * @author Srinivasan
  *
  */
-//@Component
+
 public class RestInterceptor implements ClientHttpRequestInterceptor {
 
-	private static final Logger LOGGER= LoggerFactory.getLogger(RestInterceptor.class);
-	
-	//@Autowired
+	private static final Logger LOGGER = LoggerFactory.getLogger(RestInterceptor.class);
+
 	private MemoryCache<String, AccessTokenResponse> memoryCache;
 
-	//@Autowired
 	private TokenValidator tokenValidator;
 
-	//@Qualifier("authRestTemplate")
-	//@Autowired
 	private RestTemplate restTemplate;
-	
-	public RestInterceptor(MemoryCache<String, AccessTokenResponse> memoryCache,TokenValidator tokenValidator,RestTemplate restTemplate) {
-		this.memoryCache= memoryCache;
-		this.tokenValidator= tokenValidator;
-		this.restTemplate= restTemplate;
-		
-		
+
+	public RestInterceptor(MemoryCache<String, AccessTokenResponse> memoryCache, TokenValidator tokenValidator,
+			RestTemplate restTemplate) {
+		this.memoryCache = memoryCache;
+		this.tokenValidator = tokenValidator;
+		this.restTemplate = restTemplate;
+
 	}
-	
-	
 
 	@Value("${mosip.iam.open-id-url}")
 	private String keycloakOpenIdUrl;
@@ -80,7 +75,6 @@ public class RestInterceptor implements ClientHttpRequestInterceptor {
 	@Value("${mosip.keycloak.admin.secret.key}")
 	private String adminSecret;
 
-
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
 			throws IOException {
@@ -88,25 +82,24 @@ public class RestInterceptor implements ClientHttpRequestInterceptor {
 		if ((accessTokenResponse = memoryCache.get("adminToken")) != null) {
 			boolean accessTokenExpired = tokenValidator.isExpired(accessTokenResponse.getAccess_token());
 			boolean refreshTokenExpired = tokenValidator.isExpired(accessTokenResponse.getRefresh_token());
-			LOGGER.info("access token expired: " + accessTokenExpired + " ,refresh token expired: " + refreshTokenExpired);
-			if (refreshTokenExpired){
+			LOGGER.info(
+					"access token expired: " + accessTokenExpired + " ,refresh token expired: " + refreshTokenExpired);
+			if (refreshTokenExpired) {
 				accessTokenResponse = getAdminToken(false, null);
 			} else if (accessTokenExpired) {
 				accessTokenResponse = getAdminToken(true, accessTokenResponse.getRefresh_token());
 			}
-			
-			/* if (accessTokenExpired && refreshTokenExpired) {
-				accessTokenResponse = getAdminToken(false, null);
-			} else if (accessTokenExpired) {
-				accessTokenResponse = getAdminToken(true, accessTokenResponse.getRefresh_token());
-			} else if (refreshTokenExpired) {
-				accessTokenResponse = getAdminToken(false, null);
-			} */
+
 		} else {
 			accessTokenResponse = getAdminToken(false, null);
 		}
-		memoryCache.put("adminToken", accessTokenResponse);
-		request.getHeaders().add("Authorization", "Bearer " + accessTokenResponse.getAccess_token());
+		if (accessTokenResponse != null) {
+			memoryCache.put("adminToken", accessTokenResponse);
+			request.getHeaders().add("Authorization", "Bearer " + accessTokenResponse.getAccess_token());
+		} else {
+			throw new AuthManagerException(AuthErrorCode.REST_EXCEPTION.getErrorCode(),
+					"admin access token response is null");
+		}
 		return execution.execute(request, body);
 	}
 
@@ -125,15 +118,15 @@ public class RestInterceptor implements ClientHttpRequestInterceptor {
 		}
 
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(tokenRequestBody, headers);
-		ResponseEntity<AccessTokenResponse> response=null;
+		ResponseEntity<AccessTokenResponse> response = null;
 		try {
-		 response = restTemplate.postForEntity(
-				uriComponentsBuilder.buildAndExpand(pathParams).toUriString(), request, AccessTokenResponse.class);
-		}catch(HttpServerErrorException | HttpClientErrorException ex) {
+			response = restTemplate.postForEntity(uriComponentsBuilder.buildAndExpand(pathParams).toUriString(),
+					request, AccessTokenResponse.class);
+		} catch (HttpServerErrorException | HttpClientErrorException ex) {
 			LOGGER.error(ex.getMessage());
 		}
-		
-		return response.getBody();
+
+		return response != null ? response.getBody() : null;
 	}
 
 	private MultiValueMap<String, String> getAdminValueMap() {

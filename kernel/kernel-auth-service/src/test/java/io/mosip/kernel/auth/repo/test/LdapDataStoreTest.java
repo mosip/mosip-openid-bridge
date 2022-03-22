@@ -522,7 +522,7 @@ public class LdapDataStoreTest {
 		assertThat(dto.getRoles().get(0).getRoleName(),is("PROCESSOR"));
 	}
 	
-	@Test(expected = NullPointerException.class)
+	@Test(expected = AuthManagerException.class)
 	public void getAllRolesLdapExceptionTest() throws Exception  {
 
 		LdapConnection connection = Mockito.mock(LdapConnection.class);
@@ -1116,11 +1116,10 @@ public class LdapDataStoreTest {
 		
 		//getUserDetail
 		Dn searchBase = new Dn("ou=people,c=mycountry");
-		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile="
-				+ mobileNo + "))";;
+		String searchFilter ="(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile={0}))";
 		Attributes attributes = Mockito.mock(Attributes.class);
 		when(ldapContext.search(Mockito.eq(searchBase.getName()),
-				Mockito.eq(searchFilter), Mockito.any())).thenReturn(getChangePassNumingEnum(attributes));
+				Mockito.eq(searchFilter), Mockito.eq(new String[]{mobileNo}),Mockito.any())).thenReturn(getChangePassNumingEnum(attributes));
 		
 		
 		// method
@@ -1142,11 +1141,10 @@ public class LdapDataStoreTest {
 		
 		//getUserDetail
 		Dn searchBase = new Dn("ou=people,c=mycountry");
-		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile="
-				+ mobileNo + "))";;
+		String searchFilter ="(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile={0}))";
 		Attributes attributes = Mockito.mock(Attributes.class);
 		when(ldapContext.search(Mockito.eq(searchBase.getName()),
-				Mockito.eq(searchFilter), Mockito.any())).thenReturn(getEmptyNumingEnum(attributes));
+				Mockito.eq(searchFilter), Mockito.eq(new String[]{mobileNo}),Mockito.any())).thenReturn(getEmptyNumingEnum(attributes));
 		
 		
 		// method
@@ -1435,11 +1433,10 @@ public class LdapDataStoreTest {
 		
 		//getUserDetail
 		Dn searchBase = new Dn("ou=people,c=mycountry");
-		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile="
-				+ mobileNo + "))";;
+		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile={0}))";
 		Attributes attributes = Mockito.mock(Attributes.class);
 		when(ldapContext.search(Mockito.eq(searchBase.getName()),
-				Mockito.eq(searchFilter), Mockito.any())).thenReturn(getChangePassNumingEnum(attributes));
+				Mockito.eq(searchFilter),Mockito.eq(new String[]{mobileNo}), Mockito.any())).thenReturn(getChangePassNumingEnum(attributes));
 		
 		//get role
 		Attributes roleAttributes = Mockito.mock(Attributes.class);
@@ -1525,18 +1522,18 @@ public class LdapDataStoreTest {
 		
 		//getUserDetail
 		Dn searchBase = new Dn("ou=people,c=mycountry");
-		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile="
-				+ mobileNo + "))";;
+		
+		String searchFilter ="(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile={0}))";
 		Attributes attributes = Mockito.mock(Attributes.class);
 		when(ldapContext.search(Mockito.eq(searchBase.getName()),
-				Mockito.eq(searchFilter), Mockito.any())).thenThrow(new NamingException("connection rejected"));
+				Mockito.eq(searchFilter),Mockito.eq(new String[]{mobileNo}), Mockito.any())).thenThrow(new NamingException("connection rejected"));
 		
 		//get role
 		Attributes roleAttributes = Mockito.mock(Attributes.class);
 		Dn roleSearchBase = new Dn("ou=roles,c=mycountry");
 		String roleSearchFilter = "(&(objectClass=organizationalRole)(roleOccupant=uid=" + "mockuser" + ",ou=people,c=mycountry))";
 		when(ldapContext.search(Mockito.eq(roleSearchBase.getName()),
-				Mockito.eq(roleSearchFilter), Mockito.any())).thenReturn(getChangePassNumingEnum(roleAttributes));
+				Mockito.eq(roleSearchFilter),Mockito.eq(new String[]{mobileNo}),Mockito.any())).thenReturn(getChangePassNumingEnum(roleAttributes));
 		javax.naming.directory.Attribute roleAttribute = Mockito.mock(javax.naming.directory.Attribute.class);
 		when(roleAttributes.get("cn")).thenReturn(roleAttribute);
 		when(roleAttribute.get()).thenReturn("PROCESSOR");

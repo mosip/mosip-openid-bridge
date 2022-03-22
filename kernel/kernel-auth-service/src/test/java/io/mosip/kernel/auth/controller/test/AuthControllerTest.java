@@ -23,13 +23,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.controller.AuthController;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
-import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
+import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
 import io.mosip.kernel.auth.defaultimpl.dto.UserDetailsRequestDto;
 import io.mosip.kernel.auth.test.AuthTestBootApplication;
 import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
@@ -473,8 +474,22 @@ public class AuthControllerTest {
 		Cookie cookie = new Cookie("state", "mockstate");
 		when(authService.loginRedirect(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(accessTokenResponse);
-		mockMvc.perform(get("/login-redirect/abc?state=mockstate&session_state=mock-session-state&code=mockcode")
+		mockMvc.perform(get("/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
 				.contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().is3xxRedirection());
+	}
+	
+	@Test
+	public void loginRedirectExceptionTest() throws Exception {
+
+		AccessTokenResponseDTO accessTokenResponse = new AccessTokenResponseDTO();
+		accessTokenResponse.setAccessToken("mock-access-token");
+		accessTokenResponse.setExpiresIn("111");
+		Cookie cookie = new Cookie("state", "mockstate");
+		when(authService.loginRedirect(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+				.thenReturn(accessTokenResponse);
+		mockMvc.perform(get("/login-redirect/aHR0cDovL2FiOjUwMDAv?state=mockstate&session_state=mock-session-state&code=mockcode")
+				.contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.errors[0].errorCode", is(AuthErrorCode.DOMAIN_EXCEPTION.getErrorCode())));
+		
 	}
 
 	@Test

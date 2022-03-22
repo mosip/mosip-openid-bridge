@@ -128,10 +128,11 @@ public class OTPServiceImpl implements OTPService {
 
 	@Value("${mosip.kernel.prereg.realm-id}")
 	private String preregRealmId;
-	
+
 	@Autowired
 	private MemoryCache<String, AccessTokenResponse> memoryCache;
 
+	// TODO remove this endpoint
 	@Override
 	public AuthNResponseDto sendOTP(MosipUserDto mosipUserDto, List<String> otpChannel, String appId) {
 		AuthNResponseDto authNResponseDto = null;
@@ -143,7 +144,12 @@ public class OTPServiceImpl implements OTPService {
 			// token = tokenService.getInternalTokenGenerationService();
 			AccessTokenResponse accessTokenResponse = getAuthAccessToken(authClientID,
 					"050c7e61-e415-4390-a1ac-03e1624e2b1d", realmId);
-			token =  accessTokenResponse.getAccess_token();
+
+			if (accessTokenResponse != null) {
+				token = accessTokenResponse.getAccess_token();
+			} else {
+				throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "responsebody is null");
+			}
 		} catch (HttpClientErrorException | HttpServerErrorException ex) {
 			List<ServiceError> validationErrorsList = ExceptionUtils.getServiceErrorList(ex.getResponseBodyAsString());
 
@@ -178,17 +184,21 @@ public class OTPServiceImpl implements OTPService {
 			authNResponseDto.setMessage(otpGenerateResponseDto.getStatus());
 			return authNResponseDto;
 		}
-		for (String channel : otpChannel) {
-			switch (channel) {
-			case AuthConstant.EMAIL:
-				emailMessage = getOtpEmailMessage(otpGenerateResponseDto, appId, token);
-				otpEmailSendResponseDto = sendOtpByEmail(emailMessage, mosipUserDto.getMail(), token);
-				break;
-			case AuthConstant.PHONE:
-				mobileMessage = getOtpSmsMessage(otpGenerateResponseDto, appId, token);
-				otpSmsSendResponseDto = sendOtpBySms(mobileMessage, mosipUserDto.getMobile(), token);
-				break;
+		if (otpGenerateResponseDto != null) {
+			for (String channel : otpChannel) {
+				switch (channel) {
+				case AuthConstant.EMAIL:
+					emailMessage = getOtpEmailMessage(otpGenerateResponseDto, appId, token);
+					otpEmailSendResponseDto = sendOtpByEmail(emailMessage, mosipUserDto.getMail(), token);
+					break;
+				case AuthConstant.PHONE:
+					mobileMessage = getOtpSmsMessage(otpGenerateResponseDto, appId, token);
+					otpSmsSendResponseDto = sendOtpBySms(mobileMessage, mosipUserDto.getMobile(), token);
+					break;
+				}
 			}
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "otpGenerateResponseDto is null");
 		}
 		if (otpEmailSendResponseDto != null) {
 			authNResponseDto = new AuthNResponseDto();
@@ -229,7 +239,12 @@ public class OTPServiceImpl implements OTPService {
 				throw new AuthManagerException(String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e);
 			}
 		}
-		List<OtpTemplateDto> otpTemplateList = otpTemplateResponseDto.getTemplates();
+		List<OtpTemplateDto> otpTemplateList = null;
+		if (otpTemplateResponseDto != null) {
+			otpTemplateList = otpTemplateResponseDto.getTemplates();
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "otpTemplateResponseDto is null");
+		}
 		for (OtpTemplateDto otpTemplateDto : otpTemplateList) {
 			if (otpTemplateDto.getId().toLowerCase().equals(appId.toLowerCase())) {
 				template = otpTemplateDto.getFileText();
@@ -237,7 +252,8 @@ public class OTPServiceImpl implements OTPService {
 			}
 		}
 		String otp = otpGenerateResponseDto.getOtp();
-		template = template.replace("$otp", otp);
+		if (template != null)
+			template = template.replace("$otp", otp);
 		return template;
 	}
 
@@ -267,7 +283,12 @@ public class OTPServiceImpl implements OTPService {
 				}
 			}
 			String template = null;
-			List<OtpTemplateDto> otpTemplateList = otpTemplateResponseDto.getTemplates();
+			List<OtpTemplateDto> otpTemplateList = null;
+			if (otpTemplateResponseDto != null) {
+				otpTemplateList = otpTemplateResponseDto.getTemplates();
+			} else {
+				throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
+			}
 			for (OtpTemplateDto otpTemplateDto : otpTemplateList) {
 				if (otpTemplateDto.getId().toLowerCase().equals(appId.toLowerCase())) {
 					template = otpTemplateDto.getFileText();
@@ -275,7 +296,8 @@ public class OTPServiceImpl implements OTPService {
 				}
 			}
 			String otp = otpGenerateResponseDto.getOtp();
-			template = template.replace("$otp", otp);
+			if (template != null)
+				template = template.replace("$otp", otp);
 			return template;
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			String message = e.getResponseBodyAsString();
@@ -297,18 +319,14 @@ public class OTPServiceImpl implements OTPService {
 		map.add("mailContent", message);
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 		try {
-			try {
-				response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-			} catch (HttpServerErrorException | HttpClientErrorException e) {
-				String error = e.getResponseBodyAsString();
-			} catch (RestClientException e) {
-				e.printStackTrace();
-			}
+			response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 		} catch (HttpServerErrorException | HttpClientErrorException e) {
-			String error = e.getResponseBodyAsString();
+			throw new AuthManagerException(AuthErrorCode.REST_EXCEPTION.getErrorCode(), e.getResponseBodyAsString());
+		} catch (RestClientException e) {
+			throw new AuthManagerException(AuthErrorCode.REST_EXCEPTION.getErrorCode(), e.getMessage());
 		}
 
-		if (response.getStatusCode().equals(HttpStatus.OK)) {
+		if (response != null && response.getStatusCode().equals(HttpStatus.OK)) {
 			String responseBody = response.getBody();
 			List<ServiceError> validationErrorsList = null;
 			validationErrorsList = ExceptionUtils.getServiceErrorList(responseBody);
@@ -371,7 +389,11 @@ public class OTPServiceImpl implements OTPService {
 		String realm = appId;
 		try {
 			accessTokenResponse = getAuthAccessToken(authClientID, authSecret, realmId);
-			token = accessTokenResponse.getAccess_token();
+			if (accessTokenResponse != null)
+				token = accessTokenResponse.getAccess_token();
+			else {
+				throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
+			}
 		} catch (Exception e) {
 			throw new AuthManagerException(String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e);
 		}
@@ -401,9 +423,13 @@ public class OTPServiceImpl implements OTPService {
 			}
 			if (otpResponse.getStatus() != null && otpResponse.getStatus().equals("success")) {
 				String expTime = accessTokenResponse.getExpires_in();
-				mosipUserDtoToken = new MosipUserTokenDto(mosipUser, responseAccessTokenResponse.getAccess_token(),
-						responseAccessTokenResponse.getRefresh_token(), Long.parseLong(expTime), null, null,
-						Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
+				if (responseAccessTokenResponse != null) {
+					mosipUserDtoToken = new MosipUserTokenDto(mosipUser, responseAccessTokenResponse.getAccess_token(),
+							responseAccessTokenResponse.getRefresh_token(), Long.parseLong(expTime), null, null,
+							Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
+				} else {
+					throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
+				}
 				mosipUserDtoToken.setMessage(otpResponse.getMessage());
 				mosipUserDtoToken.setStatus(otpResponse.getStatus());
 			} else {
@@ -452,28 +478,34 @@ public class OTPServiceImpl implements OTPService {
 				throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), ex.getMessage(), ex);
 			}
 		}
-		OtpGenerateResponseDto otpGenerateResponseDto = oTPGenerateService.generateOTP(mosipUser,
-				accessTokenResponse.getAccess_token());
+		OtpGenerateResponseDto otpGenerateResponseDto = null;
+		if (accessTokenResponse != null) {
+			otpGenerateResponseDto = oTPGenerateService.generateOTP(mosipUser, accessTokenResponse.getAccess_token());
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
+		}
 		if (otpGenerateResponseDto != null && otpGenerateResponseDto.getStatus().equals("USER_BLOCKED")) {
 			authNResponseDto = new AuthNResponseDto();
 			authNResponseDto.setStatus(AuthConstant.FAILURE_STATUS);
 			authNResponseDto.setMessage(otpGenerateResponseDto.getStatus());
 			return authNResponseDto;
 		}
-		for (String channel : otpUser.getOtpChannel()) {
-			switch (channel.toLowerCase()) {
-			case AuthConstant.EMAIL:
-				emailTemplate = templateUtil.getEmailTemplate(otpGenerateResponseDto.getOtp(), otpUser,
-						accessTokenResponse.getAccess_token());
-				otpEmailSendResponseDto = sendOtpByEmail(emailTemplate, mosipUser.getMail(),
-						accessTokenResponse.getAccess_token());
-				break;
-			case AuthConstant.PHONE:
-				mobileMessage = templateUtil.getOtpSmsMessage(otpGenerateResponseDto.getOtp(), otpUser,
-						accessTokenResponse.getAccess_token());
-				otpSmsSendResponseDto = sendOtpBySms(mobileMessage, mosipUser.getMobile(),
-						accessTokenResponse.getAccess_token());
-				break;
+		if (otpGenerateResponseDto != null) {
+			for (String channel : otpUser.getOtpChannel()) {
+				switch (channel.toLowerCase()) {
+				case AuthConstant.EMAIL:
+					emailTemplate = templateUtil.getEmailTemplate(otpGenerateResponseDto.getOtp(), otpUser,
+							accessTokenResponse.getAccess_token());
+					otpEmailSendResponseDto = sendOtpByEmail(emailTemplate, mosipUser.getMail(),
+							accessTokenResponse.getAccess_token());
+					break;
+				case AuthConstant.PHONE:
+					mobileMessage = templateUtil.getOtpSmsMessage(otpGenerateResponseDto.getOtp(), otpUser,
+							accessTokenResponse.getAccess_token());
+					otpSmsSendResponseDto = sendOtpBySms(mobileMessage, mosipUser.getMobile(),
+							accessTokenResponse.getAccess_token());
+					break;
+				}
 			}
 		}
 
@@ -494,7 +526,7 @@ public class OTPServiceImpl implements OTPService {
 	}
 
 	@Override
-	public AuthNResponseDto sendOTP(MosipUserDto mosipUser, OtpUser otpUser,String appId) throws Exception {
+	public AuthNResponseDto sendOTP(MosipUserDto mosipUser, OtpUser otpUser, String appId) throws Exception {
 		AuthNResponseDto authNResponseDto = null;
 		OtpEmailSendResponseDto otpEmailSendResponseDto = null;
 		SmsResponseDto otpSmsSendResponseDto = null;
@@ -503,7 +535,7 @@ public class OTPServiceImpl implements OTPService {
 		AccessTokenResponse accessTokenResponse = null;
 		authOtpValidator.validateOTPUser(otpUser);
 		try {
-			accessTokenResponse = getAuthAccessToken(authClientID, authSecret,appId);
+			accessTokenResponse = getAuthAccessToken(authClientID, authSecret, appId);
 		} catch (HttpClientErrorException | HttpServerErrorException ex) {
 			List<ServiceError> validationErrorsList = ExceptionUtils.getServiceErrorList(ex.getResponseBodyAsString());
 
@@ -528,31 +560,36 @@ public class OTPServiceImpl implements OTPService {
 				throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), ex.getMessage(), ex);
 			}
 		}
-		OtpGenerateResponseDto otpGenerateResponseDto = oTPGenerateService.generateOTP(mosipUser,
-				accessTokenResponse.getAccess_token());
+		OtpGenerateResponseDto otpGenerateResponseDto = null;
+		if (accessTokenResponse != null) {
+			otpGenerateResponseDto = oTPGenerateService.generateOTP(mosipUser, accessTokenResponse.getAccess_token());
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response is null");
+		}
 		if (otpGenerateResponseDto != null && otpGenerateResponseDto.getStatus().equals("USER_BLOCKED")) {
 			authNResponseDto = new AuthNResponseDto();
 			authNResponseDto.setStatus(AuthConstant.FAILURE_STATUS);
 			authNResponseDto.setMessage(otpGenerateResponseDto.getStatus());
 			return authNResponseDto;
 		}
-		for (String channel : otpUser.getOtpChannel()) {
-			switch (channel.toLowerCase()) {
-			case AuthConstant.EMAIL:
-				emailTemplate = templateUtil.getEmailTemplate(otpGenerateResponseDto.getOtp(), otpUser,
-						accessTokenResponse.getAccess_token());
-				otpEmailSendResponseDto = sendOtpByEmail(emailTemplate, mosipUser.getUserId(),
-						accessTokenResponse.getAccess_token());
-				break;
-			case AuthConstant.PHONE:
-				mobileMessage = templateUtil.getOtpSmsMessage(otpGenerateResponseDto.getOtp(), otpUser,
-						accessTokenResponse.getAccess_token());
-				otpSmsSendResponseDto = sendOtpBySms(mobileMessage, mosipUser.getUserId(),
-						accessTokenResponse.getAccess_token());
-				break;
+		if (otpGenerateResponseDto != null) {
+			for (String channel : otpUser.getOtpChannel()) {
+				switch (channel.toLowerCase()) {
+				case AuthConstant.EMAIL:
+					emailTemplate = templateUtil.getEmailTemplate(otpGenerateResponseDto.getOtp(), otpUser,
+							accessTokenResponse.getAccess_token());
+					otpEmailSendResponseDto = sendOtpByEmail(emailTemplate, mosipUser.getUserId(),
+							accessTokenResponse.getAccess_token());
+					break;
+				case AuthConstant.PHONE:
+					mobileMessage = templateUtil.getOtpSmsMessage(otpGenerateResponseDto.getOtp(), otpUser,
+							accessTokenResponse.getAccess_token());
+					otpSmsSendResponseDto = sendOtpBySms(mobileMessage, mosipUser.getUserId(),
+							accessTokenResponse.getAccess_token());
+					break;
+				}
 			}
 		}
-
 		if (otpEmailSendResponseDto != null && otpSmsSendResponseDto != null) {
 			authNResponseDto = new AuthNResponseDto();
 			authNResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
@@ -651,7 +688,7 @@ public class OTPServiceImpl implements OTPService {
 		MultiValueMap<String, String> tokenRequestBody = null;
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, realmId);
-		
+
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
 		tokenRequestBody = getClientValueMap(clientID, clientSecret);
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(tokenRequestBody, headers);
@@ -682,9 +719,9 @@ public class OTPServiceImpl implements OTPService {
 		map.add(AuthConstant.CLIENT_SECRET, clientSecret);
 		return map;
 	}
-	
+
 	private AccessTokenResponse getTokenFromMemoryCache(String realm) {
-		if(memoryCache.get(realm)!=null) {
+		if (memoryCache.get(realm) != null) {
 			return memoryCache.get(realm);
 		}
 		return null;

@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import io.mosip.kernel.auth.defaultadapter.config.Generated;
+
 public class AuthSuccessHandler implements AuthenticationSuccessHandler {
 
 	@Override

@@ -183,7 +183,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		if (EmptyCheckUtils.isNullEmpty(requestBody)) {
 			return responseWrapper;
 		}
-		
+
 		JsonNode reqNode = mapper.readTree(requestBody);
 		responseWrapper.setId(reqNode.path("id").asText());
 		responseWrapper.setVersion(reqNode.path("version").asText());
@@ -194,14 +194,18 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		if (object == null) {
 			return null;
 		}
-		
+
 		return mapper.writeValueAsString(object);
 	}
 
 	private String getApplicationName(Environment environment) {
 		String appNames = environment.getProperty("spring.application.name");
-		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
-		return appNamesList.get(0);
+		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+			return appNamesList.get(0);
+		} else {
+			throw new RuntimeException("property spring.application.name not found");
+		}
 	}
 
 }

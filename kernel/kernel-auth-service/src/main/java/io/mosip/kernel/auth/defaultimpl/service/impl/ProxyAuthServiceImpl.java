@@ -169,13 +169,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 	/**
 	 * Method used for validating Auth token
 	 * 
-	 * @param token
-	 *            token
+	 * @param token token
 	 * 
 	 * @return mosipUserDtoToken is of type {@link MosipUserTokenDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -188,13 +186,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 	/**
 	 * Method used for Authenticating User based on username and password
 	 * 
-	 * @param loginUser
-	 *            is of type {@link LoginUser}
+	 * @param loginUser is of type {@link LoginUser}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -207,13 +203,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 	/**
 	 * Method used for sending OTP
 	 * 
-	 * @param otpUser
-	 *            is of type {@link OtpUser}
+	 * @param otpUser is of type {@link OtpUser}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -257,13 +251,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 	/**
 	 * Method used for Authenticating User based with username and OTP
 	 * 
-	 * @param userOtp
-	 *            is of type {@link UserOtp}
+	 * @param userOtp is of type {@link UserOtp}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -278,26 +270,23 @@ public class ProxyAuthServiceImpl implements AuthService {
 		}
 		mosipUser = new MosipUserDto();
 		mosipUser.setUserId(userOtp.getUserId());
-		if (mosipUser == null && AuthConstant.IDA.toLowerCase().equals(userOtp.getAppId().toLowerCase())) {
+		if (AuthConstant.IDA.toLowerCase().equals(userOtp.getAppId().toLowerCase())) {
 			mosipUser = uinService.getDetailsForValidateOtp(userOtp.getUserId());
 		}
-		if (mosipUser != null) {
-			mosipToken = oTPService.validateOTP(mosipUser, userOtp.getOtp(), userOtp.getAppId());
-		} else {
-			throw new AuthManagerException(AuthErrorCode.USER_VALIDATION_ERROR.getErrorCode(),
-					AuthErrorCode.USER_VALIDATION_ERROR.getErrorMessage());
-		}
-		if (mosipToken != null && mosipToken.getMosipUserDto() != null) {
-			authNResponseDto.setMessage(mosipToken.getMessage());
-			authNResponseDto.setStatus(mosipToken.getStatus());
-			authNResponseDto.setToken(mosipToken.getToken());
-			authNResponseDto.setExpiryTime(mosipToken.getExpTime());
-			authNResponseDto.setRefreshToken(mosipToken.getRefreshToken());
-			authNResponseDto.setUserId(mosipToken.getMosipUserDto().getUserId());
-			authNResponseDto.setRefreshExpiryTime(mosipToken.getExpTime());
-		} else {
-			authNResponseDto.setMessage(mosipToken.getMessage());
-			authNResponseDto.setStatus(mosipToken.getStatus());
+		mosipToken = oTPService.validateOTP(mosipUser, userOtp.getOtp(), userOtp.getAppId());
+		if (mosipToken != null) {
+			if (mosipToken.getMosipUserDto() != null) {
+				authNResponseDto.setMessage(mosipToken.getMessage());
+				authNResponseDto.setStatus(mosipToken.getStatus());
+				authNResponseDto.setToken(mosipToken.getToken());
+				authNResponseDto.setExpiryTime(mosipToken.getExpTime());
+				authNResponseDto.setRefreshToken(mosipToken.getRefreshToken());
+				authNResponseDto.setUserId(mosipToken.getMosipUserDto().getUserId());
+				authNResponseDto.setRefreshExpiryTime(mosipToken.getExpTime());
+			} else {
+				authNResponseDto.setMessage(mosipToken.getMessage());
+				authNResponseDto.setStatus(mosipToken.getStatus());
+			}
 		}
 		return authNResponseDto;
 	}
@@ -305,13 +294,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 	/**
 	 * Method used for Authenticating User based with secretkey and password
 	 * 
-	 * @param clientSecret
-	 *            is of type {@link ClientSecret}
+	 * @param clientSecret is of type {@link ClientSecret}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -337,6 +324,7 @@ public class ProxyAuthServiceImpl implements AuthService {
 
 	/**
 	 * Method used for generating refresh token
+	 * 
 	 * @param appID
 	 * @param refereshToken
 	 * @param refreshTokenRequest
@@ -352,13 +340,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 	/**
 	 * Method used for invalidate token
 	 * 
-	 * @param token
-	 *            token
+	 * @param token token
 	 * 
 	 * @return authNResponse is of type {@link AuthNResponse}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -481,12 +467,13 @@ public class ProxyAuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public IndividualIdDto getIndividualIdBasedOnUserID(String userId, String appId){
+	public IndividualIdDto getIndividualIdBasedOnUserID(String userId, String appId) {
 		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
 	}
 
 	@Override
-	public MosipUserListDto getListOfUsersDetails(String realmId, String roleName,int pageStart, int pageFetch, String email, String firstName, String lastName, String username,String search) {
+	public MosipUserListDto getListOfUsersDetails(String realmId, String roleName, int pageStart, int pageFetch,
+			String email, String firstName, String lastName, String username, String search) {
 		throw new UnsupportedOperationException("This openeration is not supported");
 	}
 

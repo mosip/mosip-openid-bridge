@@ -145,7 +145,7 @@ public class KeycloakImpl implements DataStore {
 
 	private static final String FETCH_ALL_SALTS = "select ue.username,ua.value from public.user_entity ue, public.user_attribute ua where ue.id=ua.user_id and ua.name='userPassword' and ue.username IN(:username)";
 
-	private static final String FETCH_PASSWORD = "select cr.value from public.credential cr, public.user_entity ue where cr.user_id=ue.id and ue.username=:username";
+	private static final String FETCH_PASS_QUERY = "select cr.value from public.credential cr, public.user_entity ue where cr.user_id=ue.id and ue.username=:username";
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -409,16 +409,14 @@ public class KeycloakImpl implements DataStore {
 	private KeycloakRequestDto mapUserRequestToKeycloakRequestDto(UserRegistrationRequestDto userRegDto) {
 		KeycloakRequestDto keycloakRequestDto = new KeycloakRequestDto();
 		List<String> roles = new ArrayList<>();
-		List<KeycloakPasswordDTO> credentialObject = null;
+		List<KeycloakPasswordDTO> credentialObject = new ArrayList<>();
 		KeycloakPasswordDTO dto = null;
 		if (userRegDto.getAppId().equalsIgnoreCase("prereg")) {
 			roles.add(INDIVIDUAL);
-			credentialObject = new ArrayList<>();
 			dto = new KeycloakPasswordDTO();
 			dto.setType(AuthConstant.PASSWORDCONSTANT);
 			dto.setValue(preRegUserPassword);
 		} else if (userRegDto.getAppId().equalsIgnoreCase("registrationclient")) {
-			credentialObject = new ArrayList<>();
 			dto = new KeycloakPasswordDTO();
 			dto.setType(AuthConstant.PASSWORDCONSTANT);
 			dto.setValue(userRegDto.getUserPassword());
@@ -616,7 +614,7 @@ public class KeycloakImpl implements DataStore {
 	}
 
 	private String getPasswordFromDatabase(String userName) {
-		return jdbcTemplate.query(FETCH_PASSWORD, new MapSqlParameterSource().addValue("username", userName),
+		return jdbcTemplate.query(FETCH_PASS_QUERY, new MapSqlParameterSource().addValue("username", userName),
 				new ResultSetExtractor<String>() {
 
 					@Override

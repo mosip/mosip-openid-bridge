@@ -110,7 +110,7 @@ public class TokenServicesImpl implements TokenService {
 					@Override
 					public String extractData(ResultSet rs) throws SQLException, DataAccessException {
 						if (rs != null) {
-							while (rs.next()) {
+							if (rs.next()) {
 								return new String(rs.getString("user_id"));
 							}
 						}
@@ -128,7 +128,7 @@ public class TokenServicesImpl implements TokenService {
 
 					@Override
 					public AuthToken extractData(ResultSet rs) throws SQLException, DataAccessException {
-						while (rs.next()) {
+						if (rs.next()) {
 							AuthToken authToken = new AuthToken();
 							authToken.setAccessToken(rs.getString("auth_token"));
 							authToken.setUserId(rs.getString("user_id"));
@@ -158,7 +158,7 @@ public class TokenServicesImpl implements TokenService {
 
 					@Override
 					public AuthToken extractData(ResultSet rs) throws SQLException, DataAccessException {
-						while (rs.next()) {
+						if (rs.next()) {
 							AuthToken authToken = new AuthToken();
 							authToken.setAccessToken(rs.getString("auth_token"));
 							authToken.setUserId(rs.getString("user_id"));
