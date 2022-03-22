@@ -55,296 +55,308 @@ import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.EmptyCheckUtils;
 
 @Component
 public class ValidateTokenHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateTokenHelper.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ValidateTokenHelper.class);
 
-    private Map<String, PublicKey> publicKeys = new HashMap<>();
+	private Map<String, PublicKey> publicKeys = new HashMap<>();
 
-    @Value("${auth.server.admin.oidc.certs.path:/protocol/openid-connect/certs}")
-    private String certsPath;
+	@Value("${auth.server.admin.oidc.certs.path:/protocol/openid-connect/certs}")
+	private String certsPath;
 
-    @Value("${auth.server.admin.oidc.userinfo.path:/protocol/openid-connect/userinfo}")
-    private String userInfo;
+	@Value("${auth.server.admin.oidc.userinfo.path:/protocol/openid-connect/userinfo}")
+	private String userInfo;
 
-    @Value("${auth.server.admin.issuer.domain.validate:true}")
-    private boolean validateIssuerDomain;
+	@Value("${auth.server.admin.issuer.domain.validate:true}")
+	private boolean validateIssuerDomain;
 
-    /**
-     * This should be same as the value in the token
-     */
-    @Value("${auth.server.admin.issuer.uri:}")
-    private String issuerURI;
+	/**
+	 * This should be same as the value in the token
+	 */
+	@Value("${auth.server.admin.issuer.uri:}")
+	private String issuerURI;
 
-    /**
-     * When we validate a token we use the issuerURL. In case you want us to validate using an internal URL then the same has to be configured here.
-     */
-    @Value("${auth.server.admin.issuer.internal.uri:}")
-    private String issuerInternalURI;
+	/**
+	 * When we validate a token we use the issuerURL. In case you want us to
+	 * validate using an internal URL then the same has to be configured here.
+	 */
+	@Value("${auth.server.admin.issuer.internal.uri:}")
+	private String issuerInternalURI;
 
-    @Value("${auth.server.admin.audience.claim.validate:true}")
-    private boolean validateAudClaim;
+	@Value("${auth.server.admin.audience.claim.validate:true}")
+	private boolean validateAudClaim;
 
-    //@Value("${auth.server.admin.allowed.audience:}")
-    private List<String> allowedAudience;
+	// @Value("${auth.server.admin.allowed.audience:}")
+	private List<String> allowedAudience;
 
-    @Autowired
+	@Autowired
 	private ObjectMapper objectMapper;
 
-    @Autowired
+	@Autowired
 	private Environment environment;
 
-    @PostConstruct
-    @SuppressWarnings("unchecked")
-	private void init(){
-        String applName = getApplicationName();
-        this.allowedAudience = (List<String>) environment.getProperty("auth.server.admin.allowed.audience." + applName, List.class,
-                    environment.getProperty("auth.server.admin.allowed.audience", List.class, Collections.EMPTY_LIST));
-        issuerInternalURI = issuerInternalURI==""?issuerURI:issuerInternalURI;
-    }
-
-    private String getApplicationName() {
-		String appNames = environment.getProperty("spring.application.name");
-		List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
-		return appNamesList.get(0);
+	@PostConstruct
+	@SuppressWarnings("unchecked")
+	private void init() {
+		String applName = getApplicationName();
+		this.allowedAudience = (List<String>) environment.getProperty("auth.server.admin.allowed.audience." + applName,
+				List.class,
+				environment.getProperty("auth.server.admin.allowed.audience", List.class, Collections.EMPTY_LIST));
+		issuerInternalURI = issuerInternalURI.trim().isEmpty() ? issuerURI : issuerInternalURI;
 	}
 
-    public MosipUserDto doOfflineLocalTokenValidation(String jwtToken) {
-        LOGGER.info("offline verification for local profile.");
-        DecodedJWT decodedJWT = JWT.require(Algorithm.none()).build().verify(jwtToken);
+	private String getApplicationName() {
+		String appNames = environment.getProperty("spring.application.name");
+		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
+			return appNamesList.get(0);
+		} else {
+			throw new RuntimeException("property spring.application.name not found");
+		}
+	}
+
+	public MosipUserDto doOfflineLocalTokenValidation(String jwtToken) {
+		LOGGER.info("offline verification for local profile.");
+		DecodedJWT decodedJWT = JWT.require(Algorithm.none()).build().verify(jwtToken);
 		return buildMosipUser(decodedJWT, jwtToken);
-    }
+	}
 
-    public ImmutablePair<Boolean, AuthAdapterErrorCode> isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {
-        // First, token expire    
-        LocalDateTime expiryTime = DateUtils.convertUTCToLocalDateTime(DateUtils.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
-        String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
-        if (!DateUtils.before(DateUtils.getUTCCurrentDateTime(), expiryTime)) {
-            LOGGER.error("Provided Auth Token expired. Throwing Authentication Exception. UserName: " + userName);
-            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
-        }
+	public ImmutablePair<Boolean, AuthAdapterErrorCode> isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {
+		// First, token expire
+		LocalDateTime expiryTime = DateUtils
+				.convertUTCToLocalDateTime(DateUtils.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
+		String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
+		if (!DateUtils.before(DateUtils.getUTCCurrentDateTime(), expiryTime)) {
+			LOGGER.error("Provided Auth Token expired. Throwing Authentication Exception. UserName: " + userName);
+			return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
+		}
 
-        // Second, issuer domain check.
-        boolean tokenDomainMatch = getTokenIssuerDomain(decodedJWT);
-        if (validateIssuerDomain && !tokenDomainMatch){
-            LOGGER.error("Provided Auth Token Issue domain does not match. Throwing Authentication Exception. UserName: " + userName);
-            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
-        }
+		// Second, issuer domain check.
+		boolean tokenDomainMatch = getTokenIssuerDomain(decodedJWT);
+		if (validateIssuerDomain && !tokenDomainMatch) {
+			LOGGER.error(
+					"Provided Auth Token Issue domain does not match. Throwing Authentication Exception. UserName: "
+							+ userName);
+			return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
+		}
 
-        // Third, signature validation.
-        try {
-            String tokenAlgo = decodedJWT.getAlgorithm();
-            Algorithm algorithm = getVerificationAlgorithm(tokenAlgo, publicKey);
-            algorithm.verify(decodedJWT);
-        } catch(SignatureVerificationException signatureException) {
-            LOGGER.error("Signature validation failed, Throwing Authentication Exception. UserName: " + userName, signatureException);
-            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
-        }
+		// Third, signature validation.
+		try {
+			String tokenAlgo = decodedJWT.getAlgorithm();
+			Algorithm algorithm = getVerificationAlgorithm(tokenAlgo, publicKey);
+			algorithm.verify(decodedJWT);
+		} catch (SignatureVerificationException signatureException) {
+			LOGGER.error("Signature validation failed, Throwing Authentication Exception. UserName: " + userName,
+					signatureException);
+			return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
+		}
 
-        // Fourth, audience | azp validation.
-        boolean matchFound = validateAudience(decodedJWT);
-        // No match found after comparing audience & azp
-        if (!matchFound) {
-            LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception. UserName: " + userName);
-            return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.FORBIDDEN);
-        }
-        return ImmutablePair.of(Boolean.TRUE, null);
-    }
+		// Fourth, audience | azp validation.
+		boolean matchFound = validateAudience(decodedJWT);
+		// No match found after comparing audience & azp
+		if (!matchFound) {
+			LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception. UserName: "
+					+ userName);
+			return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.FORBIDDEN);
+		}
+		return ImmutablePair.of(Boolean.TRUE, null);
+	}
 
-    private boolean validateAudience(DecodedJWT decodedJWT){
-        boolean matchFound = false;
-        if (validateAudClaim){
-            
-            List<String> tokenAudience = decodedJWT.getAudience();
-            matchFound = tokenAudience.stream().anyMatch(allowedAudience::contains);
+	private boolean validateAudience(DecodedJWT decodedJWT) {
+		boolean matchFound = false;
+		if (validateAudClaim) {
 
-            // comparing with azp.
-            String azp = decodedJWT.getClaim(AuthAdapterConstant.AZP).asString();
-            if (!matchFound) {
-                matchFound = allowedAudience.stream().anyMatch(azp::equalsIgnoreCase);
-            }
-        }
-        return matchFound;
-    }
+			List<String> tokenAudience = decodedJWT.getAudience();
+			matchFound = tokenAudience.stream().anyMatch(allowedAudience::contains);
 
-    /**
-     * This method validates if the issuer domain in the JWT matches the issuerURI configured in the properties.
-     * @param decodedJWT
-     * @return
-     */
-    private boolean getTokenIssuerDomain(DecodedJWT decodedJWT) {
-        String domain = decodedJWT.getClaim(AuthAdapterConstant.ISSUER).asString();
-        try {
-            String tokenHost = new URI(domain).getHost();
-            String issuerHost = new URI(issuerURI).getHost();
-            return tokenHost.equalsIgnoreCase(issuerHost);
-        } catch (URISyntaxException synExp) {
-            LOGGER.error("Unable to parse domain from issuer.", synExp);
-        }
-        return false;
-    }
+			// comparing with azp.
+			String azp = decodedJWT.getClaim(AuthAdapterConstant.AZP).asString();
+			if (!matchFound) {
+				matchFound = allowedAudience.stream().anyMatch(azp::equalsIgnoreCase);
+			}
+		}
+		return matchFound;
+	}
 
-    public PublicKey getPublicKey(DecodedJWT decodedJWT) {
-        String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
-        LOGGER.info("offline verification for environment profile. UserName: " + userName);
-        
-        String keyId = decodedJWT.getKeyId();
-        PublicKey publicKey = publicKeys.get(keyId);
+	/**
+	 * This method validates if the issuer domain in the JWT matches the issuerURI
+	 * configured in the properties.
+	 * 
+	 * @param decodedJWT
+	 * @return
+	 */
+	private boolean getTokenIssuerDomain(DecodedJWT decodedJWT) {
+		String domain = decodedJWT.getClaim(AuthAdapterConstant.ISSUER).asString();
+		try {
+			String tokenHost = new URI(domain).getHost();
+			String issuerHost = new URI(issuerURI).getHost();
+			return tokenHost.equalsIgnoreCase(issuerHost);
+		} catch (URISyntaxException synExp) {
+			LOGGER.error("Unable to parse domain from issuer.", synExp);
+		}
+		return false;
+	}
 
-        if (Objects.isNull(publicKey)) {
-            String realm = getRealM(decodedJWT);
-            publicKey = getIssuerPublicKey(keyId, certsPath, realm);
-            publicKeys.put(keyId, publicKey);
-        }
-        return publicKey;
-    }
+	public PublicKey getPublicKey(DecodedJWT decodedJWT) {
+		String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
+		LOGGER.info("offline verification for environment profile. UserName: " + userName);
 
-    private String getRealM(DecodedJWT decodedJWT) {
-        String tokenIssuer = decodedJWT.getClaim(AuthAdapterConstant.ISSUER).asString();
-        return tokenIssuer.substring(tokenIssuer.lastIndexOf("/") + 1);
-    }
+		String keyId = decodedJWT.getKeyId();
+		PublicKey publicKey = publicKeys.get(keyId);
 
-    private PublicKey getIssuerPublicKey(String keyId, String certsPath, String realm) {
-        try {
-            
-            URI uri = new URI(issuerInternalURI + realm + certsPath).normalize();
-            JwkProvider provider = new UrlJwkProvider(uri.toURL());
-            Jwk jwk = provider.get(keyId);
-            return jwk.getPublicKey();
-        } catch (JwkException | URISyntaxException | MalformedURLException e) {
-            LOGGER.error("Error downloading Public key from server".concat(e.getMessage()));
-        }
-        return null;        
-    }
+		if (Objects.isNull(publicKey)) {
+			String realm = getRealM(decodedJWT);
+			publicKey = getIssuerPublicKey(keyId, certsPath, realm);
+			publicKeys.put(keyId, publicKey);
+		}
+		return publicKey;
+	}
 
-    private Algorithm getVerificationAlgorithm(String tokenAlgo, PublicKey publicKey){
-        // Later will add other Algorithms.
-        switch (tokenAlgo) {
-            case "RS256":
-                return Algorithm.RSA256((RSAPublicKey) publicKey, null);
-            case "RS384":
-                return Algorithm.RSA384((RSAPublicKey) publicKey, null);
-            case "RS512":
-                return Algorithm.RSA512((RSAPublicKey) publicKey, null);
-            default:
-                return Algorithm.RSA256((RSAPublicKey) publicKey, null);
-        }
-    }
+	private String getRealM(DecodedJWT decodedJWT) {
+		String tokenIssuer = decodedJWT.getClaim(AuthAdapterConstant.ISSUER).asString();
+		return tokenIssuer.substring(tokenIssuer.lastIndexOf("/") + 1);
+	}
 
-    @SuppressWarnings("unchecked")
-    public MosipUserDto buildMosipUser(DecodedJWT decodedJWT, String jwtToken) {
-        MosipUserDto mosipUserDto = new MosipUserDto();
-        String user = decodedJWT.getSubject();
+	private PublicKey getIssuerPublicKey(String keyId, String certsPath, String realm) {
+		try {
+
+			URI uri = new URI(issuerInternalURI + realm + certsPath).normalize();
+			JwkProvider provider = new UrlJwkProvider(uri.toURL());
+			Jwk jwk = provider.get(keyId);
+			return jwk.getPublicKey();
+		} catch (JwkException | URISyntaxException | MalformedURLException e) {
+			LOGGER.error("Error downloading Public key from server".concat(e.getMessage()));
+		}
+		return null;
+	}
+
+	private Algorithm getVerificationAlgorithm(String tokenAlgo, PublicKey publicKey) {
+		// Later will add other Algorithms.
+		switch (tokenAlgo) {
+		case "RS256":
+			return Algorithm.RSA256((RSAPublicKey) publicKey, null);
+		case "RS384":
+			return Algorithm.RSA384((RSAPublicKey) publicKey, null);
+		case "RS512":
+			return Algorithm.RSA512((RSAPublicKey) publicKey, null);
+		default:
+			return Algorithm.RSA256((RSAPublicKey) publicKey, null);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public MosipUserDto buildMosipUser(DecodedJWT decodedJWT, String jwtToken) {
+		MosipUserDto mosipUserDto = new MosipUserDto();
+		String user = decodedJWT.getSubject();
 		mosipUserDto.setToken(jwtToken);
 		mosipUserDto.setMail(decodedJWT.getClaim(AuthAdapterConstant.EMAIL).asString());
 		mosipUserDto.setMobile(decodedJWT.getClaim(AuthAdapterConstant.MOBILE).asString());
-        mosipUserDto.setUserId(decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString());
-        Claim realmAccess = decodedJWT.getClaim(AuthAdapterConstant.REALM_ACCESS);
-        if (!realmAccess.isNull()) {
-            List<String> roles = (List<String>) realmAccess.asMap().get("roles");
-            StringBuilder strBuilder = new StringBuilder();
+		mosipUserDto.setUserId(decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString());
+		Claim realmAccess = decodedJWT.getClaim(AuthAdapterConstant.REALM_ACCESS);
+		if (!realmAccess.isNull()) {
+			List<String> roles = (List<String>) realmAccess.asMap().get("roles");
+			StringBuilder strBuilder = new StringBuilder();
 
-            for (String role : roles) {
-                strBuilder.append(role);
-                strBuilder.append(AuthAdapterConstant.COMMA);
-            }
-            mosipUserDto.setRole(strBuilder.toString());
-            mosipUserDto.setName(user);
-        } else {
-            mosipUserDto.setRole(decodedJWT.getClaim(AuthAdapterConstant.ROLES).asString());
-            mosipUserDto.setName(user);
-        }
-		
-        LOGGER.info("user (offline verification done): " + mosipUserDto.getUserId());
+			for (String role : roles) {
+				strBuilder.append(role);
+				strBuilder.append(AuthAdapterConstant.COMMA);
+			}
+			mosipUserDto.setRole(strBuilder.toString());
+			mosipUserDto.setName(user);
+		} else {
+			mosipUserDto.setRole(decodedJWT.getClaim(AuthAdapterConstant.ROLES).asString());
+			mosipUserDto.setName(user);
+		}
+
+		LOGGER.info("user (offline verification done): " + mosipUserDto.getUserId());
 		return mosipUserDto;
-    }
+	}
 
-    public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, RestTemplate restTemplate) {
-        if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
-            LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
-            return ImmutablePair.of(HttpStatus.EXPECTATION_FAILED, null);
-        }
+	public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, RestTemplate restTemplate) {
+		if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
+			LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
+			return ImmutablePair.of(HttpStatus.EXPECTATION_FAILED, null);
+		}
 
-        DecodedJWT decodedJWT = JWT.decode(jwtToken);
+		DecodedJWT decodedJWT = JWT.decode(jwtToken);
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER, AuthAdapterConstant.BEARER_STR + jwtToken);
 		HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
-        ResponseEntity<String> response = null;
-        HttpStatusCodeException statusCodeException = null;
+		ResponseEntity<String> response = null;
+		HttpStatusCodeException statusCodeException = null;
 		try {
-            String realm = getRealM(decodedJWT);
-            String userInfoPath = issuerInternalURI + realm + userInfo;
+			String realm = getRealM(decodedJWT);
+			String userInfoPath = issuerInternalURI + realm + userInfo;
 			response = restTemplate.exchange(userInfoPath, HttpMethod.GET, entity, String.class);
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			LOGGER.error("Token validation failed for accessToken {}", jwtToken, e);
-            statusCodeException = e;
+			statusCodeException = e;
 		}
-        
-        if (Objects.nonNull(statusCodeException)){
-            JsonNode errorNode;
-            try {
-                errorNode = objectMapper.readTree(statusCodeException.getResponseBodyAsString());
-                LOGGER.error("Token validation failed error {} and message {}", errorNode.get(AuthAdapterConstant.ERROR), 
-                                errorNode.get(AuthAdapterConstant.ERROR_DESC));
-                return ImmutablePair.of(statusCodeException.getStatusCode(), null);
-            } catch (IOException e) {
-                LOGGER.error("IO Excepton in parsing response {}", e.getMessage());
-            }
-        }
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            // validating audience | azp claims.
-            boolean matchFound = validateAudience(decodedJWT);
-            if (!matchFound) {
-                LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception");
-                return ImmutablePair.of(HttpStatus.FORBIDDEN, null);
-            }
-            MosipUserDto mosipUserDto = buildMosipUser(decodedJWT, jwtToken);
-            return ImmutablePair.of(HttpStatus.OK, mosipUserDto);
-        }
-        return ImmutablePair.of(HttpStatus.UNAUTHORIZED, null);
+		if (Objects.nonNull(statusCodeException)) {
+			JsonNode errorNode;
+			try {
+				errorNode = objectMapper.readTree(statusCodeException.getResponseBodyAsString());
+				LOGGER.error("Token validation failed error {} and message {}",
+						errorNode.get(AuthAdapterConstant.ERROR), errorNode.get(AuthAdapterConstant.ERROR_DESC));
+				return ImmutablePair.of(statusCodeException.getStatusCode(), null);
+			} catch (IOException e) {
+				LOGGER.error("IO Excepton in parsing response {}", e.getMessage());
+			}
+		}
+
+		if (response != null && response.getStatusCode().is2xxSuccessful()) {
+			// validating audience | azp claims.
+			boolean matchFound = validateAudience(decodedJWT);
+			if (!matchFound) {
+				LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception");
+				return ImmutablePair.of(HttpStatus.FORBIDDEN, null);
+			}
+			MosipUserDto mosipUserDto = buildMosipUser(decodedJWT, jwtToken);
+			return ImmutablePair.of(HttpStatus.OK, mosipUserDto);
+		}
+		return ImmutablePair.of(HttpStatus.UNAUTHORIZED, null);
 	}
 
-    public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, WebClient webClient) {
-        if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
-            LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
-            return ImmutablePair.of(HttpStatus.EXPECTATION_FAILED, null);
-        }
+	public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, WebClient webClient) {
+		if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
+			LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
+			return ImmutablePair.of(HttpStatus.EXPECTATION_FAILED, null);
+		}
 
-        DecodedJWT decodedJWT = JWT.decode(jwtToken);
-        HttpHeaders headers = new HttpHeaders();
+		DecodedJWT decodedJWT = JWT.decode(jwtToken);
+		HttpHeaders headers = new HttpHeaders();
 		headers.add(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER, AuthAdapterConstant.BEARER_STR + jwtToken);
 		String realm = getRealM(decodedJWT);
-        String userInfoPath = issuerInternalURI + realm + userInfo;
-        ClientResponse response = webClient.method(HttpMethod.GET)
-                                           .uri(userInfoPath)
-                                           .headers(httpHeaders -> {
-                                                httpHeaders.addAll(headers);
-                                            })
-                                           .exchange()
-                                           .block();
-        if (response.statusCode() == HttpStatus.OK) {
-            ObjectNode responseBody = response.bodyToMono(ObjectNode.class).block();
-            List<ServiceError> validationErrorsList = ExceptionUtils.getServiceErrorList(responseBody.asText());
-            if (!validationErrorsList.isEmpty()) {
-                LOGGER.error("Error in validate token. Code {}, message {}", validationErrorsList.get(0).getErrorCode(), 
-                    validationErrorsList.get(0).getMessage());
-                return ImmutablePair.of(HttpStatus.UNAUTHORIZED, null);
-            }
+		String userInfoPath = issuerInternalURI + realm + userInfo;
+		ClientResponse response = webClient.method(HttpMethod.GET).uri(userInfoPath).headers(httpHeaders -> {
+			httpHeaders.addAll(headers);
+		}).exchange().block();
+		if (response != null && response.statusCode() == HttpStatus.OK) {
+			ObjectNode responseBody = response.bodyToMono(ObjectNode.class).block();
+			if (responseBody != null) {
+				List<ServiceError> validationErrorsList = ExceptionUtils.getServiceErrorList(responseBody.asText());
+				if (!validationErrorsList.isEmpty()) {
+					LOGGER.error("Error in validate token. Code {}, message {}",
+							validationErrorsList.get(0).getErrorCode(), validationErrorsList.get(0).getMessage());
+					return ImmutablePair.of(HttpStatus.UNAUTHORIZED, null);
+				}
+			}
 
-            // validating audience | azp claims.
-            boolean matchFound = validateAudience(decodedJWT);
-            if (!matchFound) {
-                LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception");
-                return ImmutablePair.of(HttpStatus.FORBIDDEN, null);
-            }
-            MosipUserDto mosipUserDto = buildMosipUser(decodedJWT, jwtToken);
-            return ImmutablePair.of(HttpStatus.OK, mosipUserDto);
-        }                
+			// validating audience | azp claims.
+			boolean matchFound = validateAudience(decodedJWT);
+			if (!matchFound) {
+				LOGGER.error("Provided Client Id does not match with Aud/AZP. Throwing Authorizaion Exception");
+				return ImmutablePair.of(HttpStatus.FORBIDDEN, null);
+			}
+			MosipUserDto mosipUserDto = buildMosipUser(decodedJWT, jwtToken);
+			return ImmutablePair.of(HttpStatus.OK, mosipUserDto);
+		}
 		LOGGER.error("user authentication failed for the provided token (WebClient).");
 		return ImmutablePair.of(HttpStatus.UNAUTHORIZED, null);
-    }
-    
+	}
+
 }

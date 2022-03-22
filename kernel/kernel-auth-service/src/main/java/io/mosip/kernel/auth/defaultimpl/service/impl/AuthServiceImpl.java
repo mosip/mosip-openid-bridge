@@ -92,12 +92,11 @@ import io.mosip.kernel.core.util.EmptyCheckUtils;
  *
  */
 /*
- * This is default impl of authservice provided by mosip. if this property mosip.iam.use.default.impl is true then it 
- * will be enabled along with other default beans which are included by mosip as default implementation for auth service 
- * features. 
+ * This is default impl of authservice provided by mosip. if this property
+ * mosip.iam.use.default.impl is true then it will be enabled along with other
+ * default beans which are included by mosip as default implementation for auth
+ * service features.
  */
-
-
 
 @Profile("!local")
 @Service
@@ -172,12 +171,12 @@ public class AuthServiceImpl implements AuthService {
 	@Value("${mosip.iam.token_endpoint}")
 	private String tokenEndpoint;
 
-	 @Value("${mosip.admin_realm_id}")
-	 private String realmID;
+	@Value("${mosip.admin_realm_id}")
+	private String realmID;
 
 	@Value("${mosip.kernel.prereg.realm-id}")
 	private String preRegRealmID;
-	
+
 	@Value("${mosip.iam.base-url}")
 	private String keycloakBaseURL;
 
@@ -191,13 +190,11 @@ public class AuthServiceImpl implements AuthService {
 	/**
 	 * Method used for validating Auth token
 	 * 
-	 * @param token
-	 *            token
+	 * @param token token
 	 * 
 	 * @return mosipUserDtoToken is of type {@link MosipUserTokenDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -221,13 +218,11 @@ public class AuthServiceImpl implements AuthService {
 	/**
 	 * Method used for Authenticating User based on username and password
 	 * 
-	 * @param loginUser
-	 *            is of type {@link LoginUser}
+	 * @param loginUser is of type {@link LoginUser}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -242,7 +237,8 @@ public class AuthServiceImpl implements AuthService {
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, realmId);
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		LOGGER.debug("invoke " + uriComponentsBuilder.toUriString() + " realm " + realmId + " username " + loginUser.getUserName() + "clientId " + clientID);
+		LOGGER.debug("invoke " + uriComponentsBuilder.toUriString() + " realm " + realmId + " username "
+				+ loginUser.getUserName() + "clientId " + clientID);
 		tokenRequestBody = getPasswordValueMap(clientID, clientSecret, loginUser.getUserName(),
 				loginUser.getPassword());
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(tokenRequestBody, headers);
@@ -263,51 +259,54 @@ public class AuthServiceImpl implements AuthService {
 					AuthErrorCode.SERVER_ERROR.getErrorCode());
 		}
 		AccessTokenResponse accessTokenResponse = response.getBody();
-		authNResponseDto = new AuthNResponseDto();
-		authNResponseDto.setToken(accessTokenResponse.getAccess_token());
-		authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
-		authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
-		authNResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
- 		authNResponseDto.setMessage(AuthConstant.USERPWD_SUCCESS_MESSAGE);
-		authNResponseDto.setRefreshExpiryTime(Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
-		return authNResponseDto;
+		if (accessTokenResponse != null) {
+			authNResponseDto = new AuthNResponseDto();
+			authNResponseDto.setToken(accessTokenResponse.getAccess_token());
+			authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
+			authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
+			authNResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
+			authNResponseDto.setMessage(AuthConstant.USERPWD_SUCCESS_MESSAGE);
+			authNResponseDto.setRefreshExpiryTime(Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
+			return authNResponseDto;
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "reponse body received is null");
+		}
 	}
 
 	/**
 	 * Method used for sending OTP
 	 * 
-	 * @param otpUser
-	 *            is of type {@link OtpUser}
+	 * @param otpUser is of type {@link OtpUser}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
 	@Override
 	public AuthNResponseDto authenticateWithOtp(OtpUser otpUser) throws Exception {
 		AuthNResponseDto authNResponseDto = null;
-        String realmId=authUtil.getRealmIdFromAppId(otpUser.getAppId());
+		String realmId = authUtil.getRealmIdFromAppId(otpUser.getAppId());
 		MosipUserDto mosipUser = null;
 		otpUser.getOtpChannel().replaceAll(String::toLowerCase);
 		otpUser.setAppId(otpUser.getAppId().toLowerCase());
 		otpUser.setOtpChannel(otpUser.getOtpChannel());
 		if (AuthConstant.APPTYPE_UIN.equals(otpUser.getUseridtype())) {
 			mosipUser = uinService.getDetailsFromUin(otpUser);
-			LOGGER.debug("OTP, apptype uin with userid " + mosipUser.getUserId() + " realm "+ realmId);
-			authNResponseDto = oTPService.sendOTPForUin(mosipUser, otpUser,realmId);
+			LOGGER.debug("OTP, apptype uin with userid " + mosipUser.getUserId() + " realm " + realmId);
+			authNResponseDto = oTPService.sendOTPForUin(mosipUser, otpUser, realmId);
 			authNResponseDto.setStatus(authNResponseDto.getStatus());
 			authNResponseDto.setMessage(authNResponseDto.getMessage());
 		} else if (AuthConstant.APPTYPE_USERID.equals(otpUser.getUseridtype())) {
 			UserRegistrationRequestDto userCreationRequestDto = new UserRegistrationRequestDto();
-			LOGGER.debug("OTP, apptype userid for userid " + otpUser.getUserId() + " realm "+ realmId);
+			LOGGER.debug("OTP, apptype userid for userid " + otpUser.getUserId() + " realm " + realmId);
 			userCreationRequestDto.setUserName(otpUser.getUserId());
 			userCreationRequestDto.setAppId(otpUser.getAppId());
 			mosipUser = registerUser(userCreationRequestDto);
-			authNResponseDto = oTPService.sendOTP(mosipUser, otpUser,realmId);
-			LOGGER.debug("otp request status " + otpUser.getUserId() + " realm "+ realmId + " status " + authNResponseDto.getStatus());
+			authNResponseDto = oTPService.sendOTP(mosipUser, otpUser, realmId);
+			LOGGER.debug("otp request status " + otpUser.getUserId() + " realm " + realmId + " status "
+					+ authNResponseDto.getStatus());
 			authNResponseDto.setStatus(authNResponseDto.getStatus());
 			authNResponseDto.setMessage(authNResponseDto.getMessage());
 		} else {
@@ -319,13 +318,11 @@ public class AuthServiceImpl implements AuthService {
 	/**
 	 * Method used for Authenticating User based with username and OTP
 	 * 
-	 * @param userOtp
-	 *            is of type {@link UserOtp}
+	 * @param userOtp is of type {@link UserOtp}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -339,18 +336,18 @@ public class AuthServiceImpl implements AuthService {
 			realm = userOtp.getAppId();
 		}
 
-		LOGGER.debug("otp request status " + userOtp.getUserId() + " realm "+ realm);
+		LOGGER.debug("otp request status " + userOtp.getUserId() + " realm " + realm);
 		if (keycloakImpl.isUserAlreadyPresent(userOtp.getUserId(), realm)) {
 			mosipUser = new MosipUserDto();
 			mosipUser.setUserId(userOtp.getUserId());
-			LOGGER.info("user already present " + userOtp.getUserId() + " realm "+ realm);
+			LOGGER.info("user already present " + userOtp.getUserId() + " realm " + realm);
 		}
 		if (mosipUser == null && AuthConstant.IDA.toLowerCase().equals(userOtp.getAppId().toLowerCase())) {
 			mosipUser = uinService.getDetailsForValidateOtp(userOtp.getUserId());
 		}
 		if (mosipUser != null) {
 			mosipToken = oTPService.validateOTP(mosipUser, userOtp.getOtp(), realm);
-			LOGGER.info("Validate otp" + userOtp.getUserId() + " realm "+ realm + " status " + mosipToken == null? " No Response ": mosipToken.getStatus());
+			LOGGER.info("Validate otp" + userOtp.getUserId() + " realm " + realm + " status " + mosipToken.getStatus());
 		} else {
 			throw new AuthManagerException(AuthErrorCode.USER_VALIDATION_ERROR.getErrorCode(),
 					AuthErrorCode.USER_VALIDATION_ERROR.getErrorMessage());
@@ -373,13 +370,11 @@ public class AuthServiceImpl implements AuthService {
 	/**
 	 * Method used for Authenticating User based with secretkey and password
 	 * 
-	 * @param clientSecret
-	 *            is of type {@link ClientSecret}
+	 * @param clientSecret is of type {@link ClientSecret}
 	 * 
 	 * @return authNResponseDto is of type {@link AuthNResponseDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -392,34 +387,39 @@ public class AuthServiceImpl implements AuthService {
 		String realmId = authUtil.getRealmIdFromAppId(clientSecret.getAppId());
 		pathParams.put(AuthConstant.REALM_ID, realmId);
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		LOGGER.info("invoke " + uriComponentsBuilder.toUriString() + " secret key based authentication " + clientSecret.getClientId() + " realm "+ realmId );
+		LOGGER.info("invoke " + uriComponentsBuilder.toUriString() + " secret key based authentication "
+				+ clientSecret.getClientId() + " realm " + realmId);
 		LOGGER.info("This should not be invoked often. If you see too many of this then we need to fix the bug.");
 		tokenRequestBody = getClientSecretValueMap(clientSecret.getClientId(), clientSecret.getSecretKey());
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(tokenRequestBody, headers);
 		ResponseEntity<AccessTokenResponse> response = authRestTemplate.postForEntity(
 				uriComponentsBuilder.buildAndExpand(pathParams).toUriString(), request, AccessTokenResponse.class);
-		AccessTokenResponse accessTokenResponse = response.getBody();
-		LOGGER.info("secret key based authentication " + clientSecret.getClientId() + " realm "+ realmId + " accesstoken expires in " + accessTokenResponse.getExpires_in() + " refresh token expires in " + accessTokenResponse.getRefresh_expires_in());
-		AuthNResponseDto authNResponseDto = new AuthNResponseDto();
-		authNResponseDto.setToken(accessTokenResponse.getAccess_token());
-		authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
-		authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
-		authNResponseDto.setStatus(SUCCESS);
-		authNResponseDto.setMessage(CLIENTID_AND_TOKEN_COMBINATION_HAD_BEEN_VALIDATED_SUCCESSFULLY);
-		return authNResponseDto;
+		AccessTokenResponse accessTokenResponse = null;
+			accessTokenResponse = response.getBody();
+		if (accessTokenResponse != null) {
+			LOGGER.info("secret key based authentication " + clientSecret.getClientId() + " realm " + realmId
+					+ " accesstoken expires in " + accessTokenResponse.getExpires_in() + " refresh token expires in "
+					+ accessTokenResponse.getRefresh_expires_in());
+			AuthNResponseDto authNResponseDto = new AuthNResponseDto();
+			authNResponseDto.setToken(accessTokenResponse.getAccess_token());
+			authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
+			authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
+			authNResponseDto.setStatus(SUCCESS);
+			authNResponseDto.setMessage(CLIENTID_AND_TOKEN_COMBINATION_HAD_BEEN_VALIDATED_SUCCESSFULLY);
+			return authNResponseDto;
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "responsebody is null");
+		}
 	}
-
 
 	/**
 	 * Method used for generating refresh token
 	 * 
-	 * @param refreshToken
-	 *            existing refresh token
+	 * @param refreshToken existing refresh token
 	 * 
 	 * @return mosipUserDtoToken is of type {@link MosipUserTokenDto}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -439,35 +439,41 @@ public class AuthServiceImpl implements AuthService {
 		pathParams.put(AuthConstant.REALM_ID, realmId);
 
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		LOGGER.info("refresh token based authentication " + uriComponentsBuilder.toUriString() + " realm "+ realmId + " client id " + refreshTokenRequest.getClientID());
+		LOGGER.info("refresh token based authentication " + uriComponentsBuilder.toUriString() + " realm " + realmId
+				+ " client id " + refreshTokenRequest.getClientID());
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(tokenRequestBody, headers);
 		ResponseEntity<AccessTokenResponse> response = null;
 		try {
 			response = authRestTemplate.postForEntity(uriComponentsBuilder.buildAndExpand(pathParams).toUriString(),
 					request, AccessTokenResponse.class);
 		} catch (HttpServerErrorException | HttpClientErrorException ex) {
-			LOGGER.error("refresh token based authentication " + uriComponentsBuilder.toUriString() + " realm "+ realmId + " client id " + refreshTokenRequest.getClientID() + " failed with error ");
+			LOGGER.error("refresh token based authentication " + uriComponentsBuilder.toUriString() + " realm "
+					+ realmId + " client id " + refreshTokenRequest.getClientID() + " failed with error ");
 			LOGGER.error(ex.getMessage());
 		}
 		Objects.requireNonNull(response);
 		AccessTokenResponse accessTokenResponse = response.getBody();
-		AuthNResponse authNResponse = new AuthNResponse("SUCCESS", "Access token refreshed");
-		LOGGER.info("refresh token based authentication " + uriComponentsBuilder.toUriString() + " realm "+ realmId + " client id " + refreshTokenRequest.getClientID() + ". Response status: " + authNResponse.getStatus());
-		return new RefreshTokenResponse(authNResponse, accessTokenResponse.getAccess_token(),
-				accessTokenResponse.getRefresh_token(), accessTokenResponse.getExpires_in(),
-				accessTokenResponse.getExpires_in());
+		if (accessTokenResponse != null) {
+			AuthNResponse authNResponse = new AuthNResponse("SUCCESS", "Access token refreshed");
+			LOGGER.info("refresh token based authentication " + uriComponentsBuilder.toUriString() + " realm " + realmId
+					+ " client id " + refreshTokenRequest.getClientID() + ". Response status: "
+					+ authNResponse.getStatus());
+			return new RefreshTokenResponse(authNResponse, accessTokenResponse.getAccess_token(),
+					accessTokenResponse.getRefresh_token(), accessTokenResponse.getExpires_in(),
+					accessTokenResponse.getExpires_in());
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response body is null");
+		}
 	}
 
 	/**
 	 * Method used for invalidate token
 	 * 
-	 * @param token
-	 *            token
+	 * @param token token
 	 * 
 	 * @return authNResponse is of type {@link AuthNResponse}
 	 * 
-	 * @throws Exception
-	 *             exception
+	 * @throws Exception exception
 	 * 
 	 */
 
@@ -483,28 +489,28 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public RolesListDto getAllRoles(String appId) {
-		appId=authUtil.getRealmIdFromAppId(appId);
+		appId = authUtil.getRealmIdFromAppId(appId);
 		RolesListDto rolesListDto = keycloakImpl.getAllRoles(appId);
 		return rolesListDto;
 	}
 
 	@Override
 	public MosipUserListDto getListOfUsersDetails(List<String> userDetails, String appId) throws Exception {
-		appId=authUtil.getRealmIdFromAppId(appId);
-		MosipUserListDto mosipUserListDto = keycloakImpl.getListOfUsersDetails(userDetails,appId);
+		appId = authUtil.getRealmIdFromAppId(appId);
+		MosipUserListDto mosipUserListDto = keycloakImpl.getListOfUsersDetails(userDetails, appId);
 		return mosipUserListDto;
 	}
 
 	@Override
 	public MosipUserSaltListDto getAllUserDetailsWithSalt(List<String> userDetails, String appId) throws Exception {
-		appId=authUtil.getRealmIdFromAppId(appId);
-		return keycloakImpl.getAllUserDetailsWithSalt(userDetails,appId);
+		appId = authUtil.getRealmIdFromAppId(appId);
+		return keycloakImpl.getAllUserDetailsWithSalt(userDetails, appId);
 	}
 
 	@Override
 	public RIdDto getRidBasedOnUid(String userId, String appId) throws Exception {
-		appId=authUtil.getRealmIdFromAppId(appId);
-		return keycloakImpl.getRidFromUserId(userId,appId);
+		appId = authUtil.getRealmIdFromAppId(appId);
+		return keycloakImpl.getRidFromUserId(userId, appId);
 
 	}
 
@@ -514,21 +520,18 @@ public class AuthServiceImpl implements AuthService {
 		return userStoreFactory.getDataStoreBasedOnApp(appId).unBlockAccount(userId);
 	}
 
-	
 	@Deprecated
 	@Override
 	public AuthZResponseDto changePassword(String appId, PasswordDto passwordDto) throws Exception {
 		return userStoreFactory.getDataStoreBasedOnApp(appId).changePassword(passwordDto);
 	}
 
-	
 	@Deprecated
 	@Override
 	public AuthZResponseDto resetPassword(String appId, PasswordDto passwordDto) throws Exception {
 		return userStoreFactory.getDataStoreBasedOnApp(appId).resetPassword(passwordDto);
 	}
 
-	
 	@Deprecated
 	@Override
 	public UserNameDto getUserNameBasedOnMobileNumber(String appId, String mobileNumber) throws Exception {
@@ -542,7 +545,6 @@ public class AuthServiceImpl implements AuthService {
 		return keycloakImpl.registerUser(userCreationRequestDto);
 	}
 
-	
 	@Deprecated
 	@Override
 	public UserPasswordResponseDto addUserPassword(UserPasswordRequestDto userPasswordRequestDto) {
@@ -584,19 +586,20 @@ public class AuthServiceImpl implements AuthService {
 		if (EmptyCheckUtils.isNullEmpty(token)) {
 			throw new AuthenticationServiceException(AuthErrorCode.INVALID_TOKEN.getErrorMessage());
 		}
-		
+
 		DecodedJWT decodedJWT = JWT.decode(token);
-		String issuer=decodedJWT.getClaim("iss").asString();	
-		String realm = issuer.substring(issuer.lastIndexOf("/")+1);
-		
+		String issuer = decodedJWT.getClaim("iss").asString();
+		String realm = issuer.substring(issuer.lastIndexOf("/") + 1);
+
 		ResponseEntity<String> response = null;
 		MosipUserDto mosipUserDto = null;
-		StringBuilder urlBuilder = new StringBuilder().append(keycloakBaseURL).append("/auth/realms/").append(realm).append("/protocol/openid-connect/userinfo");
+		StringBuilder urlBuilder = new StringBuilder().append(keycloakBaseURL).append("/auth/realms/").append(realm)
+				.append("/protocol/openid-connect/userinfo");
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(urlBuilder.toString());
-		LOGGER.info("validate token request to " + uriComponentsBuilder.toUriString() );
+		LOGGER.info("validate token request to " + uriComponentsBuilder.toUriString());
 
 		HttpHeaders headers = new HttpHeaders();
-		
+
 		String accessToken = "Bearer " + token;
 		headers.add("Authorization", accessToken);
 
@@ -619,15 +622,16 @@ public class AuthServiceImpl implements AuthService {
 			}
 		}
 
-		if (response.getStatusCode().is2xxSuccessful()) {			
-			mosipUserDto = getClaims(decodedJWT,token);
-			LOGGER.info("Response received for user id " + mosipUserDto.getUserId() + " is " + response.getStatusCode().toString());
+		if (response.getStatusCode().is2xxSuccessful()) {
+			mosipUserDto = getClaims(decodedJWT, token);
+			LOGGER.info("Response received for user id " + mosipUserDto.getUserId() + " is "
+					+ response.getStatusCode().toString());
 		}
 		return mosipUserDto;
 
 	}
 
-	//Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+	// Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
 	/*
 	 * (non-Javadoc)
@@ -646,14 +650,14 @@ public class AuthServiceImpl implements AuthService {
 		StringBuilder urlBuilder = new StringBuilder().append(issuer).append("/protocol/openid-connect/logout");
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(urlBuilder.toString())
 				.queryParam(KeycloakConstants.ID_TOKEN_HINT, token);
-		
-		LOGGER.info("logout user {} uri: {}",token, uriComponentsBuilder.toUriString() );
+
+		LOGGER.info("logout user {} uri: {}", token, uriComponentsBuilder.toUriString());
 		try {
 			response = authRestTemplate.getForEntity(uriComponentsBuilder.buildAndExpand(pathparams).toUriString(),
 					String.class);
-			
+
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
-			LOGGER.error("error occcur in logout : {}",e.getResponseBodyAsString());
+			LOGGER.error("error occcur in logout : {}", e.getResponseBodyAsString());
 			throw new AuthManagerException(AuthErrorCode.REST_EXCEPTION.getErrorCode(),
 					AuthErrorCode.REST_EXCEPTION.getErrorMessage() + e.getResponseBodyAsString());
 		}
@@ -665,11 +669,11 @@ public class AuthServiceImpl implements AuthService {
 			authResponseDto.setMessage(LOG_OUT_FAILED);
 			authResponseDto.setStatus(FAILED);
 		}
-		LOGGER.info("logout status {} for token {}",authResponseDto.getStatus(),token );
+		LOGGER.info("logout status {} for token {}", authResponseDto.getStatus(), token);
 		return authResponseDto;
 	}
 
-	private MosipUserDto getClaims(DecodedJWT decodedJWT,String cookie) {
+	private MosipUserDto getClaims(DecodedJWT decodedJWT, String cookie) {
 
 		Claim realmAccess = decodedJWT.getClaim(AuthConstant.REALM_ACCESS);
 
@@ -715,8 +719,8 @@ public class AuthServiceImpl implements AuthService {
 		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
 		ResponseEntity<String> responseEntity = null;
 		try {
-			responseEntity = authRestTemplate.exchange(uriBuilder.buildAndExpand(pathParam).toUriString(), HttpMethod.POST,
-					entity, String.class);
+			responseEntity = authRestTemplate.exchange(uriBuilder.buildAndExpand(pathParam).toUriString(),
+					HttpMethod.POST, entity, String.class);
 
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			KeycloakErrorResponseDto keycloakErrorResponseDto = parseKeyClockErrorResponse(e);
@@ -795,10 +799,10 @@ public class AuthServiceImpl implements AuthService {
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, realmId);
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		LOGGER.debug("invoke " + uriComponentsBuilder.toUriString() + " realm " + realmId + " username " + loginUser.getUserName() + "clientId " +
-				loginUser.getClientId());
-		tokenRequestBody = getPasswordValueMap(loginUser.getClientId(), loginUser.getClientSecret(), loginUser.getUserName(),
-				loginUser.getPassword());
+		LOGGER.debug("invoke " + uriComponentsBuilder.toUriString() + " realm " + realmId + " username "
+				+ loginUser.getUserName() + "clientId " + loginUser.getClientId());
+		tokenRequestBody = getPasswordValueMap(loginUser.getClientId(), loginUser.getClientSecret(),
+				loginUser.getUserName(), loginUser.getPassword());
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(tokenRequestBody, headers);
 		try {
 			response = authRestTemplate.postForEntity(uriComponentsBuilder.buildAndExpand(pathParams).toUriString(),
@@ -817,25 +821,29 @@ public class AuthServiceImpl implements AuthService {
 					AuthErrorCode.SERVER_ERROR.getErrorCode());
 		}
 		AccessTokenResponse accessTokenResponse = response.getBody();
-		authNResponseDto = new AuthNResponseDto();
-		authNResponseDto.setToken(accessTokenResponse.getAccess_token());
-		authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
-		authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
-		authNResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
-		authNResponseDto.setMessage(AuthConstant.USERPWD_SUCCESS_MESSAGE);
-		authNResponseDto.setRefreshExpiryTime(Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
-		return authNResponseDto;
+		if (accessTokenResponse != null) {
+			authNResponseDto = new AuthNResponseDto();
+			authNResponseDto.setToken(accessTokenResponse.getAccess_token());
+			authNResponseDto.setRefreshToken(accessTokenResponse.getRefresh_token());
+			authNResponseDto.setExpiryTime(Long.parseLong(accessTokenResponse.getExpires_in()));
+			authNResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
+			authNResponseDto.setMessage(AuthConstant.USERPWD_SUCCESS_MESSAGE);
+			authNResponseDto.setRefreshExpiryTime(Long.parseLong(accessTokenResponse.getRefresh_expires_in()));
+			return authNResponseDto;
+		} else {
+			throw new AuthManagerException(AuthErrorCode.CLIENT_ERROR.getErrorCode(), "response body is null");
+		}
 	}
 
 	@Override
 	public IndividualIdDto getIndividualIdBasedOnUserID(String userId, String appId) {
-		return keycloakImpl.getIndividualIdFromUserId(userId,authUtil.getRealmIdFromAppId(appId));
+		return keycloakImpl.getIndividualIdFromUserId(userId, authUtil.getRealmIdFromAppId(appId));
 	}
 
 	@Override
 	public MosipUserListDto getListOfUsersDetails(String realmId, String roleName, int pageStart, int pageFetch,
-			String email, String firstName, String lastName, String username,String search) {
+			String email, String firstName, String lastName, String username, String search) {
 		return keycloakImpl.getListOfUsersDetails(authUtil.getRealmIdFromAppId(realmId), roleName, pageStart, pageFetch,
-				email, firstName, lastName, username,search);
+				email, firstName, lastName, username, search);
 	}
 }

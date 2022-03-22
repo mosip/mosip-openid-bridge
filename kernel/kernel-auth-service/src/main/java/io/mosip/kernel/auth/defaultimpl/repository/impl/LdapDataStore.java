@@ -216,7 +216,8 @@ public class LdapDataStore implements DataStore {
 			throw new AuthManagerException(LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorCode(),
 					LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorMessage(), e);
 		} finally {
-			connection.close();
+			if (connection != null)
+				connection.close();
 		}
 		return mosipUserDto;
 	}
@@ -247,8 +248,10 @@ public class LdapDataStore implements DataStore {
 			throw new AuthManagerException(LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorCode(),
 					LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorMessage(), ex);
 		} finally {
-			connection.unBind();
-			connection.close();
+			if (connection != null) {
+				connection.unBind();
+				connection.close();
+			}
 		}
 		return null;
 	}
@@ -273,8 +276,10 @@ public class LdapDataStore implements DataStore {
 			throw new AuthManagerException(LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorCode(),
 					LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorMessage(), ex);
 		} finally {
-			connection.unBind();
-			connection.close();
+			if (connection != null) {
+				connection.unBind();
+				connection.close();
+			}
 		}
 		return null;
 	}
@@ -387,11 +392,12 @@ public class LdapDataStore implements DataStore {
 					LDAPErrorCode.LDAP_ROLES_REQUEST_ERROR.getErrorMessage(), e);
 		} finally {
 			try {
-				rolesData.close();
-				connection.close();
+				if (rolesData != null)
+					rolesData.close();
+				if (connection != null)
+					connection.close();
 			} catch (IOException e) {
-				throw new AuthManagerException(LDAPErrorCode.LDAP_ROLES_REQUEST_ERROR.getErrorCode(),
-						LDAPErrorCode.LDAP_ROLES_REQUEST_ERROR.getErrorMessage(), e);
+				LOGGER.error(e.getMessage());
 			}
 		}
 	}
@@ -418,7 +424,8 @@ public class LdapDataStore implements DataStore {
 			throw new AuthManagerException(LDAPErrorCode.LDAP_ROLES_REQUEST_ERROR.getErrorCode(),
 					LDAPErrorCode.LDAP_ROLES_REQUEST_ERROR.getErrorMessage(), ex);
 		} finally {
-			connection.close();
+			if (connection != null)
+				connection.close();
 		}
 	}
 
@@ -448,7 +455,8 @@ public class LdapDataStore implements DataStore {
 			throw new AuthManagerException(LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorCode(),
 					LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorMessage(), e);
 		} finally {
-			connection.close();
+			if (connection != null)
+				connection.close();
 		}
 		mosipUserSaltList.setMosipUserSaltList(mosipUserDtos);
 		return mosipUserSaltList;
@@ -471,7 +479,8 @@ public class LdapDataStore implements DataStore {
 				ridDto.setRId(data.getRId());
 			}
 		} finally {
-			ldapConnection.close();
+			if (ldapConnection != null)
+				ldapConnection.close();
 		}
 		return ridDto;
 	}
@@ -804,7 +813,8 @@ public class LdapDataStore implements DataStore {
 
 	private void rollbackUser(Dn userDn, DirContext context) {
 		try {
-			context.destroySubcontext(userDn.getName());
+			if (context != null && userDn != null)
+				context.destroySubcontext(userDn.getName());
 		} catch (NamingException exception) {
 			throw new AuthManagerException(AuthErrorCode.ROLLBACK_USER_EXCEPTION.getErrorCode(),
 					AuthErrorCode.ROLLBACK_USER_EXCEPTION.getErrorMessage());
@@ -827,7 +837,8 @@ public class LdapDataStore implements DataStore {
 			throw new AuthManagerException(LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorCode(),
 					LDAPErrorCode.LDAP_CONNECTION_ERROR.getErrorMessage(), e);
 		} finally {
-			ldapConnection.close();
+			if (ldapConnection != null)
+				ldapConnection.close();
 		}
 		return data;
 	}
@@ -871,11 +882,10 @@ public class LdapDataStore implements DataStore {
 			throw new LdapInvalidDnException("Invalid phone number");
 		}
 		Dn searchBase = new Dn("ou=people,c=mycountry");
-		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile="
-				+ mobileNumber + "))";
+		String searchFilter = "(&(objectClass=organizationalPerson)(objectClass=inetOrgPerson)(objectClass=person)(mobile={0}))";
 		LdapContext context = getContext();
 		NamingEnumeration<SearchResult> searchResult = context.search(searchBase.getName(), searchFilter,
-				new SearchControls());
+				new String[]{mobileNumber},new SearchControls());
 		if (!searchResult.hasMore()) {
 			throw new AuthManagerException("ADMN-ACM-MOB-NOT-FOUND", "Mobile is registered/not present");
 		}
@@ -1155,7 +1165,7 @@ public class LdapDataStore implements DataStore {
 
 	@Override
 	public MosipUserListDto getListOfUsersDetails(String realmId, String roleName, int pageStart, int pageFetch,
-			String email, String firstName, String lastName, String username,String search) {
+			String email, String firstName, String lastName, String username, String search) {
 		throw new UnsupportedOperationException("This openeration is not supported");
 	}
 
