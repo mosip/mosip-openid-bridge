@@ -113,7 +113,8 @@ public enum AuthErrorCode {
 	KEYCLOAK_STATE_EXCEPTION("KER-ATH-022", "state is not maching"),
 	INVALID_CREDENTIALS("KER-ATH-023","Invalid Credentials"),
 	REALM_NOT_FOUND("KER-ATH-026","Realm not found:: %s"),
-	INDIVIDUAL_ID_NOT_FOUND("KER-ATH-027", "Individual Id not found for user");
+	INDIVIDUAL_ID_NOT_FOUND("KER-ATH-027", "Individual Id not found for user"),
+	DOMAIN_EXCEPTION("KER-ATH-028", "uri's domain name not found in allowed domains");
 
 	/**
 	 * The error code
