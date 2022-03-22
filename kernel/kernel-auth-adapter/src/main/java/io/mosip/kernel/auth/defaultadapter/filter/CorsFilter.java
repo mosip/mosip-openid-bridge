@@ -32,7 +32,8 @@ public class CorsFilter extends OncePerRequestFilter {
 	private List<String> origins;
 	
 	public CorsFilter(String origins) {
-		this.origins=Arrays.asList(origins.split("( )*,( )*"));
+		this.origins=Arrays.asList(origins.split(","));
+		this.origins.parallelStream().forEach(x -> x.trim());
 	}
 
 	@Override

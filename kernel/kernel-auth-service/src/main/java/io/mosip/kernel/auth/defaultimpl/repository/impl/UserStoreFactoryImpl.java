@@ -69,7 +69,8 @@ public class UserStoreFactoryImpl implements UserStoreFactory {
 	public void buildDataStoreMap() {
 		dataStoreMap = new HashMap<>();
 		String datasources = mosipEnvironment.getDataStores();
-		List<String> dataStoreList = Arrays.asList(datasources.split("\\s*,\\s*"));
+		List<String> dataStoreList = Arrays.asList(datasources.split(","));
+		dataStoreList.parallelStream().forEach(x->x.trim());
 
 		for (String ds : dataStoreList) {
 			if (dataStoreMap.get(ds) == null) {
