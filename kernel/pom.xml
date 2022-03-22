@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<version>1.1.5.4</version>
+	<version>1.1.5.5-SNAPSHOT</version>
 	<groupId>io.mosip.kernel</groupId>
-	<artifactId>kernel-parent</artifactId>
+	<artifactId>mosip-openid-bridge</artifactId>
 	<packaging>pom</packaging>
-	<name>kernel</name>
-	<description>Parent project of MOSIP Kernel</description>
-	<url>https://github.com/mosip/commons</url>
+	<name>mosip-openid-bridge</name>
+	<description>Parent project of MOSIP mosip-openid-bridge</description>
+	<url>https://github.com/mosip/mosip-openid-bridge</url>
 <properties>		
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -17,10 +17,9 @@
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.version>3.8.0</maven.compiler.version>
 		<maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
-
 		<maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
 		<maven.war.plugin.version>3.1.0</maven.war.plugin.version>
-		<maven.jacoco.plugin.version>0.8.1</maven.jacoco.plugin.version>
+		<maven.jacoco.version>0.8.5</maven.jacoco.version>
 		<maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
 		<maven.javadoc.version>3.2.0</maven.javadoc.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
@@ -117,60 +116,14 @@
  -->
 
 
-		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/dto/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/security/**,**/*Config.java,**/*BootApplication.java,**/*VertxApplication.java,**/cbeffutil/**,**/*Utils.java,**/*Validator.java,**/*Helper.java,**/verticle/**,**/VidWriter.java/**,**/spi/**,**/core/http/**,"**/LocationServiceImpl.java","**/RegistrationCenterMachineServiceImpl.java","**/RegistrationCenterServiceImpl.java","**/pridgenerator/**","**/idgenerator/prid","**/proxy/**","**/cryptosignature/**"</sonar.coverage.exclusions>
+		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/verticle/**,**/spi/**,"**/proxy/**"</sonar.coverage.exclusions>
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**</sonar.cpd.exclusions>
 	</properties>
 
 	<modules>
-	        <module>kernel-core</module>
-		<module>kernel-logger-logback</module>
-		<module>kernel-auth-adapter</module>
-		<module>kernel-dataaccess-hibernate</module>
-		<module>kernel-auditmanager-api</module>
-		<module>kernel-idgenerator-prid</module>
-		<module>kernel-idgenerator-vid</module>
-		<module>kernel-idgenerator-tokenid</module>
-		<module>kernel-idgenerator-machineid</module>
-		<module>kernel-idgenerator-regcenterid</module>
-		<module>kernel-idgenerator-mispid</module>
-		<module>kernel-licensekeygenerator-misp</module>
-		<module>kernel-idgenerator-rid</module>
-		<module>kernel-idgenerator-partnerid</module>
-		<module>kernel-idvalidator-prid</module>
-		<module>kernel-idvalidator-rid</module> 
-		<module>kernel-idvalidator-uin</module>
-		<module>kernel-idvalidator-vid</module>
-		<module>kernel-idvalidator-mispid</module>
-		<module>kernel-pinvalidator</module>
-		<module>kernel-keygenerator-bouncycastle</module>
-		<module>kernel-crypto-jce</module>
-		<module>kernel-templatemanager-velocity</module>
-		<module>kernel-pdfgenerator-itext</module>
-		<module>kernel-datamapper-orika</module>
-		<module>kernel-qrcodegenerator-zxing</module>
-		<module>kernel-cbeffutil-api</module>
-		<module>kernel-transliteration-icu4j</module>
-		<module>kernel-applicanttype-api</module>
-		<module>kernel-crypto-signature</module>
-		<module>kernel-idobjectvalidator</module>
-		<module>kernel-bioapi-provider</module>
-		<module>kernel-registration-packet-manager</module>
-		<module>kernel-authcodeflowproxy-api</module>
-		<module>kernel-websubclient-api</module>
-		<module>kernel-auditmanager-service</module>
-		<module>kernel-otpmanager-service</module>
-		<module>kernel-notification-service</module>
+	    <module>kernel-auth-adapter</module>
 		<module>kernel-auth-service</module>
-		<module>kernel-ridgenerator-service</module>
-		<module>kernel-keymanager-service</module>
-		<module>kernel-idgenerator-service</module>
-		<module>kernel-pridgenerator-service</module>
-		<module>kernel-salt-generator</module>
-		<module>kernel-biometrics-api</module>
-		<module>kernel-biosdk-provider</module>
-		<module>object-store</module>
-		<module>keys-generator</module>
-	</modules>
+		</modules>
 
 	
 <distributionManagement>
@@ -193,27 +146,28 @@
 						<skipTests>${skipTests}</skipTests>
 						<skip>false</skip>
 						<argLine>
-							--illegal-access=permit
+							${argLine} --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED --illegal-access=permit
 						</argLine>
 					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>${maven.jacoco.plugin.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.sonarsource.scanner.maven</groupId>
-					<artifactId>sonar-maven-plugin</artifactId>
-					<version>${maven.sonar.plugin.version}</version>
-					   <executions>
-							<execution>
-								<phase>verify</phase>
-								<goals>
-									<goal>sonar</goal>
-								</goals>
-							</execution>
-					  </executions>
+					<version>${maven.jacoco.version}</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>prepare-agent</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>report</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>report</goal>
+							</goals>
+						</execution>
+					</executions>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -257,34 +211,6 @@
 						</archive>
 					</configuration>
 				</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<configuration>
-					<append>true</append>
-				</configuration>
-				<executions>
-					<execution>
-						<id>agent-for-ut</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>agent-for-it</id>
-						<goals>
-							<goal>prepare-agent-integration</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>jacoco-site</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -435,4 +361,35 @@
                   <organizationUrl>https://github.com/mosip/commons</organizationUrl>
                 </developer>
         </developers>
+	<profiles>
+		<profile>
+			<id>sonar</id>
+			<properties>
+				<sonar.sources>.</sonar.sources>
+				<sonar.inclusions>src/main/java/**,src/main/resources/**</sonar.inclusions>
+				<sonar.exclusions>${sonar.coverage.exclusions}</sonar.exclusions>
+				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+			</properties>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonarsource.scanner.maven</groupId>
+						<artifactId>sonar-maven-plugin</artifactId>
+						<version>${maven.sonar.plugin.version}</version>
+						<executions>
+							<execution>
+								<phase>verify</phase>
+								<goals>
+									<goal>sonar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	</project>

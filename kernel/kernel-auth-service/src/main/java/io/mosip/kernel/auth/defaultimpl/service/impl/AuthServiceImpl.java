@@ -798,4 +798,9 @@ public class AuthServiceImpl implements AuthService {
 		return authNResponseDto;
 	}
 
+	@Override
+	public IndividualIdDto getIndividualIdBasedOnUserID(String userId, String appId) {
+		return keycloakImpl.getIndividualIdFromUserId(userId, authUtil.getRealmIdFromAppId(appId));
+	}
+
 }
