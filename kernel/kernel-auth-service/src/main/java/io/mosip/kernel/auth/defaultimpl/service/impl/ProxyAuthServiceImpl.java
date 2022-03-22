@@ -454,4 +454,9 @@ public class ProxyAuthServiceImpl implements AuthService {
 				AuthConstant.USERPWD_SUCCESS_MESSAGE);
 	}
 
+	@Override
+	public IndividualIdDto getIndividualIdBasedOnUserID(String userId, String appId) {
+		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
+	}
+
 }

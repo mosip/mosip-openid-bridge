@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import io.mosip.kernel.core.authmanager.model.*;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
@@ -705,6 +708,24 @@ public class AuthController {
 		authNResponseDto.setExpiryTime(Long.parseLong(mosipUserDtoToken.getAccessTokenExpTime()));
 		authNResponseDto.setRefreshExpiryTime(Long.parseLong(mosipUserDtoToken.getRefreshTokenExpTime()));
 		responseWrapper.setResponse(authNResponseDto);
+		return responseWrapper;
+	}
+
+	/**
+	 * This API will fetch RID based on appId and userId.
+	 *
+	 * @param appId  - application Id
+	 * @param userId - user Id
+	 * @return {@link IndividualIdDto}
+	 * @throws Exception
+	 */
+	@ResponseFilter
+	@GetMapping(value = "individualId/{appid}/{userid}")
+	public ResponseWrapper<IndividualIdDto> getIndividualId(@PathVariable("appid") String appId,
+			@PathVariable("userid") String userId) {
+		ResponseWrapper<IndividualIdDto> responseWrapper = new ResponseWrapper<>();
+		IndividualIdDto individualIdDto = authService.getIndividualIdBasedOnUserID(userId, appId);
+		responseWrapper.setResponse(individualIdDto);
 		return responseWrapper;
 	}
 }

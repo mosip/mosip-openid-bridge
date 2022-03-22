@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import io.mosip.kernel.core.authmanager.model.*;
 import org.bouncycastle.util.Arrays;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -22,23 +23,6 @@ import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
 import io.mosip.kernel.auth.defaultimpl.dto.DataBaseProps;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.repository.DataStore;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
-import io.mosip.kernel.core.authmanager.model.ClientSecret;
-import io.mosip.kernel.core.authmanager.model.LoginUser;
-import io.mosip.kernel.core.authmanager.model.MosipUserDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
-import io.mosip.kernel.core.authmanager.model.OtpUser;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
-import io.mosip.kernel.core.authmanager.model.RIdDto;
-import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
-import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
 
 /**
  * @author Ramadurai Pandian
@@ -330,6 +314,12 @@ public class DBDataStore implements DataStore {
 	public UserDetailsResponseDto getUserDetailBasedOnUid(List<String> userId) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public IndividualIdDto getIndividualIdFromUserId(String userId, String realmID) {
+		// TODO code cleaup
+		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
 	}
 
 }
