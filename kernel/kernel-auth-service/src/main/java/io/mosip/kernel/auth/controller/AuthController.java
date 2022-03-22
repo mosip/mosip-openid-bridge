@@ -93,8 +93,8 @@ public class AuthController {
 	@Value("${mosip.kernel.auth-code-url-splitter:#URISPLITTER#}")
 	private String urlSplitter;
 
-	@Value("#{'${auth.allowed.domains}'.split(',')}")
-	private List<String> allowedDomains;
+	@Value("#{'${auth.allowed.urls}'.split(',')}")
+	private List<String> allowedUrls;
 
 	/**
 	 * Autowired reference for {@link MosipEnvironment}
@@ -834,8 +834,7 @@ public class AuthController {
 		String uri = new String(Base64.decodeBase64(redirectURI.getBytes()));
 
 		LOGGER.info("login-redirect open id login uri " + uri);
-		URL url = new URL(uri);
-		if (allowedDomains.contains(url.getHost())) {
+		if (allowedUrls.contains(uri)) {
 			res.sendRedirect(uri);
 		} else {
 			throw new AuthManagerException(AuthErrorCode.DOMAIN_EXCEPTION.getErrorCode(),
