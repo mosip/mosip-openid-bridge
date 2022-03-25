@@ -82,10 +82,6 @@ public class UserStoreFactoryImpl implements UserStoreFactory {
 				if (ds.contains(AuthConstant.LDAP)) {
 					DataStore idatastore = new LdapDataStore(dataBaseConfig);
 					dataStoreMap.put(ds, idatastore);
-				} else {
-					DataStore idatastore = new DBDataStore(dataBaseConfig, maximumPoolSize, validationTimeout,
-							connectionTimeout, idleTimeout, minimumIdle);
-					dataStoreMap.put(ds, idatastore);
 				}
 
 			}
