@@ -34,10 +34,14 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import io.mosip.kernel.auth.defaultadapter.filter.AuthFilter;
+import io.mosip.kernel.auth.defaultadapter.filter.CSRFFilter;
 import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
@@ -74,6 +78,9 @@ import io.mosip.kernel.core.util.EmptyCheckUtils;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
+
+	@Value("${mosip.kernel.csrf_ignore.url:}")
+	private String[] csrfIgnoreUrls;
 
 	@Value("${mosip.security.csrf-enable:false}")
 	private boolean isCSRFEnable;
@@ -146,7 +153,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 		if (!isCSRFEnable) {
 			http = http.csrf().disable();
+		} else{
+			http.csrf().ignoringAntMatchers(csrfIgnoreUrls)
+				.csrfTokenRepository(this.getCsrfTokenRepository());
 		}
+
 		http.authorizeRequests().antMatchers("*").authenticated().and().exceptionHandling()
 				.authenticationEntryPoint(new AuthEntryPoint()).and().sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -169,6 +180,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		}
 	}
 
+	private CsrfTokenRepository getCsrfTokenRepository() {
+		CookieCsrfTokenRepository cookieCsrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+		cookieCsrfTokenRepository.setCookiePath("/");
+		return cookieCsrfTokenRepository;
+	} 
 }
 
 class AuthEntryPoint implements AuthenticationEntryPoint {
