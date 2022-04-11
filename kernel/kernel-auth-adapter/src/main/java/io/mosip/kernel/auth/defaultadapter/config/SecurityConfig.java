@@ -35,13 +35,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import io.mosip.kernel.auth.defaultadapter.filter.AuthFilter;
-import io.mosip.kernel.auth.defaultadapter.filter.CSRFFilter;
 import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
