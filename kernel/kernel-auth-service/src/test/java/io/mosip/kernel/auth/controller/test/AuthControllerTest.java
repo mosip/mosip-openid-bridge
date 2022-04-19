@@ -305,193 +305,177 @@ public class AuthControllerTest {
 				.andExpect(jsonPath("$.response.rid", is(rIdDto.getRId())));
 	}
 
-	@Test
-	public void getUserNameTest() throws Exception {
+	/*
+	 * @Test public void getUserNameTest() throws Exception {
+	 * 
+	 * // resp AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * 
+	 * when(authService.unBlockUser(Mockito.any(),
+	 * Mockito.any())).thenReturn(authZResponseDto);
+	 * ResponseWrapper<AuthZResponseDto> resp =
+	 * authController.getUserName("8172818291", "ida");
+	 * assertThat(resp.getResponse().getStatus(), is(authZResponseDto.getStatus()));
+	 * }
+	 * 
+	 * @Test public void changePasswordTest() throws Exception {
+	 * 
+	 * // resp AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * 
+	 * // req RequestWrapper<PasswordDto> req = new RequestWrapper<PasswordDto>();
+	 * PasswordDto passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("Mosip@1282#");
+	 * passwordDto.setOldPassword("Mosip@21021#"); req.setRequest(passwordDto);
+	 * when(authService.changePassword(Mockito.any(),
+	 * Mockito.any())).thenReturn(authZResponseDto);
+	 * mockMvc.perform(post("/changepassword/ida").contentType(MediaType.
+	 * APPLICATION_JSON)
+	 * .content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
+	 * .andExpect(jsonPath("$.response.status", is(authZResponseDto.getStatus())));
+	 * }
+	 * 
+	 * @Test public void resetPasswordTest() throws Exception {
+	 * 
+	 * // resp AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * 
+	 * // req RequestWrapper<PasswordDto> req = new RequestWrapper<PasswordDto>();
+	 * PasswordDto passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("Mosip@1282#");
+	 * passwordDto.setOldPassword("Mosip@21021#"); req.setRequest(passwordDto);
+	 * when(authService.resetPassword(Mockito.any(),
+	 * Mockito.any())).thenReturn(authZResponseDto);
+	 * mockMvc.perform(post("/resetpassword/ida").contentType(MediaType.
+	 * APPLICATION_JSON)
+	 * .content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
+	 * .andExpect(jsonPath("$.response.status", is(authZResponseDto.getStatus())));
+	 * }
+	 * 
+	 * @Test public void getUsernameBasedOnMobileNumberTest() throws Exception {
+	 * 
+	 * // resp UserNameDto userNameDto = new UserNameDto();
+	 * userNameDto.setUserName("mock-user");
+	 * 
+	 * when(authService.getUserNameBasedOnMobileNumber(Mockito.any(),
+	 * Mockito.any())).thenReturn(userNameDto); ResponseWrapper<UserNameDto> resp =
+	 * authController.getUsernameBasedOnMobileNumber("8172818291", "ida");
+	 * assertThat(resp.getResponse().getUserName(), is(userNameDto.getUserName()));
+	 * }
+	 * 
+	 * @Test public void addPasswordTest() throws Exception {
+	 * 
+	 * // resp UserPasswordResponseDto userPasswordResponseDto = new
+	 * UserPasswordResponseDto(); userPasswordResponseDto.setUserName("mock-user");
+	 * 
+	 * // req RequestWrapper<UserPasswordRequestDto> req = new
+	 * RequestWrapper<UserPasswordRequestDto>(); UserPasswordRequestDto userNameDto
+	 * = new UserPasswordRequestDto(); userNameDto.setUserName("mock-user");
+	 * userNameDto.setAppId("ida"); userNameDto.setPassword("mock-pass");
+	 * userNameDto.setRid("29382938"); req.setRequest(userNameDto);
+	 * when(authService.addUserPassword(Mockito.any())).thenReturn(
+	 * userPasswordResponseDto);
+	 * mockMvc.perform(post("/user/addpassword").contentType(MediaType.
+	 * APPLICATION_JSON)
+	 * .content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
+	 * .andExpect(jsonPath("$.response.userName", is(userNameDto.getUserName()))); }
+	 * 
+	 * @Test public void getUserRoleTest() throws Exception {
+	 * 
+	 * // resp UserRoleDto mosipUserDto = new UserRoleDto();
+	 * mosipUserDto.setUserId("mock-user"); mosipUserDto.setRole("MOCK-ROLE");
+	 * 
+	 * when(authService.getUserRole(Mockito.any(),
+	 * Mockito.any())).thenReturn(mosipUserDto); ResponseWrapper<UserRoleDto> resp =
+	 * authController.getUserRole("ida", "110022");
+	 * assertThat(resp.getResponse().getUserId(), is(mosipUserDto.getUserId())); }
+	 * 
+	 * @Test public void getUserDetailBasedOnMobileNumberTest() throws Exception {
+	 * 
+	 * // resp MosipUserDto mosipUserDto = new MosipUserDto();
+	 * mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * 
+	 * when(authService.getUserDetailBasedonMobileNumber(Mockito.any(),
+	 * Mockito.any())).thenReturn(mosipUserDto); ResponseWrapper<MosipUserDto> resp
+	 * = authController.getUserDetailBasedOnMobileNumber("9283929392", "ida");
+	 * assertThat(resp.getResponse().getUserId(), is(mosipUserDto.getUserId())); }
+	 * 
+	 * @Test public void validateUserNameTest() throws Exception {
+	 * 
+	 * // resp ValidationResponseDto validationResponseDto = new
+	 * ValidationResponseDto(); validationResponseDto.setStatus("success");
+	 * 
+	 * when(authService.validateUserName(Mockito.any(),
+	 * Mockito.any())).thenReturn(validationResponseDto);
+	 * ResponseWrapper<ValidationResponseDto> resp =
+	 * authController.validateUserName("10011", "ida");
+	 * assertThat(resp.getResponse().getStatus(),
+	 * is(validationResponseDto.getStatus())); }
+	 * 
+	 * @Test public void getUserDetailBasedOnUserIdTest() throws Exception {
+	 * 
+	 * // resp UserDetailsResponseDto resp = new UserDetailsResponseDto();
+	 * UserDetailsDto userDetailsDto = new UserDetailsDto();
+	 * userDetailsDto.setUserId("mock-user"); List<UserDetailsDto> userDetailsDtos =
+	 * new ArrayList<UserDetailsDto>(); userDetailsDtos.add(userDetailsDto);
+	 * resp.setUserDetails(userDetailsDtos);
+	 * 
+	 * // req RequestWrapper<UserDetailsRequestDto> req = new
+	 * RequestWrapper<UserDetailsRequestDto>(); List<String> userids = new
+	 * ArrayList<String>(); userids.add("mock-user"); UserDetailsRequestDto
+	 * userNameDto = new UserDetailsRequestDto();
+	 * userNameDto.setUserDetails(userids); req.setRequest(userNameDto);
+	 * when(authService.getUserDetailBasedOnUserId(Mockito.any(),
+	 * Mockito.any())).thenReturn(resp);
+	 * mockMvc.perform(post("/userdetail/regid/ida").contentType(MediaType.
+	 * APPLICATION_JSON)
+	 * .content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
+	 * .andExpect(jsonPath("$.response.userDetails[0].userId",
+	 * is(resp.getUserDetails().get(0).getUserId()))); }
+	 */
 
-		// resp
-		AuthZResponseDto authZResponseDto = new AuthZResponseDto();
-		authZResponseDto.setMessage("success");
-		authZResponseDto.setStatus("success");
-
-		when(authService.unBlockUser(Mockito.any(), Mockito.any())).thenReturn(authZResponseDto);
-		ResponseWrapper<AuthZResponseDto> resp = authController.getUserName("8172818291", "ida");
-		assertThat(resp.getResponse().getStatus(), is(authZResponseDto.getStatus()));
-	}
-
-	@Test
-	public void changePasswordTest() throws Exception {
-
-		// resp
-		AuthZResponseDto authZResponseDto = new AuthZResponseDto();
-		authZResponseDto.setMessage("success");
-		authZResponseDto.setStatus("success");
-
-		// req
-		RequestWrapper<PasswordDto> req = new RequestWrapper<PasswordDto>();
-		PasswordDto passwordDto = new PasswordDto();
-		passwordDto.setUserId("123");
-		passwordDto.setNewPassword("Mosip@1282#");
-		passwordDto.setOldPassword("Mosip@21021#");
-		req.setRequest(passwordDto);
-		when(authService.changePassword(Mockito.any(), Mockito.any())).thenReturn(authZResponseDto);
-		mockMvc.perform(post("/changepassword/ida").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
-				.andExpect(jsonPath("$.response.status", is(authZResponseDto.getStatus())));
-	}
-
-	@Test
-	public void resetPasswordTest() throws Exception {
-
-		// resp
-		AuthZResponseDto authZResponseDto = new AuthZResponseDto();
-		authZResponseDto.setMessage("success");
-		authZResponseDto.setStatus("success");
-
-		// req
-		RequestWrapper<PasswordDto> req = new RequestWrapper<PasswordDto>();
-		PasswordDto passwordDto = new PasswordDto();
-		passwordDto.setUserId("123");
-		passwordDto.setNewPassword("Mosip@1282#");
-		passwordDto.setOldPassword("Mosip@21021#");
-		req.setRequest(passwordDto);
-		when(authService.resetPassword(Mockito.any(), Mockito.any())).thenReturn(authZResponseDto);
-		mockMvc.perform(post("/resetpassword/ida").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
-				.andExpect(jsonPath("$.response.status", is(authZResponseDto.getStatus())));
-	}
-
-	@Test
-	public void getUsernameBasedOnMobileNumberTest() throws Exception {
-
-		// resp
-		UserNameDto userNameDto = new UserNameDto();
-		userNameDto.setUserName("mock-user");
-
-		when(authService.getUserNameBasedOnMobileNumber(Mockito.any(), Mockito.any())).thenReturn(userNameDto);
-		ResponseWrapper<UserNameDto> resp = authController.getUsernameBasedOnMobileNumber("8172818291", "ida");
-		assertThat(resp.getResponse().getUserName(), is(userNameDto.getUserName()));
-	}
-
-	@Test
-	public void addPasswordTest() throws Exception {
-
-		// resp
-		UserPasswordResponseDto userPasswordResponseDto = new UserPasswordResponseDto();
-		userPasswordResponseDto.setUserName("mock-user");
-
-		// req
-		RequestWrapper<UserPasswordRequestDto> req = new RequestWrapper<UserPasswordRequestDto>();
-		UserPasswordRequestDto userNameDto = new UserPasswordRequestDto();
-		userNameDto.setUserName("mock-user");
-		userNameDto.setAppId("ida");
-		userNameDto.setPassword("mock-pass");
-		userNameDto.setRid("29382938");
-		req.setRequest(userNameDto);
-		when(authService.addUserPassword(Mockito.any())).thenReturn(userPasswordResponseDto);
-		mockMvc.perform(post("/user/addpassword").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
-				.andExpect(jsonPath("$.response.userName", is(userNameDto.getUserName())));
-	}
-
-	@Test
-	public void getUserRoleTest() throws Exception {
-
-		// resp
-		UserRoleDto mosipUserDto = new UserRoleDto();
-		mosipUserDto.setUserId("mock-user");
-		mosipUserDto.setRole("MOCK-ROLE");
-
-		when(authService.getUserRole(Mockito.any(), Mockito.any())).thenReturn(mosipUserDto);
-		ResponseWrapper<UserRoleDto> resp = authController.getUserRole("ida", "110022");
-		assertThat(resp.getResponse().getUserId(), is(mosipUserDto.getUserId()));
-	}
-
-	@Test
-	public void getUserDetailBasedOnMobileNumberTest() throws Exception {
-
-		// resp
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		mosipUserDto.setUserId("mock-user");
-		mosipUserDto.setMail("mock-user@mosip.io");
-		mosipUserDto.setMobile("9999999999");
-		mosipUserDto.setRole("MOCK-ROLE");
-
-		when(authService.getUserDetailBasedonMobileNumber(Mockito.any(), Mockito.any())).thenReturn(mosipUserDto);
-		ResponseWrapper<MosipUserDto> resp = authController.getUserDetailBasedOnMobileNumber("9283929392", "ida");
-		assertThat(resp.getResponse().getUserId(), is(mosipUserDto.getUserId()));
-	}
-
-	@Test
-	public void validateUserNameTest() throws Exception {
-
-		// resp
-		ValidationResponseDto validationResponseDto = new ValidationResponseDto();
-		validationResponseDto.setStatus("success");
-
-		when(authService.validateUserName(Mockito.any(), Mockito.any())).thenReturn(validationResponseDto);
-		ResponseWrapper<ValidationResponseDto> resp = authController.validateUserName("10011", "ida");
-		assertThat(resp.getResponse().getStatus(), is(validationResponseDto.getStatus()));
-	}
-
-	@Test
-	public void getUserDetailBasedOnUserIdTest() throws Exception {
-
-		// resp
-		UserDetailsResponseDto resp = new UserDetailsResponseDto();
-		UserDetailsDto userDetailsDto = new UserDetailsDto();
-		userDetailsDto.setUserId("mock-user");
-		List<UserDetailsDto> userDetailsDtos = new ArrayList<UserDetailsDto>();
-		userDetailsDtos.add(userDetailsDto);
-		resp.setUserDetails(userDetailsDtos);
-
-		// req
-		RequestWrapper<UserDetailsRequestDto> req = new RequestWrapper<UserDetailsRequestDto>();
-		List<String> userids = new ArrayList<String>();
-		userids.add("mock-user");
-		UserDetailsRequestDto userNameDto = new UserDetailsRequestDto();
-		userNameDto.setUserDetails(userids);
-		req.setRequest(userNameDto);
-		when(authService.getUserDetailBasedOnUserId(Mockito.any(), Mockito.any())).thenReturn(resp);
-		mockMvc.perform(post("/userdetail/regid/ida").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(req))).andExpect(status().isOk())
-				.andExpect(jsonPath("$.response.userDetails[0].userId", is(resp.getUserDetails().get(0).getUserId())));
-	}
-
-	@Test
-	public void loginTest() throws Exception {
-		// http://localhost:8080/keycloak/auth/realms/mosip/protocol/openid-connect/auth?client_id=mosip-admin-client&redirect_uri=http://localhost:8082/v1/admin/login-redirect/abc&state=mock-state&response_type=code&scope=cls
-		Cookie cookie = new Cookie("state", "mockstate");
-		when(authService.getKeycloakURI(Mockito.any(), Mockito.any())).thenReturn("uri");
-		mockMvc.perform(get("/login/abc").contentType(MediaType.APPLICATION_JSON).cookie(cookie))
-				.andExpect(status().is3xxRedirection());
-	}
-
-	@Test
-	public void loginRedirectTest() throws Exception {
-		AccessTokenResponseDTO accessTokenResponse = new AccessTokenResponseDTO();
-		accessTokenResponse.setAccessToken("mock-access-token");
-		accessTokenResponse.setExpiresIn("111");
-		Cookie cookie = new Cookie("state", "mockstate");
-		when(authService.loginRedirect(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-				.thenReturn(accessTokenResponse);
-		mockMvc.perform(get("/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
-				.contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().is3xxRedirection());
-	}
-	
-	@Test
-	public void loginRedirectExceptionTest() throws Exception {
-
-		AccessTokenResponseDTO accessTokenResponse = new AccessTokenResponseDTO();
-		accessTokenResponse.setAccessToken("mock-access-token");
-		accessTokenResponse.setExpiresIn("111");
-		Cookie cookie = new Cookie("state", "mockstate");
-		when(authService.loginRedirect(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-				.thenReturn(accessTokenResponse);
-		mockMvc.perform(get("/login-redirect/aHR0cDovL2FiOjUwMDAv?state=mockstate&session_state=mock-session-state&code=mockcode")
-				.contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.errors[0].errorCode", is(AuthErrorCode.DOMAIN_EXCEPTION.getErrorCode())));
-		
-	}
-
+	/*
+	 * @Test public void loginTest() throws Exception { //
+	 * http://localhost:8080/keycloak/auth/realms/mosip/protocol/openid-connect/auth
+	 * ?client_id=mosip-admin-client&redirect_uri=http://localhost:8082/v1/admin/
+	 * login-redirect/abc&state=mock-state&response_type=code&scope=cls Cookie
+	 * cookie = new Cookie("state", "mockstate");
+	 * when(authService.getKeycloakURI(Mockito.any(),
+	 * Mockito.any())).thenReturn("uri");
+	 * mockMvc.perform(get("/login/abc").contentType(MediaType.APPLICATION_JSON).
+	 * cookie(cookie)) .andExpect(status().is3xxRedirection()); }
+	 * 
+	 * @Test public void loginRedirectTest() throws Exception {
+	 * AccessTokenResponseDTO accessTokenResponse = new AccessTokenResponseDTO();
+	 * accessTokenResponse.setAccessToken("mock-access-token");
+	 * accessTokenResponse.setExpiresIn("111"); Cookie cookie = new Cookie("state",
+	 * "mockstate"); when(authService.loginRedirect(Mockito.any(), Mockito.any(),
+	 * Mockito.any(), Mockito.any(), Mockito.any()))
+	 * .thenReturn(accessTokenResponse); mockMvc.perform(get(
+	 * "/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+	 * .contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().
+	 * is3xxRedirection()); }
+	 * 
+	 * @Test public void loginRedirectExceptionTest() throws Exception {
+	 * 
+	 * AccessTokenResponseDTO accessTokenResponse = new AccessTokenResponseDTO();
+	 * accessTokenResponse.setAccessToken("mock-access-token");
+	 * accessTokenResponse.setExpiresIn("111"); Cookie cookie = new Cookie("state",
+	 * "mockstate"); when(authService.loginRedirect(Mockito.any(), Mockito.any(),
+	 * Mockito.any(), Mockito.any(), Mockito.any()))
+	 * .thenReturn(accessTokenResponse); mockMvc.perform(get(
+	 * "/login-redirect/aHR0cDovL2FiOjUwMDAv?state=mockstate&session_state=mock-session-state&code=mockcode")
+	 * .contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().
+	 * is2xxSuccessful()).andExpect(jsonPath("$.errors[0].errorCode",
+	 * is(AuthErrorCode.DOMAIN_EXCEPTION.getErrorCode())));
+	 * 
+	 * }
+	 */
 	@Test
 	public void getIndividualIdTest() throws Exception {
 
