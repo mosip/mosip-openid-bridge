@@ -45,7 +45,6 @@ import io.mosip.kernel.auth.defaultimpl.dto.KeycloakErrorResponseDto;
 import io.mosip.kernel.auth.defaultimpl.dto.RealmAccessDto;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
-import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
 import io.mosip.kernel.auth.defaultimpl.service.OTPService;
 import io.mosip.kernel.auth.defaultimpl.service.TokenService;
@@ -57,8 +56,8 @@ import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
 import io.mosip.kernel.core.authmanager.model.AuthNResponse;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
 import io.mosip.kernel.core.authmanager.model.AuthResponseDto;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
 import io.mosip.kernel.core.authmanager.model.ClientSecret;
+import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
 import io.mosip.kernel.core.authmanager.model.LoginUser;
 import io.mosip.kernel.core.authmanager.model.LoginUserWithClientId;
 import io.mosip.kernel.core.authmanager.model.MosipUserDto;
@@ -66,20 +65,12 @@ import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
 import io.mosip.kernel.core.authmanager.model.OtpUser;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
 import io.mosip.kernel.core.authmanager.model.RIdDto;
 import io.mosip.kernel.core.authmanager.model.RefreshTokenRequest;
 import io.mosip.kernel.core.authmanager.model.RefreshTokenResponse;
 import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
 import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
 import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserRoleDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
-import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
 import io.mosip.kernel.core.authmanager.spi.AuthService;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 
@@ -116,9 +107,6 @@ public class AuthServiceImpl implements AuthService {
 
 	@Value("${mosip.iam.open-id-url}")
 	private String keycloakOpenIdUrl;
-
-	@Autowired
-	UserStoreFactory userStoreFactory;
 
 	@Autowired
 	KeycloakImpl keycloakImpl;
@@ -514,70 +502,9 @@ public class AuthServiceImpl implements AuthService {
 
 	}
 
-	@Deprecated
-	@Override
-	public AuthZResponseDto unBlockUser(String userId, String appId) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).unBlockAccount(userId);
-	}
-
-	@Deprecated
-	@Override
-	public AuthZResponseDto changePassword(String appId, PasswordDto passwordDto) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).changePassword(passwordDto);
-	}
-
-	@Deprecated
-	@Override
-	public AuthZResponseDto resetPassword(String appId, PasswordDto passwordDto) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).resetPassword(passwordDto);
-	}
-
-	@Deprecated
-	@Override
-	public UserNameDto getUserNameBasedOnMobileNumber(String appId, String mobileNumber) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp("registrationclient")
-				.getUserNameBasedOnMobileNumber(mobileNumber);
-
-	}
-
 	@Override
 	public MosipUserDto registerUser(UserRegistrationRequestDto userCreationRequestDto) {
 		return keycloakImpl.registerUser(userCreationRequestDto);
-	}
-
-	@Deprecated
-	@Override
-	public UserPasswordResponseDto addUserPassword(UserPasswordRequestDto userPasswordRequestDto) {
-		return userStoreFactory.getDataStoreBasedOnApp(userPasswordRequestDto.getAppId())
-				.addPassword(userPasswordRequestDto);
-	}
-
-	@Override
-	public UserRoleDto getUserRole(String appId, String userId) throws Exception {
-		MosipUserDto mosipuser = null;
-		mosipuser = userStoreFactory.getDataStoreBasedOnApp(appId).getUserRoleByUserId(userId);
-		UserRoleDto userRole = new UserRoleDto();
-		userRole.setUserId(mosipuser.getUserId());
-		userRole.setRole(mosipuser.getRole());
-		return userRole;
-	}
-
-	@Deprecated
-	@Override
-	public MosipUserDto getUserDetailBasedonMobileNumber(String appId, String mobileNumber) throws Exception {
-
-		return userStoreFactory.getDataStoreBasedOnApp(appId).getUserDetailBasedonMobileNumber(mobileNumber);
-	}
-
-	@Deprecated
-	@Override
-	public ValidationResponseDto validateUserName(String appId, String userName) {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).validateUserName(userName);
-	}
-
-	@Override
-	public UserDetailsResponseDto getUserDetailBasedOnUserId(String appId, List<String> userIds) {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).getUserDetailBasedOnUid(userIds);
 	}
 
 	@Override
