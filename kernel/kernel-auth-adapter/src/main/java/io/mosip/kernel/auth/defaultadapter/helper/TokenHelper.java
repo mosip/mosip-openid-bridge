@@ -79,10 +79,10 @@ public class TokenHelper {
 			String tokenUrl = new StringBuilder(issuerInternalURI).append(realm).append(tokenPath).toString();
 			response = restTemplate.postForEntity(tokenUrl, request, String.class);
 		} catch (HttpServerErrorException | HttpClientErrorException e) {
-			LOGGER.error("error connecting to auth service {}", e.getResponseBodyAsString());
+			LOGGER.error("error connecting to keycloak {}", e.getResponseBodyAsString());
 		}
 		if (response == null) {
-			LOGGER.error("error connecting to auth service {}",
+			LOGGER.error("error connecting to keycloak {}",
 					AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 			return null;
 		}
