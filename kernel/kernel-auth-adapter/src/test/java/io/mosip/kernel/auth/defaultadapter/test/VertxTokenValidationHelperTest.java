@@ -225,4 +225,5 @@ public class VertxTokenValidationHelperTest {
 		MosipUserDto md=vertxTokenValidationHelper.getTokenValidatedVertxUserResponse(restTemplate, routingContext, roles);
 		assertNull(md);
 	}	
+	
 }

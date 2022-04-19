@@ -1,12 +1,9 @@
 package io.mosip.kernel.auth.keycloak.test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,69 +13,31 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
-import io.mosip.kernel.auth.defaultimpl.dto.AccessTokenResponse;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
-import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
-import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
-import io.mosip.kernel.auth.defaultimpl.service.OTPService;
-import io.mosip.kernel.auth.defaultimpl.service.TokenService;
-import io.mosip.kernel.auth.defaultimpl.service.UinService;
 import io.mosip.kernel.auth.defaultimpl.util.AuthUtil;
-import io.mosip.kernel.auth.defaultimpl.util.TemplateUtil;
-import io.mosip.kernel.auth.defaultimpl.util.TokenGenerator;
-import io.mosip.kernel.auth.defaultimpl.util.TokenValidator;
 import io.mosip.kernel.auth.test.AuthTestBootApplication;
-import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
-import io.mosip.kernel.core.authmanager.model.AuthNResponse;
-import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
 import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserSalt;
-import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
 import io.mosip.kernel.core.authmanager.model.RIdDto;
-import io.mosip.kernel.core.authmanager.model.Role;
 import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
-import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserRoleDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
-import io.mosip.kernel.core.util.StringUtils;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
 @RunWith(SpringRunner.class)
