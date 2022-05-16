@@ -613,21 +613,6 @@ public class KeycloakImpl implements DataStore {
 		return mosipUserDtos;
 	}
 
-	private String getPasswordFromDatabase(String userName) {
-		return jdbcTemplate.query(FETCH_PASS_QUERY, new MapSqlParameterSource().addValue("username", userName),
-				new ResultSetExtractor<String>() {
-
-					@Override
-					public String extractData(ResultSet rs) throws SQLException, DataAccessException {
-						String pwd = null;
-						while (rs.next()) {
-							pwd = rs.getString("value");
-
-						}
-						return pwd;
-					}
-				});
-	}
 
 	/**
 	 * Gets the roles as string.
