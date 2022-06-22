@@ -68,7 +68,7 @@ public class CustomJWTAuthHandler extends AbstractUserDetailsAuthenticationProvi
 
 		AuthUserDetails authUserDetails = new AuthUserDetails(mosipUserDto, token.toString());
 		List<GrantedAuthority> grantedAuthorities = AuthorityUtils.commaSeparatedStringToAuthorityList(mosipUserDto.getRole());
-		authUserDetails.setAuthorities(grantedAuthorities);
+		authUserDetails.addRoleAuthorities(grantedAuthorities);
 		return authUserDetails;
 	}
 }
