@@ -8,6 +8,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.net.ssl.HostnameVerifier;
@@ -130,7 +131,8 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 		 DecodedJWT decodedJWT = JWT.decode(jwtToken);
 		Claim claim = decodedJWT.getClaim(AuthAdapterConstant.SCOPE);
 		if(claim != null && !(claim instanceof NullClaim)) {
-			
+			String scopesStr = claim.asString();
+			return Optional.of(scopesStr);
 		}
 		return Optional.empty();
 	}
