@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 import javax.net.ssl.HostnameVerifier;
@@ -30,9 +31,16 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.impl.NullClaim;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
 import io.mosip.kernel.auth.defaultadapter.config.RestTemplateInterceptor;
+import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
 import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
@@ -100,11 +108,30 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 		AuthToken authToken = (AuthToken) usernamePasswordAuthenticationToken;
 		String token = authToken.getToken();
 		MosipUserDto mosipUserDto = validationHelper.getTokenValidatedUserResponse(token, restTemplate);
-		List<GrantedAuthority> grantedAuthorities = AuthorityUtils
+		
+		List<GrantedAuthority> roleAuthorities = AuthorityUtils
 				.commaSeparatedStringToAuthorityList(mosipUserDto.getRole());
+		
 		AuthUserDetails authUserDetails = new AuthUserDetails(mosipUserDto, token);
-		authUserDetails.setAuthorities(grantedAuthorities);
+		authUserDetails.addRoleAuthorities(roleAuthorities);
+		
+		Optional<String> scopeClaimOpt = getScopeClaim(token);
+		if(scopeClaimOpt.isPresent()) {
+			List<GrantedAuthority> scopeAuthorities = AuthorityUtils
+					.createAuthorityList(StringUtils
+							.tokenizeToStringArray(scopeClaimOpt.get() , " "));
+			authUserDetails.addScopeAuthorities(scopeAuthorities);
+		}
 		return authUserDetails;
 
+	}
+
+	private Optional<String> getScopeClaim(String jwtToken) {
+		 DecodedJWT decodedJWT = JWT.decode(jwtToken);
+		Claim claim = decodedJWT.getClaim(AuthAdapterConstant.SCOPE);
+		if(claim != null && !(claim instanceof NullClaim)) {
+			
+		}
+		return Optional.empty();
 	}
 }
