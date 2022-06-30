@@ -115,25 +115,33 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	public void addAuthFilter(Router router, String path, HttpMethod httpMethod,
 			String commaSepratedRoles) {
 		Objects.requireNonNull(httpMethod, AuthAdapterConstant.HTTP_METHOD_NOT_NULL);
-		if (EmptyCheckUtils.isNullEmpty(commaSepratedRoles)) {
-			throw new NullPointerException(AuthAdapterConstant.ROLES_NOT_EMPTY_NULL);
-		}
-		String[] roles = commaSepratedRoles.split(",");
 		Route filterRoute = router.route(httpMethod, path);
 		filterRoute.handler(routingContext -> {
-			String token;
-			try {
-				token = validateToken(routingContext, roles);
-				if (token.isEmpty()) {
-					return;
-				}
+			tokenValidation(routingContext, commaSepratedRoles);
+		});
+	}
+
+	@Generated // coverage exclusion as this is a filter
+	@Override
+	public void addAuthFilter(RoutingContext routingContext, String commaSepratedRoles) {
+		tokenValidation(routingContext, commaSepratedRoles);
+	}
+
+	private void tokenValidation(RoutingContext routingContext, String commaSepratedRoles) {
+		try {
+			if (EmptyCheckUtils.isNullEmpty(commaSepratedRoles)) {
+				throw new NullPointerException(AuthAdapterConstant.ROLES_NOT_EMPTY_NULL);
+			}
+			String[] roles = commaSepratedRoles.split(",");
+			String token = validateToken(routingContext, roles);
+			if (!token.isEmpty()) {
 				HttpServerResponse httpServerResponse = routingContext.response();
 				httpServerResponse.putHeader(AuthAdapterConstant.AUTH_HEADER_SET_COOKIE, token);
 				routingContext.next();
-			} catch (Exception e) {
-				throw new AuthManagerException(String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e);
 			}
-		});
+		} catch (Exception e) {
+			throw new AuthManagerException(String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e);
+		}
 	}
 
 	private String validateToken(RoutingContext routingContext, String[] roles)
