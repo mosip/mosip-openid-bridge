@@ -20,8 +20,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerExchangeFilterFunction;
+import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -59,8 +58,8 @@ public class BeanConfig {
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
 
-	@Autowired(required = false)
-	private LoadBalancerClient loadBalancerClient;
+	@Autowired
+    private ReactorLoadBalancerExchangeFilterFunction lbFunction;
 
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
@@ -128,8 +127,8 @@ public class BeanConfig {
 
 	@Bean
 	public WebClient plainWebClient() {
-		ExchangeFilterFunction filterFunction = (loadBalancerClient != null)
-				? new LoadBalancerExchangeFilterFunction(loadBalancerClient)
+		ExchangeFilterFunction filterFunction = (lbFunction != null)
+				? lbFunction
 				: (req, next) -> {
 					return next.exchange(req);
 				};

@@ -8,6 +8,7 @@ on:
       - 1.*
       - develop
       - release*
+      - java17Migration
   
 jobs:
   build:
@@ -19,7 +20,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           ref: ${{ github.ref }}
-          java-version: 11
+          java-version: 17
           server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
@@ -84,7 +85,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           ref: ${{ github.ref }}
-          java-version: 11
+          java-version: 17
           server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
@@ -211,7 +212,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           ref: ${{ github.ref }}
-          java-version: 11
+          java-version: 17
           server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
