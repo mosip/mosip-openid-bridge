@@ -8,7 +8,7 @@ on:
       - 1.*
       - develop
       - release*
-      - java17Migration
+      - j17Migration
   
 jobs:
   build:
