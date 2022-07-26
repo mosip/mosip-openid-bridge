@@ -52,6 +52,8 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
+import static io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant.AUTH_HEADER;
+
 @Lazy
 @Component
 public class VertxAuthHandler implements VertxAuthenticationProvider {
@@ -65,8 +67,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	private VertxTokenValidationHelper validationHelper;
 	
 	private static final String DEFAULTADMIN_MOSIP_IO = "defaultadmin@mosip.io";
-	private static final String AUTHORIZATION = "Authorization=";
-	
+
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 	
@@ -137,8 +138,8 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 			String token = validateToken(routingContext, roles);
 			if (!token.isEmpty()) {
 				HttpServerResponse httpServerResponse = routingContext.response();
-				if (!token.startsWith(AUTHORIZATION))
-					token = AUTHORIZATION + token;
+				if (!token.startsWith(AUTH_HEADER))
+					token = AUTH_HEADER + token;
 				httpServerResponse.putHeader(AuthAdapterConstant.AUTH_HEADER_SET_COOKIE, token);
 				routingContext.next();
 			}
