@@ -65,6 +65,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	private VertxTokenValidationHelper validationHelper;
 	
 	private static final String DEFAULTADMIN_MOSIP_IO = "defaultadmin@mosip.io";
+	private static final String AUTHORIZATION = "Authorization=";
 	
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
@@ -136,6 +137,8 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 			String token = validateToken(routingContext, roles);
 			if (!token.isEmpty()) {
 				HttpServerResponse httpServerResponse = routingContext.response();
+				if (!token.startsWith(AUTHORIZATION))
+					token = AUTHORIZATION + token;
 				httpServerResponse.putHeader(AuthAdapterConstant.AUTH_HEADER_SET_COOKIE, token);
 				routingContext.next();
 			}
