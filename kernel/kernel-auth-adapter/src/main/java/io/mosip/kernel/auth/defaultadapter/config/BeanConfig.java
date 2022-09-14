@@ -56,18 +56,23 @@ public class BeanConfig {
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 
-	@Value("${mosip.kernel.http.default.restTemplate.max-connection-per-route:30}")
+	@Value("${mosip.kernel.http.default.restTemplate.max-connection-per-route:20}")
 	private Integer defaultRestTemplateMaxConnectionPerRoute;
 
 	@Value("${mosip.kernel.http.default.restTemplate.total-max-connections:100}")
 	private Integer defaultRestTemplateTotalMaxConnections;
 
-	@Value("${mosip.kernel.http.selftoken.restTemplate.max-connection-per-route:true}")
+	@Value("${mosip.kernel.http.selftoken.restTemplate.max-connection-per-route:20}")
 	private Integer selfTokenRestTemplateMaxConnectionPerRoute;
 
 	@Value("${mosip.kernel.http.selftoken.restTemplate.total-max-connections:100}")
 	private Integer selfTokenRestTemplateTotalMaxConnections;
 
+	@Value("${mosip.kernel.http.plain.restTemplate.max-connection-per-route:20}")
+	private Integer plainRestTemplateMaxConnectionPerRoute;
+
+	@Value("${mosip.kernel.http.plain.restTemplate.total-max-connections:100}")
+	private Integer plainRestTemplateTotalMaxConnections;
 
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
@@ -77,7 +82,9 @@ public class BeanConfig {
 
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute).setMaxConnTotal(defaultRestTemplateTotalMaxConnections).disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute)
+				.setMaxConnTotal(defaultRestTemplateTotalMaxConnections).disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
@@ -101,8 +108,25 @@ public class BeanConfig {
 	// this is just used by client token interceptor to call to renew and validate
 	// token
 	@Bean
-	public RestTemplate plainRestTemplate() {
-		RestTemplate template = new RestTemplate();
+	public RestTemplate plainRestTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException{
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setMaxConnPerRoute(plainRestTemplateMaxConnectionPerRoute)
+				.setMaxConnTotal(plainRestTemplateTotalMaxConnections).disableCookieManagement();
+		RestTemplate restTemplate = null;
+		if (sslBypass) {
+			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+					.loadTrustMaterial(null, acceptingTrustStrategy).build();
+			SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
+				public boolean verify(String arg0, SSLSession arg1) {
+					return true;
+				}
+			});
+			httpClientBuilder.setSSLSocketFactory(csf);
+		}
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+		requestFactory.setHttpClient(httpClientBuilder.build());
+		RestTemplate template = new RestTemplate(requestFactory);
 		template.setInterceptors(Collections.singletonList(defaultInterceptor));
 		return template;
 	}
@@ -116,7 +140,9 @@ public class BeanConfig {
 	public RestTemplate selfTokenRestTemplate(@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
 			@Autowired TokenHolder<String> cachedTokenObject)
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(selfTokenRestTemplateMaxConnectionPerRoute).setMaxConnTotal(selfTokenRestTemplateTotalMaxConnections).disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setMaxConnPerRoute(selfTokenRestTemplateMaxConnectionPerRoute)
+				.setMaxConnTotal(selfTokenRestTemplateTotalMaxConnections).disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
