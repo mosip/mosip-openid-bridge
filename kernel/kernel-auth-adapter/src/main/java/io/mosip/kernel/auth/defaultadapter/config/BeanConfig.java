@@ -56,6 +56,19 @@ public class BeanConfig {
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 
+	@Value("${mosip.kernel.http.default.restTemplate.max-connection-per-route:30}")
+	private Integer defaultRestTemplateMaxConnectionPerRoute;
+
+	@Value("${mosip.kernel.http.default.restTemplate.total-max-connections:100}")
+	private Integer defaultRestTemplateTotalMaxConnections;
+
+	@Value("${mosip.kernel.http.selftoken.restTemplate.max-connection-per-route:true}")
+	private Integer selfTokenRestTemplateMaxConnectionPerRoute;
+
+	@Value("${mosip.kernel.http.selftoken.restTemplate.total-max-connections:100}")
+	private Integer selfTokenRestTemplateTotalMaxConnections;
+
+
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
 
@@ -64,7 +77,7 @@ public class BeanConfig {
 
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute).setMaxConnTotal(defaultRestTemplateTotalMaxConnections).disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
@@ -103,7 +116,7 @@ public class BeanConfig {
 	public RestTemplate selfTokenRestTemplate(@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
 			@Autowired TokenHolder<String> cachedTokenObject)
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(selfTokenRestTemplateMaxConnectionPerRoute).setMaxConnTotal(selfTokenRestTemplateTotalMaxConnections).disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
