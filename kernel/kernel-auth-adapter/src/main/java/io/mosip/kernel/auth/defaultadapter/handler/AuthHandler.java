@@ -113,7 +113,7 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 		List<GrantedAuthority> roleAuthorities = AuthorityUtils
 				.commaSeparatedStringToAuthorityList(mosipUserDto.getRole());
 		
-		AuthUserDetails authUserDetails = new AuthUserDetails(mosipUserDto, token);
+		AuthUserDetails authUserDetails = new AuthUserDetails(mosipUserDto, token, mosipUserDto.getIdToken());
 		authUserDetails.addRoleAuthorities(roleAuthorities);
 		
 		Optional<String> scopeClaimOpt = getScopeClaim(token);
