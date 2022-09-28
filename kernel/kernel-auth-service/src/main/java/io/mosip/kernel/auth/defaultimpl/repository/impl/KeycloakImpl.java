@@ -8,6 +8,7 @@ import java.util.*;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.DatatypeConverter;
 
+import io.mosip.kernel.core.authmanager.model.*;
 import org.apache.directory.api.ldap.model.password.PasswordDetails;
 import org.apache.directory.api.ldap.model.password.PasswordUtil;
 import org.assertj.core.util.Strings;
@@ -48,25 +49,6 @@ import io.mosip.kernel.auth.defaultimpl.repository.DataStore;
 import io.mosip.kernel.auth.defaultimpl.util.AuthUtil;
 import io.mosip.kernel.core.authmanager.exception.AuthNException;
 import io.mosip.kernel.core.authmanager.exception.AuthZException;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
-import io.mosip.kernel.core.authmanager.model.ClientSecret;
-import io.mosip.kernel.core.authmanager.model.LoginUser;
-import io.mosip.kernel.core.authmanager.model.MosipUserDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserSalt;
-import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
-import io.mosip.kernel.core.authmanager.model.OtpUser;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
-import io.mosip.kernel.core.authmanager.model.RIdDto;
-import io.mosip.kernel.core.authmanager.model.Role;
-import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
-import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.util.CryptoUtil;
@@ -688,6 +670,44 @@ public class KeycloakImpl implements DataStore {
 		String roleId = jsonNode.get("id").asText();
 		return roleId;
 		
+	}
+
+	@Override
+	public IndividualIdDto getIndividualIdFromUserId(String userId, String realmID) {
+		IndividualIdDto individualIdDto = new IndividualIdDto();
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, realmID);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		HttpEntity<String> httpEntity = new HttpEntity<>(null, httpHeaders);
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder
+				.fromUriString(keycloakAdminUrl + users + "?username=" + userId);
+		String response = callKeycloakService(uriComponentsBuilder.buildAndExpand(pathParams).toString(),
+				HttpMethod.GET, httpEntity);
+		if (response == null || response.isEmpty()) {
+			throw new AuthManagerException(AuthErrorCode.USER_NOT_FOUND.getErrorCode(),
+					AuthErrorCode.USER_NOT_FOUND.getErrorMessage());
+		}
+		try {
+			JsonNode node = objectMapper.readTree(response);
+			for (JsonNode jsonNode : node) {
+				if (jsonNode.get(AuthConstant.USER_NAME).textValue().equals(userId)) {
+					JsonNode attriNode = jsonNode.get("attributes");
+					String individualId = attriNode.get(AuthConstant.INDIVIDUAL_ID).get(0).textValue();
+					individualIdDto.setIndividualId(individualId);
+					break;
+				}
+			}
+			if (individualIdDto.getIndividualId() == null) {
+				throw new AuthManagerException(AuthErrorCode.INDIVIDUAL_ID_NOT_FOUND.getErrorCode(),
+						AuthErrorCode.INDIVIDUAL_ID_NOT_FOUND.getErrorMessage());
+			}
+
+		} catch (IOException e) {
+			throw new AuthManagerException(AuthErrorCode.IO_EXCEPTION.getErrorCode(),
+					AuthErrorCode.IO_EXCEPTION.getErrorMessage());
+		}
+
+		return individualIdDto;
 	}
 
 }
