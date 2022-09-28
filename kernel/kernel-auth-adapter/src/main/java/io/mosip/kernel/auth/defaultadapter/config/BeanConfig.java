@@ -30,10 +30,18 @@ public class BeanConfig {
 
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
+	
+	@Value("${mosip.kernel.http.default.restTemplate.max-connection-per-route:20}")
+	private Integer defaultRestTemplateMaxConnectionPerRoute;
+
+	@Value("${mosip.kernel.http.default.restTemplate.total-max-connections:100}")
+	private Integer defaultRestTemplateTotalMaxConnections;
 
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute)
+				.setMaxConnTotal(defaultRestTemplateTotalMaxConnections).disableCookieManagement();
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
@@ -44,12 +52,12 @@ public class BeanConfig {
 					return true;
 				}
 			});
-			httpClientBuilder.setSSLSocketFactory(csf);			
-		} 
+			httpClientBuilder.setSSLSocketFactory(csf);
+		}
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		restTemplate = new RestTemplate(requestFactory);
-		//interceptor added in RestTemplatePostProcessor
+		// interceptor added in RestTemplatePostProcessor
 		return restTemplate;
 	}
 
