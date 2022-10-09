@@ -102,6 +102,13 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 
 	@Value("${auth.jwt.secret:authjwtsecret}")
 	private String authJwtSecret;
+	
+
+	@Value("${mosip.kernel.http.auth.handler.restTemplate.max-connection-per-route:20}")
+	private Integer defaultRestTemplateMaxConnectionPerRoute;
+
+	@Value("${mosip.kernel.http.auth.handler.restTemplate.total-max-connections:100}")
+	private Integer defaultRestTemplateTotalMaxConnections;
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -109,7 +116,7 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 	@Autowired
 	private RestTemplateInterceptor restInterceptor;
 	
-	private RestTemplate restTemplate = null;
+	private RestTemplate restTemplate ;
 	
 	private static final String DEFAULTADMIN_MOSIP_IO = "defaultadmin@mosip.io";
 	
@@ -118,8 +125,9 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 	
 	@PostConstruct
 	void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
-		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute)
+				.setMaxConnTotal(defaultRestTemplateTotalMaxConnections).disableCookieManagement();
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
@@ -131,10 +139,11 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 			});
 			httpClientBuilder.setSSLSocketFactory(csf);
 		}
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
+		restTemplate = new RestTemplate(requestFactory);
 		List<ClientHttpRequestInterceptor> list = new ArrayList<>();
 		list.add(restInterceptor);
-		restTemplate = new RestTemplate(requestFactory);
 		restTemplate.setInterceptors(list);
 	}
 
