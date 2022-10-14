@@ -166,7 +166,7 @@ jobs:
           xpath: /*[local-name()="project"]/*[local-name()="version"] 
       
       - name: Unzip and extract the id-repository-vid-service
-        run: unzip -o -j "release.zip" "${{ env.SERVICE_LOCATION }}/target/*" -d "./${{ env.SERVICE_LOCATION }}/target"
+        run: unzip -o "*release.zip" "${{ env.SERVICE_LOCATION }}/target/*" -d "./${{ env.SERVICE_LOCATION }}/target"
       
       - name: Build image
         run: |
