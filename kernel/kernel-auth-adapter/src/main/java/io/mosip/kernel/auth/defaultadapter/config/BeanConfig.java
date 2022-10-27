@@ -112,18 +112,6 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setMaxConnPerRoute(plainRestTemplateMaxConnectionPerRoute)
 				.setMaxConnTotal(plainRestTemplateTotalMaxConnections).disableCookieManagement();
-		RestTemplate restTemplate = null;
-		if (sslBypass) {
-			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-					.loadTrustMaterial(null, acceptingTrustStrategy).build();
-			SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
-				public boolean verify(String arg0, SSLSession arg1) {
-					return true;
-				}
-			});
-			httpClientBuilder.setSSLSocketFactory(csf);
-		}
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		RestTemplate template = new RestTemplate(requestFactory);
