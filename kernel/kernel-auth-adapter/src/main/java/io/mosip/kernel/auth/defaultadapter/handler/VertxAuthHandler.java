@@ -52,6 +52,8 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
+import static io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant.AUTH_HEADER;
+
 @Lazy
 @Component
 public class VertxAuthHandler implements VertxAuthenticationProvider {
@@ -65,7 +67,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	private VertxTokenValidationHelper validationHelper;
 	
 	private static final String DEFAULTADMIN_MOSIP_IO = "defaultadmin@mosip.io";
-	
+
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 	
@@ -115,25 +117,35 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	public void addAuthFilter(Router router, String path, HttpMethod httpMethod,
 			String commaSepratedRoles) {
 		Objects.requireNonNull(httpMethod, AuthAdapterConstant.HTTP_METHOD_NOT_NULL);
-		if (EmptyCheckUtils.isNullEmpty(commaSepratedRoles)) {
-			throw new NullPointerException(AuthAdapterConstant.ROLES_NOT_EMPTY_NULL);
-		}
-		String[] roles = commaSepratedRoles.split(",");
 		Route filterRoute = router.route(httpMethod, path);
 		filterRoute.handler(routingContext -> {
-			String token;
-			try {
-				token = validateToken(routingContext, roles);
-				if (token.isEmpty()) {
-					return;
-				}
+			tokenValidation(routingContext, commaSepratedRoles);
+		});
+	}
+
+	@Generated // coverage exclusion as this is a filter
+	@Override
+	public void addAuthFilter(RoutingContext routingContext, String commaSepratedRoles) {
+		tokenValidation(routingContext, commaSepratedRoles);
+	}
+
+	private void tokenValidation(RoutingContext routingContext, String commaSepratedRoles) {
+		try {
+			if (EmptyCheckUtils.isNullEmpty(commaSepratedRoles)) {
+				throw new NullPointerException(AuthAdapterConstant.ROLES_NOT_EMPTY_NULL);
+			}
+			String[] roles = commaSepratedRoles.split(",");
+			String token = validateToken(routingContext, roles);
+			if (!token.isEmpty()) {
 				HttpServerResponse httpServerResponse = routingContext.response();
+				if (!token.startsWith(AUTH_HEADER))
+					token = AUTH_HEADER + token;
 				httpServerResponse.putHeader(AuthAdapterConstant.AUTH_HEADER_SET_COOKIE, token);
 				routingContext.next();
-			} catch (Exception e) {
-				throw new AuthManagerException(String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e);
 			}
-		});
+		} catch (Exception e) {
+			throw new AuthManagerException(String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e);
+		}
 	}
 
 	private String validateToken(RoutingContext routingContext, String[] roles)
