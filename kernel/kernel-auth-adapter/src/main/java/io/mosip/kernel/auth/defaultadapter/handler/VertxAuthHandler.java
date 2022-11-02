@@ -124,6 +124,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	}
 
 	@Generated // coverage exclusion as this is a filter
+	@Override
 	public void addAuthFilter(RoutingContext routingContext, String commaSepratedRoles) {
 		tokenValidation(routingContext, commaSepratedRoles);
 	}
