@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -60,6 +61,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 	private ObjectMapper mapper;
 	private List<String> allowedHttpMethods;
+
+	@Autowired
+	private Environment environment;
 
 	@SuppressWarnings("unchecked")
 	public AuthFilter(RequestMatcher requiresAuthenticationRequestMatcher,
@@ -114,6 +118,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			HttpServletResponse httpServletResponse)
 			throws AuthenticationException, JsonProcessingException, IOException {
 		String token = null;
+		String idToken = null;
 		Cookie[] cookies = null;
 		try {
 			cookies = httpServletRequest.getCookies();
@@ -122,6 +127,14 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					if (cookie.getName().contains(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER)) {
 						LOGGER.debug("extract token from cookie named " + cookie.getName());
 						token = cookie.getValue();
+					} else {
+						String idTokenName=this.environment.getProperty(AuthAdapterConstant.ID_TOKEN);
+						if(idTokenName!=null){
+							if(cookie.getName().contains(idTokenName)){
+								LOGGER.debug("extract token from cookie named " + cookie.getName());
+								idToken = cookie.getValue();
+							}
+						}
 					}
 				}
 			}
@@ -142,7 +155,13 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					+ "\n\n");
 			return null;
 		}
-		AuthToken authToken = new AuthToken(token);
+		AuthToken authToken = null;
+		if(idToken==null){
+			 authToken = new AuthToken(token);
+		} else{
+			authToken = new AuthToken(token, idToken);
+		}
+
 		LOGGER.debug("Extracted auth token for request " + httpServletRequest.getRequestURL());
 		return getAuthenticationManager().authenticate(authToken);
 	}

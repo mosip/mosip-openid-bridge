@@ -108,12 +108,18 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 			UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken) throws AuthenticationException {
 		AuthToken authToken = (AuthToken) usernamePasswordAuthenticationToken;
 		String token = authToken.getToken();
+		String idToken = authToken.getIdToken();
 		MosipUserDto mosipUserDto = validationHelper.getTokenValidatedUserResponse(token, restTemplate);
 		
 		List<GrantedAuthority> roleAuthorities = AuthorityUtils
 				.commaSeparatedStringToAuthorityList(mosipUserDto.getRole());
 		
-		AuthUserDetails authUserDetails = new AuthUserDetails(mosipUserDto, token);
+		AuthUserDetails authUserDetails;
+		if(idToken!=null){
+			authUserDetails = new AuthUserDetails(mosipUserDto, token, idToken);
+		} else{
+			authUserDetails = new AuthUserDetails(mosipUserDto, token);
+		}
 		authUserDetails.addRoleAuthorities(roleAuthorities);
 		
 		Optional<String> scopeClaimOpt = getScopeClaim(token);
