@@ -74,18 +74,31 @@ public class ValidateTokenHelper {
 	private boolean validateIssuerDomain;
 
 	/**
-	 * This should be same as the value in the token
+	 * This should be same as the value in the token	
 	 */
 	@Value("${auth.server.admin.issuer.uri:}")
 	private String issuerURI;
 
+	/**
+	 * This property will directly apply the certs URL without need for constructing the path from issuer URL. 
+	 * This is useful to keep a different certs URL for integrating with MOSIP IdP for token validation.
+	 */
+	@Value("${auth.server.admin.oidc.certs.url:}")
+	private String certsUrl;
+	
+	/**
+	 * This property will directly apply the userInfo URL without need for constructing the path from issuer URL. 
+	 * This is useful to keep a different userInfo URL for integrating with MOSIP IdP for token validation.
+	 */
+	@Value("${auth.server.admin.oidc.userinfo.url:}")
+	private String userInfoUrl;
+	
 	/**
 	 * When we validate a token we use the issuerURL. In case you want us to
 	 * validate using an internal URL then the same has to be configured here.
 	 */
 	@Value("${auth.server.admin.issuer.internal.uri:}")
 	private String issuerInternalURI;
-
 	@Value("${auth.server.admin.audience.claim.validate:true}")
 	private boolean validateAudClaim;
 
@@ -208,8 +221,12 @@ public class ValidateTokenHelper {
 		PublicKey publicKey = publicKeys.get(keyId);
 
 		if (Objects.isNull(publicKey)) {
-			String realm = getRealM(decodedJWT);
-			publicKey = getIssuerPublicKey(keyId, certsPath, realm);
+			if(certsUrl == null || certsUrl.isEmpty()) {
+				String realm = getRealM(decodedJWT);
+				publicKey = getIssuerPublicKey(keyId, certsPath, realm);
+			} else {
+				publicKey = getIssuerPublicKey(keyId, certsUrl);
+			}
 			publicKeys.put(keyId, publicKey);
 		}
 		return publicKey;
@@ -220,10 +237,14 @@ public class ValidateTokenHelper {
 		return tokenIssuer.substring(tokenIssuer.lastIndexOf("/") + 1);
 	}
 
-	private PublicKey getIssuerPublicKey(String keyId, String certsPath, String realm) {
+	private PublicKey getIssuerPublicKey(String keyId, String certsPathVal, String realm) {
+		return getIssuerPublicKey(keyId, issuerInternalURI + realm + certsPathVal);
+	}
+	
+	private PublicKey getIssuerPublicKey(String keyId, String certUrl) {
 		try {
 
-			URI uri = new URI(issuerInternalURI + realm + certsPath).normalize();
+			URI uri = new URI(certUrl).normalize();
 			JwkProvider provider = new UrlJwkProvider(uri.toURL());
 			Jwk jwk = provider.get(keyId);
 			return jwk.getPublicKey();
@@ -288,8 +309,7 @@ public class ValidateTokenHelper {
 		ResponseEntity<String> response = null;
 		HttpStatusCodeException statusCodeException = null;
 		try {
-			String realm = getRealM(decodedJWT);
-			String userInfoPath = issuerInternalURI + realm + userInfo;
+			String userInfoPath = getUserInfoPath(decodedJWT);
 			response = restTemplate.exchange(userInfoPath, HttpMethod.GET, entity, String.class);
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			LOGGER.error("Token validation failed for accessToken {}", jwtToken, e);
@@ -321,6 +341,17 @@ public class ValidateTokenHelper {
 		return ImmutablePair.of(HttpStatus.UNAUTHORIZED, null);
 	}
 
+	private String getUserInfoPath(DecodedJWT decodedJWT) {
+		String userInfoPath;
+		if(userInfoUrl == null || userInfoUrl.isEmpty()) {
+			String realm = getRealM(decodedJWT);
+			userInfoPath = issuerInternalURI + realm + userInfo;
+		} else {
+			userInfoPath = userInfoUrl;
+		}
+		return userInfoPath;
+	}
+
 	public ImmutablePair<HttpStatus, MosipUserDto> doOnlineTokenValidation(String jwtToken, WebClient webClient) {
 		if ("".equals(issuerURI) || "".equals(issuerInternalURI)) {
 			LOGGER.warn("OIDC validate URL is not available in config file, not requesting for token validation.");
@@ -330,8 +361,7 @@ public class ValidateTokenHelper {
 		DecodedJWT decodedJWT = JWT.decode(jwtToken);
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER, AuthAdapterConstant.BEARER_STR + jwtToken);
-		String realm = getRealM(decodedJWT);
-		String userInfoPath = issuerInternalURI + realm + userInfo;
+		String userInfoPath = getUserInfoPath(decodedJWT);
 		ClientResponse response = webClient.method(HttpMethod.GET).uri(userInfoPath).headers(httpHeaders -> {
 			httpHeaders.addAll(headers);
 		}).exchange().block();
