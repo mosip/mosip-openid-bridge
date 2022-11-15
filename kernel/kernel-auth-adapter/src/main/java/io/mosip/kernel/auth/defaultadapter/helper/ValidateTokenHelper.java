@@ -241,10 +241,10 @@ public class ValidateTokenHelper {
 		return getIssuerPublicKey(keyId, issuerInternalURI + realm + certsPathVal);
 	}
 	
-	private PublicKey getIssuerPublicKey(String keyId, String certUrl) {
+	private PublicKey getIssuerPublicKey(String keyId, String certsUrIPath) {
 		try {
 
-			URI uri = new URI(certUrl).normalize();
+			URI uri = new URI(certsUrIPath).normalize();
 			JwkProvider provider = new UrlJwkProvider(uri.toURL());
 			Jwk jwk = provider.get(keyId);
 			return jwk.getPublicKey();
