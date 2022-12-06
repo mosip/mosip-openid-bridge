@@ -123,6 +123,7 @@
 	<modules>
 	    <module>kernel-auth-adapter</module>
 		<module>kernel-auth-service</module>
+		<module>kernel-authcodeflowproxy-api</module>
 		</modules>
 
 	
