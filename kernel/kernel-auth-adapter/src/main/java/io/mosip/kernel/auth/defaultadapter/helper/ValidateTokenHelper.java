@@ -123,7 +123,7 @@ public class ValidateTokenHelper {
 
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
-		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+		if (appNames != null && !EmptyCheckUtils.isNullEmpty(appNames)) {
 			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
 			return appNamesList.get(0);
 		} else {
