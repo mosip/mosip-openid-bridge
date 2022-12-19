@@ -292,7 +292,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName(Environment environment) {
 		String appNames = environment.getProperty("spring.application.name");
-		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+		if (appNames != null && !EmptyCheckUtils.isNullEmpty(appNames)) {
 			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
 			return appNamesList.get(0);
 		} else {
