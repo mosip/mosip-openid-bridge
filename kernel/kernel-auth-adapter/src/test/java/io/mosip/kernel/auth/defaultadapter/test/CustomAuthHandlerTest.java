@@ -23,7 +23,7 @@ import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.handler.CustomJWTAuthHandler;
 import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
-import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
+import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
 
