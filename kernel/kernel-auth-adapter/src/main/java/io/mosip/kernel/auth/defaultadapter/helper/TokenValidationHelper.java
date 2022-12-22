@@ -3,9 +3,6 @@ package io.mosip.kernel.auth.defaultadapter.helper;
 import java.security.PublicKey;
 import java.util.Objects;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,9 +11,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
-import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
+import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @Component
 public class TokenValidationHelper {
