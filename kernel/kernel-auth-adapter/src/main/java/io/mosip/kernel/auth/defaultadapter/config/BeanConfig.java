@@ -37,8 +37,8 @@ import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
-import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import io.mosip.kernel.openid.bridge.model.AuthUserDetails;
 
 @Configuration
 @EnableScheduling
@@ -180,7 +180,7 @@ public class BeanConfig {
 					&& SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null
 					&& SecurityContextHolder.getContext().getAuthentication()
 							.getPrincipal() instanceof AuthUserDetails) {
-				AuthUserDetails userDetail = (AuthUserDetails) SecurityContextHolder.getContext().getAuthentication()
+				io.mosip.kernel.openid.bridge.model.AuthUserDetails userDetail = (AuthUserDetails) SecurityContextHolder.getContext().getAuthentication()
 						.getPrincipal();
 				filtered = ClientRequest.from(req).header(AuthAdapterConstant.AUTH_HEADER_COOKIE,
 						AuthAdapterConstant.AUTH_HEADER + userDetail.getToken()).build();

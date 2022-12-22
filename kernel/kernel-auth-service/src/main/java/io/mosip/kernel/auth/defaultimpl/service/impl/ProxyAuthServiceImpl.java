@@ -46,7 +46,7 @@ import io.mosip.kernel.core.authmanager.model.RefreshTokenResponse;
 import io.mosip.kernel.core.authmanager.model.RolesListDto;
 import io.mosip.kernel.core.authmanager.model.UserOtp;
 import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 /**
  * Proxy Implementation of Auth service which will not use IAM just give back
