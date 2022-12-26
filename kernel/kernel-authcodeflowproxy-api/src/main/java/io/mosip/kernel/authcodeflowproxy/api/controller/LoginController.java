@@ -9,11 +9,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +65,9 @@ public class LoginController {
 
 	@Value("${auth.validate.id-token:false}")
 	private boolean validateIdToken;
+	
+	@Autowired
+	private AntPathMatcher antPathMatcher;
 
 	@GetMapping(value = "/login/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
@@ -117,15 +122,24 @@ public class LoginController {
 			res.addCookie(idTokenCookie);
 		}
 		res.setStatus(302);
-		String url = new String(Base64.decodeBase64(redirectURI.getBytes()));
-		if(url.contains("#")) {
-			url= url.split("#")[0];
-		}
-		if(!allowedUrls.contains(url)) {
-			LOGGER.error("Url {} was not part of allowed url's",url);
+		String redirectUrl = new String(Base64.decodeBase64(redirectURI.getBytes()));
+		
+		boolean matchesAllowedUrls = matchesAllowedUrls(redirectUrl);
+		if(!matchesAllowedUrls) {
+			LOGGER.error("Url {} was not part of allowed url's",redirectUrl);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
-		res.sendRedirect(url);	
+		res.sendRedirect(redirectUrl);	
+	}
+
+	private boolean matchesAllowedUrls(String url) {
+		boolean hasMatch = allowedUrls.contains(url.contains("#") ? url.split("#")[0] : url);
+		if(!hasMatch) {		
+			hasMatch = allowedUrls.stream()
+				.filter(pattern -> antPathMatcher.isPattern(pattern))
+				.anyMatch(pattern -> antPathMatcher.match(pattern, url));
+		}
+		return hasMatch;
 	}
 
 	private void setCookieParams(Cookie idTokenCookie, boolean isHttpOnly, boolean isSecure,String path) {
@@ -173,12 +187,9 @@ public class LoginController {
 	@GetMapping(value = "/logout/user")
 	public void logoutUser(
 			@CookieValue(value = "Authorization", required = false) String token,@RequestParam(name = "redirecturi", required = true) String redirectURI, HttpServletResponse res) throws IOException {
-		redirectURI = new String(Base64.decodeBase64(redirectURI));
-		if(redirectURI.contains("#")) {
-			redirectURI= redirectURI.split("#")[0];
-		}
-		if(!allowedUrls.contains(redirectURI)) {
-			LOGGER.error("Url {} was not part of allowed url's",redirectURI);
+		String redirectURL = new String(Base64.decodeBase64(redirectURI));
+		if(!matchesAllowedUrls(redirectURL)) {
+			LOGGER.error("Url {} was not part of allowed url's",redirectURL);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		String uri = loginService.logoutUser(token,redirectURI);
