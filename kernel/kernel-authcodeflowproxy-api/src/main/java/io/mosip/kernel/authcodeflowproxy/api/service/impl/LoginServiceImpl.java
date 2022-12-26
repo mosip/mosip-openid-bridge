@@ -36,19 +36,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.kernel.authcodeflowproxy.api.constants.Constants;
-import io.mosip.kernel.authcodeflowproxy.api.constants.Errors;
-import io.mosip.kernel.authcodeflowproxy.api.dto.AccessTokenResponse;
-import io.mosip.kernel.authcodeflowproxy.api.dto.AccessTokenResponseDTO;
-import io.mosip.kernel.authcodeflowproxy.api.dto.IAMErrorResponseDto;
-import io.mosip.kernel.authcodeflowproxy.api.dto.JWSSignatureRequestDto;
-import io.mosip.kernel.authcodeflowproxy.api.dto.JWTSignatureResponseDto;
-import io.mosip.kernel.authcodeflowproxy.api.dto.MosipUserDto;
-import io.mosip.kernel.authcodeflowproxy.api.exception.AuthRestException;
-import io.mosip.kernel.authcodeflowproxy.api.exception.ClientException;
-import io.mosip.kernel.authcodeflowproxy.api.exception.ServiceException;
-import io.mosip.kernel.authcodeflowproxy.api.service.LoginService;
-import io.mosip.kernel.authcodeflowproxy.api.utils.AuthCodeProxyFlowUtils;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.RequestWrapper;
@@ -56,6 +43,19 @@ import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import io.mosip.kernel.openid.bridge.api.constants.Constants;
+import io.mosip.kernel.openid.bridge.api.constants.Errors;
+import io.mosip.kernel.openid.bridge.api.exception.AuthRestException;
+import io.mosip.kernel.openid.bridge.api.exception.ClientException;
+import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
+import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
+import io.mosip.kernel.openid.bridge.dto.AccessTokenResponse;
+import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
+import io.mosip.kernel.openid.bridge.dto.IAMErrorResponseDto;
+import io.mosip.kernel.openid.bridge.dto.JWSSignatureRequestDto;
+import io.mosip.kernel.openid.bridge.dto.JWTSignatureResponseDto;
+import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -253,7 +253,7 @@ public class LoginServiceImpl implements LoginService {
 	private String getClientAssertion() {
 		JWSSignatureRequestDto jwsSignatureRequestDto = new JWSSignatureRequestDto();
 		try {
-			jwsSignatureRequestDto.setDataToSign(getDataToSign());
+			jwsSignatureRequestDto.setDataToSign( CryptoUtil.encodeToPlainBase64(getClientAssertionData()));
 			jwsSignatureRequestDto.setReferenceId(this.environment.getProperty(Constants.CLIENT_ASSERTION_REFERENCE_ID));
 			jwsSignatureRequestDto.setApplicationId(this.environment.getProperty(Constants.APPLICATION_ID));
 			jwsSignatureRequestDto.setIncludePayload(Boolean.valueOf(this.environment.getProperty(Constants.IS_INCLUDE_PAYLOAD)));
@@ -276,11 +276,11 @@ public class LoginServiceImpl implements LoginService {
 		}
 	}
 
-	private String getDataToSign() {
+	private byte[] getClientAssertionData() {
 		Map dataToSignMap = new LinkedHashMap();
 		dataToSignMap.put(Constants.SUB, clientID);
 		dataToSignMap.put(Constants.ISS, clientID);
-		dataToSignMap.put(Constants.AUD, this.environment.getProperty(Constants.BASE_URL));
+		dataToSignMap.put(Constants.AUD, tokenEndpoint);
 		dataToSignMap.put(Constants.EXP, getExpiryTime());
 		dataToSignMap.put(Constants.IAT, getEpochTime());
 		String jsonObject = null;
@@ -290,7 +290,7 @@ public class LoginServiceImpl implements LoginService {
 			throw new ServiceException(Errors.JSON_PROCESSING_EXCEPTION.getErrorCode(),
 					Errors.JSON_PROCESSING_EXCEPTION.getErrorMessage());
 		}
-		return CryptoUtil.encodeToPlainBase64(jsonObject.getBytes());
+		return jsonObject.getBytes();
 	}
 
 	private Object getEpochTime() {

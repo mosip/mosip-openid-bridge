@@ -19,7 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
+import io.mosip.kernel.openid.bridge.model.AuthUserDetails;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScopeValidatorImplTest {
