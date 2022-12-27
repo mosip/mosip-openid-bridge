@@ -1,12 +1,9 @@
 package io.mosip.kernel.auth.defaultadapter.test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
@@ -27,28 +24,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
 import io.mosip.kernel.auth.defaultadapter.helper.ValidateTokenHelper;
 import io.mosip.kernel.auth.defaultadapter.helper.VertxTokenValidationHelper;
-import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
+import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
