@@ -106,7 +106,7 @@ public class LoginController {
 		AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 				redirectURI);
 		String accessToken = jwtResponseDTO.getAccessToken();
-		validateToken(accessToken);
+		validateTokenHelper.validateToken(accessToken);
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
 		if(validateIdToken) {
@@ -116,7 +116,7 @@ public class LoginController {
 				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
 			}
-			validateToken(idToken);
+			validateTokenHelper.validateToken(idToken);
 			Cookie idTokenCookie = new Cookie(idTokenProperty, idToken);
 			setCookieParams(idTokenCookie,true,true,"/");
 			res.addCookie(idTokenCookie);
@@ -148,22 +148,16 @@ public class LoginController {
 		idTokenCookie.setPath(path);
 	}
 
-	private void validateToken(String accessToken) {
-		if(!validateTokenHelper.isTokenValid(accessToken).getKey()){
-			throw new ServiceException(Errors.INVALID_TOKEN.getErrorCode(), Errors.INVALID_TOKEN.getErrorMessage());
-		}
-	}
-
 	@ResponseFilter
 	@GetMapping(value = "/authorize/admin/validateToken")
-	public ResponseWrapper<MosipUserDto> validateAdminToken(HttpServletRequest request, HttpServletResponse res) {
+	public ResponseWrapper<?> validateAdminToken(HttpServletRequest request, HttpServletResponse res) {
 		String authToken = null;
 		Cookie[] cookies = request.getCookies();
 		if (cookies == null) {
 			throw new ClientException(Errors.COOKIE_NOTPRESENT_ERROR.getErrorCode(),
 					Errors.COOKIE_NOTPRESENT_ERROR.getErrorMessage());
 		}
-		MosipUserDto mosipUserDto = null;
+		Object mosipUserDto = null;
 
 		for (Cookie cookie : cookies) {
 			if (cookie.getName().contains(authTokenHeader)) {
@@ -178,7 +172,7 @@ public class LoginController {
 		mosipUserDto = loginService.valdiateToken(authToken);
 		Cookie cookie = loginService.createCookie(authToken);
 		res.addCookie(cookie);
-		ResponseWrapper<MosipUserDto> responseWrapper = new ResponseWrapper<>();
+		ResponseWrapper<Object> responseWrapper = new ResponseWrapper<>();
 		responseWrapper.setResponse(mosipUserDto);
 		return responseWrapper;
 	}
@@ -193,6 +187,18 @@ public class LoginController {
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		String uri = loginService.logoutUser(token,redirectURI);
+		Cookie cookie = loginService.createExpiringCookie();
+		res.addCookie(cookie);
+		
+		if(validateIdToken) {
+			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
+			//Create expiring id_token cookie
+			Cookie idTokenCookie = new Cookie(idTokenProperty, null);
+			idTokenCookie.setMaxAge(0);
+			setCookieParams(idTokenCookie,true,true,"/");
+			res.addCookie(idTokenCookie);
+		}
+		
 		res.setStatus(302);
 		res.sendRedirect(uri);
 	}

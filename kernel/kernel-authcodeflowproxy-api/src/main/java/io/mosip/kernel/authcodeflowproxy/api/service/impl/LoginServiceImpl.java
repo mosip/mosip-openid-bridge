@@ -14,6 +14,8 @@ import java.util.Objects;
 
 import javax.servlet.http.Cookie;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -36,6 +39,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.authcodeflowproxy.api.validator.ValidateTokenUtil;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.RequestWrapper;
@@ -43,6 +47,7 @@ import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import io.mosip.kernel.openid.bridge.api.constants.AuthErrorCode;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.AuthRestException;
@@ -59,6 +64,8 @@ import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @Service
 public class LoginServiceImpl implements LoginService {
+
+	private static final String TOKEN_VALID = "TOKEN_VALID";
 
 	@Value("${mosip.kernel.auth-code-url-splitter:#URISPLITTER#}")
 	private String urlSplitter;
@@ -99,7 +106,7 @@ public class LoginServiceImpl implements LoginService {
 	@Value("${mosip.iam.token_endpoint}")
 	private String tokenEndpoint;
 
-	@Value("${auth.server.admin.validate.url}")
+	@Value("${auth.server.admin.validate.url:}")
 	private String validateUrl;
 	
 	
@@ -111,6 +118,9 @@ public class LoginServiceImpl implements LoginService {
 
 	@Value("${mosip.iam.module.token.endpoint.private-key-jwt.auth.enabled:false}")
 	private boolean isJwtAuthEnabled;
+	
+	@Value("${mosip.iam.logout.offline:false}")
+	private boolean offlineLogout;
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -124,6 +134,9 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private Environment environment;
+	
+	@Autowired
+	private ValidateTokenUtil validateTokenUtil;
 
 	@Override
 	public String login(String redirectURI, String state) {
@@ -137,7 +150,7 @@ public class LoginServiceImpl implements LoginService {
 		uriComponentsBuilder.queryParam(Constants.SCOPE, scope);
 		String claim = this.environment.getProperty(Constants.CLAIM_PROPERTY);
 		if(claim != null){
-			uriComponentsBuilder.queryParam(Constants.CLAIM, urlEncode(claim));
+			uriComponentsBuilder.queryParam(Constants.CLAIMS, urlEncode(claim));
 		}
 		return uriComponentsBuilder.buildAndExpand(pathParam).toString();
 	}
@@ -160,10 +173,29 @@ public class LoginServiceImpl implements LoginService {
 		cookie.setPath("/");
 		return cookie;
 	}
+	
+	@Override
+	public Cookie createExpiringCookie() {
+		final Cookie cookie = new Cookie(authTokenHeader, null);
+		cookie.setMaxAge(0);
+		cookie.setHttpOnly(true);
+		cookie.setSecure(isSecureCookie);
+		cookie.setPath("/");
+		return cookie;
+	}
 
 	@Override
-	public MosipUserDto valdiateToken(String authToken) {
-
+	public Object valdiateToken(String authToken) {
+		if(validateUrl == null || validateUrl.isEmpty()) {
+			ImmutablePair<Boolean, AuthErrorCode> tokenValid = validateTokenUtil.isTokenValid(authToken);
+			if(tokenValid.left) {
+				return TOKEN_VALID;
+			} else {
+				throw new AuthRestException(
+						List.of(new ServiceError(tokenValid.right.getErrorCode(), tokenValid.right.getErrorMessage())),
+						HttpStatus.UNAUTHORIZED);
+			}
+		}
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Cookie", authTokenHeader + "=" + authToken);
 		HttpEntity<String> requestEntity = new HttpEntity<>(headers);
@@ -322,6 +354,12 @@ public class LoginServiceImpl implements LoginService {
 		if (EmptyCheckUtils.isNullEmpty(token)) {
 			throw new AuthenticationServiceException(Errors.INVALID_TOKEN.getErrorMessage());
 		}
+		// For offline logout, there is no token invalidation happening in the IdP's
+		// end. It is expected that the cookie with the tokens only getting expired.
+		if(offlineLogout) {
+			return new String(Base64.decodeBase64(redirectURI.getBytes()));
+		}
+		
 		String issuer = AuthCodeProxyFlowUtils.getissuer(token);
 		StringBuilder urlBuilder = new StringBuilder().append(issuer).append(endSessionEndpointPath);
 		UriComponentsBuilder uriComponentsBuilder;
