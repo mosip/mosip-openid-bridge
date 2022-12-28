@@ -11,7 +11,7 @@ public interface LoginService {
 
 	Cookie createCookie(String authCookie);
 
-	MosipUserDto valdiateToken(String authToken);
+	Object valdiateToken(String authToken);
 
 
 	AccessTokenResponseDTO loginRedirect(String state, String sessionState, String code, String stateCookie,
@@ -19,5 +19,6 @@ public interface LoginService {
 
 	String logoutUser(String token, String redirectURI);
 
+	Cookie createExpiringCookie();
 
 }
