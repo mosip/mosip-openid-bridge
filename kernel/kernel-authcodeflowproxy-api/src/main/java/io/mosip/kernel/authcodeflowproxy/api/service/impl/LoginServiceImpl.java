@@ -148,7 +148,7 @@ public class LoginServiceImpl implements LoginService {
 		uriComponentsBuilder.queryParam(Constants.STATE, state);
 		uriComponentsBuilder.queryParam(Constants.RESPONSE_TYPE, responseType);
 		uriComponentsBuilder.queryParam(Constants.SCOPE, scope);
-		String claim = this.environment.getProperty(Constants.CLAIM_PROPERTY);
+		String claim = this.environment.getProperty(Constants.CLAIMS_PROPERTY);
 		if(claim != null){
 			uriComponentsBuilder.queryParam(Constants.CLAIMS, urlEncode(claim));
 		}
