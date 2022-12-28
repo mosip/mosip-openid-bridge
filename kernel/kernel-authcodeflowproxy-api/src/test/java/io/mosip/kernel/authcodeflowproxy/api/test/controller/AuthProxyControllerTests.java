@@ -677,7 +677,7 @@ public class AuthProxyControllerTests {
 		when(mockAlgo.getName()).thenReturn("RSA256");
 		String token = withExpiresAt.withClaim("scope", "aaa bbb").sign(mockAlgo);
 
-		when(environment.getProperty(Constants.CLAIM_PROPERTY)).thenReturn("claim");
+		when(environment.getProperty(Constants.CLAIMS_PROPERTY)).thenReturn("claim");
 
 		accessTokenResponse.setAccess_token(token);
 		accessTokenResponse.setId_token(token);
