@@ -55,7 +55,7 @@ public class Constants {
 
 	public static final String CLAIMS = "claims";
 
-	public static final String CLAIM_PROPERTY = "mosip.iam.module.login_flow.claim";
+	public static final String CLAIMS_PROPERTY = "mosip.iam.module.login_flow.claims";
 
 	public static final String CLIENT_ASSERTION = "client_assertion";
 }
