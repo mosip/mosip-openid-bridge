@@ -119,6 +119,10 @@ public class LoginServiceImpl implements LoginService {
 	@Value("${mosip.iam.module.token.endpoint.private-key-jwt.auth.enabled:false}")
 	private boolean isJwtAuthEnabled;
 	
+	/**
+	 * For offline logout, there is no token invalidation happening in the IdP's
+	 * end. It is expected that the cookies with the tokens only getting expired.
+	 */
 	@Value("${mosip.iam.logout.offline:false}")
 	private boolean offlineLogout;
 
@@ -354,8 +358,7 @@ public class LoginServiceImpl implements LoginService {
 		if (EmptyCheckUtils.isNullEmpty(token)) {
 			throw new AuthenticationServiceException(Errors.INVALID_TOKEN.getErrorMessage());
 		}
-		// For offline logout, there is no token invalidation happening in the IdP's
-		// end. It is expected that the cookie with the tokens only getting expired.
+		
 		if(offlineLogout) {
 			return new String(Base64.decodeBase64(redirectURI.getBytes()));
 		}
