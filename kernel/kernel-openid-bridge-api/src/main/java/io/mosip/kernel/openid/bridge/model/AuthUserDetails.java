@@ -7,7 +7,6 @@ import java.util.stream.Stream;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 /***********************************************************************************************************************
  * Used by spring security to store user details like roles and use this across
@@ -18,7 +17,12 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @since 1.0.0
  **********************************************************************************************************************/
 
-public class AuthUserDetails implements UserDetails {
+public class AuthUserDetails extends io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 867530372652743714L;
 
 	public static final String SCOPE_AUTHORITY_PREFIX = "SCOPE_";
 
@@ -27,31 +31,16 @@ public class AuthUserDetails implements UserDetails {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 4068560701182593212L;
-
-	private String userId;
-	private String token;
-	private String mail;
-	private String mobile;
-	private String rId;
 	private String idToken;
 
 	private Collection<? extends GrantedAuthority> authorities;
 
 	public AuthUserDetails(MosipUserDto mosipUserDto, String token) {
-		this.userId = mosipUserDto.getUserId();
-		this.token = token;
-		this.mail = mosipUserDto.getMail();
-		this.mobile = mosipUserDto.getMobile();
-		this.rId = mosipUserDto.getRId();
+		super(mosipUserDto, token);
 	}
 
 	public AuthUserDetails(MosipUserDto mosipUserDto, String token, String idToken) {
-		this.userId = mosipUserDto.getUserId();
-		this.token = token;
-		this.mail = mosipUserDto.getMail();
-		this.mobile = mosipUserDto.getMobile();
-		this.rId = mosipUserDto.getRId();
+		this(mosipUserDto, token);
 		this.idToken = idToken;
 	}
 
@@ -82,75 +71,10 @@ public class AuthUserDetails implements UserDetails {
 	public void addScopeAuthorities(Collection<? extends GrantedAuthority> authorities) {
 		this.addAuthorities(authorities, SCOPE_AUTHORITY_PREFIX);
 	}
-
-	@Override
-	public String getPassword() {
-		return null;
-	}
-
-	@Override
-	public String getUsername() {
-		return userId;
-	}
-
-	@Override
-	public boolean isAccountNonExpired() {
-		return true;
-	}
-
-	@Override
-	public boolean isAccountNonLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return true;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return true;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserName(String userName) {
-		this.userId = userName;
-	}
-
-	public String getToken() {
-		return token;
-	}
-
-	public void setToken(String token) {
-		this.token = token;
-	}
-
-	public String getMail() {
-		return mail;
-	}
-
-	public void setMail(String mail) {
-		this.mail = mail;
-	}
-
-	public String getMobile() {
-		return mobile;
-	}
-
-	public void setMobile(String mobile) {
-		this.mobile = mobile;
-	}
-
-	public String getrId() {
-		return rId;
-	}
-
-	public void setrId(String rId) {
-		this.rId = rId;
+	
+	@Deprecated
+	public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+		this.addRoleAuthorities(authorities);
 	}
 
 	public String getIdToken() {
