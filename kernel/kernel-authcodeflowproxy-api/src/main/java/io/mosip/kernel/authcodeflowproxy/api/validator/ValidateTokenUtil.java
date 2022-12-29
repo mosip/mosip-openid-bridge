@@ -39,6 +39,8 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.api.constants.AuthConstant;
 import io.mosip.kernel.openid.bridge.api.constants.AuthErrorCode;
+import io.mosip.kernel.openid.bridge.api.constants.Errors;
+import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
 
 /**
  * Token validator
@@ -84,6 +86,12 @@ public class ValidateTokenUtil {
 			return appNamesList.get(0);
 		} else {
 			throw new RuntimeException("property spring.application.name not found");
+		}
+	}
+	
+	public void validateToken(String accessToken) {
+		if(!isTokenValid(accessToken).getKey()){
+			throw new ServiceException(Errors.INVALID_TOKEN.getErrorCode(), Errors.INVALID_TOKEN.getErrorMessage());
 		}
 	}
 	
