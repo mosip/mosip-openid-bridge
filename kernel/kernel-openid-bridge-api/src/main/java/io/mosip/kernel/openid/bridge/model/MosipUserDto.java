@@ -1,8 +1,7 @@
 package io.mosip.kernel.openid.bridge.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 /**
  * MOSIP USER IS THE STANDARD SPEC THAT WILL BE TUNED BASED ON THE DETAILS
@@ -13,16 +12,6 @@ import lombok.NoArgsConstructor;
  */
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class MosipUserDto {
-	private String userId;
-	private String mobile;
-	private String mail;
-	private String langCode;
-	private String userPassword;
-	private String name;
-	private String role;
-	private String rId;
-	private String token;
+@EqualsAndHashCode(callSuper=true)
+public class MosipUserDto extends io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto {
 }
