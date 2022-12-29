@@ -190,6 +190,7 @@ public class LoginServiceImpl implements LoginService {
 
 	@Override
 	public Object valdiateToken(String authToken) {
+		//For IdP if validateURL is null/empty, no need for online token validation (which is done through authmanager), perform it offline.
 		if(validateUrl == null || validateUrl.isEmpty()) {
 			ImmutablePair<Boolean, AuthErrorCode> tokenValid = validateTokenUtil.isTokenValid(authToken);
 			if(tokenValid.left) {
