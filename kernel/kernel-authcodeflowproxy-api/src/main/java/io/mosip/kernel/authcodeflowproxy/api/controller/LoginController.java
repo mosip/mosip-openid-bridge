@@ -68,6 +68,13 @@ public class LoginController {
 	
 	@Autowired
 	private AntPathMatcher antPathMatcher;
+	
+	/**
+	 * For offline logout, there is no token invalidation happening in the IdP's
+	 * end. It is expected that the cookies with the tokens only getting expired.
+	 */
+	@Value("${mosip.iam.logout.offline:false}")
+	private boolean offlineLogout;
 
 	@GetMapping(value = "/login/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
@@ -187,16 +194,19 @@ public class LoginController {
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		String uri = loginService.logoutUser(token,redirectURI);
-		Cookie cookie = loginService.createExpiringCookie();
-		res.addCookie(cookie);
 		
-		if(validateIdToken) {
-			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
-			//Create expiring id_token cookie
-			Cookie idTokenCookie = new Cookie(idTokenProperty, null);
-			idTokenCookie.setMaxAge(0);
-			setCookieParams(idTokenCookie,true,true,"/");
-			res.addCookie(idTokenCookie);
+		if(offlineLogout) {
+			Cookie cookie = loginService.createExpiringCookie();
+			res.addCookie(cookie);
+			
+			if(validateIdToken) {
+				String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
+				//Create expiring id_token cookie
+				Cookie idTokenCookie = new Cookie(idTokenProperty, null);
+				idTokenCookie.setMaxAge(0);
+				setCookieParams(idTokenCookie,true,true,"/");
+				res.addCookie(idTokenCookie);
+			}
 		}
 		
 		res.setStatus(302);
