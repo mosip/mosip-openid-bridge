@@ -50,6 +50,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.client.RestTemplate;
 
 import com.auth0.jwt.JWT;
@@ -99,6 +100,9 @@ public class AuthProxyControllerTests {
 
 	@SpyBean
 	private LoginService loginService;
+	
+	@SpyBean
+	private AntPathMatcher antPathMatcher;
 	
 	@Mock
 	private Algorithm mockAlgo;
@@ -549,6 +553,120 @@ public class AuthProxyControllerTests {
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
+	
+	@Test
+	public void loginRedirectTestWithHash_AntPattern_success() throws Exception {
+		Builder jwtbuilder = JWT.create();
+		jwtbuilder.withExpiresAt(Date.from(Instant.now().plusSeconds(100)));
+		jwtbuilder.withClaim(AuthConstant.PREFERRED_USERNAME, "12345");
+		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
+		Algorithm alg = mock(Algorithm.class);
+		when(alg.getName()).thenReturn("none");
+		String jwtToken = jwtbuilder.sign(alg);
+		
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token(jwtToken);
+		accessTokenResponse.setId_token(jwtToken);
+		accessTokenResponse.setExpires_in("111");
+		
+		mockServer
+				.expect(ExpectedCount.once(),
+						requestTo(new URI(
+								"http://localhost:8080/keycloak/auth/realms/mosip/protocol/openid-connect/token")))
+				.andExpect(method(HttpMethod.POST))
+				.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON)
+						.body(objectMapper.writeValueAsString(accessTokenResponse)));
+		
+		mockServer
+		.expect(ExpectedCount.once(),
+				requestTo(new URI(
+						"http://localhost:5000/keycloak/auth/realms/mosip/protocol/openid-connect/certs")))
+		.andExpect(method(HttpMethod.POST))
+		.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(accessTokenResponse)));
+		
+		Cookie cookie = new Cookie("state", "mockstate");
+		mockMvc.perform(get(
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWUtdWkvZGFzaGJvYXJk?state=mockstate&session_state=mock-session-state&code=mockcode")
+						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
+				.andExpect(status().is3xxRedirection());
+	}
+	
+	@Test
+	public void loginRedirectTestWithHash_AntPattern_success2() throws Exception {
+		Builder jwtbuilder = JWT.create();
+		jwtbuilder.withExpiresAt(Date.from(Instant.now().plusSeconds(100)));
+		jwtbuilder.withClaim(AuthConstant.PREFERRED_USERNAME, "12345");
+		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
+		Algorithm alg = mock(Algorithm.class);
+		when(alg.getName()).thenReturn("none");
+		String jwtToken = jwtbuilder.sign(alg);
+		
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token(jwtToken);
+		accessTokenResponse.setId_token(jwtToken);
+		accessTokenResponse.setExpires_in("111");
+		
+		mockServer
+				.expect(ExpectedCount.once(),
+						requestTo(new URI(
+								"http://localhost:8080/keycloak/auth/realms/mosip/protocol/openid-connect/token")))
+				.andExpect(method(HttpMethod.POST))
+				.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON)
+						.body(objectMapper.writeValueAsString(accessTokenResponse)));
+		
+		mockServer
+		.expect(ExpectedCount.once(),
+				requestTo(new URI(
+						"http://localhost:5000/keycloak/auth/realms/mosip/protocol/openid-connect/certs")))
+		.andExpect(method(HttpMethod.POST))
+		.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(accessTokenResponse)));
+		
+		Cookie cookie = new Cookie("state", "mockstate");
+		mockMvc.perform(get(
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWUtdWkvIy91aW5zZXJ2aWNlcw?state=mockstate&session_state=mock-session-state&code=mockcode")
+						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
+				.andExpect(status().is3xxRedirection());
+	}
+	
+	@Test
+	public void loginRedirectTestWithHash_AntPattern_failure() throws Exception {
+		Builder jwtbuilder = JWT.create();
+		jwtbuilder.withExpiresAt(Date.from(Instant.now().plusSeconds(100)));
+		jwtbuilder.withClaim(AuthConstant.PREFERRED_USERNAME, "12345");
+		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
+		Algorithm alg = mock(Algorithm.class);
+		when(alg.getName()).thenReturn("none");
+		String jwtToken = jwtbuilder.sign(alg);
+		
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token(jwtToken);
+		accessTokenResponse.setId_token(jwtToken);
+		accessTokenResponse.setExpires_in("111");
+		
+		mockServer
+				.expect(ExpectedCount.once(),
+						requestTo(new URI(
+								"http://localhost:8080/keycloak/auth/realms/mosip/protocol/openid-connect/token")))
+				.andExpect(method(HttpMethod.POST))
+				.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON)
+						.body(objectMapper.writeValueAsString(accessTokenResponse)));
+		
+		mockServer
+		.expect(ExpectedCount.once(),
+				requestTo(new URI(
+						"http://localhost:5000/keycloak/auth/realms/mosip/protocol/openid-connect/certs")))
+		.andExpect(method(HttpMethod.POST))
+		.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(accessTokenResponse)));
+		
+		Cookie cookie = new Cookie("state", "mockstate");
+		mockMvc.perform(get(
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWVvdGhlci11aS9kYXNoYm9hcmQ?state=mockstate&session_state=mock-session-state&code=mockcode")
+						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
+		.andExpect(status().isOk()).andExpect(jsonPath("$.errors[0].errorCode", is(Errors.ALLOWED_URL_EXCEPTION.getErrorCode())));
+	}
 
 	@Test
 	public void loginRedirectWithClaimTest() throws Exception {
@@ -559,7 +677,7 @@ public class AuthProxyControllerTests {
 		when(mockAlgo.getName()).thenReturn("RSA256");
 		String token = withExpiresAt.withClaim("scope", "aaa bbb").sign(mockAlgo);
 
-		when(environment.getProperty(Constants.CLAIM_PROPERTY)).thenReturn("claim");
+		when(environment.getProperty(Constants.CLAIMS_PROPERTY)).thenReturn("claim");
 
 		accessTokenResponse.setAccess_token(token);
 		accessTokenResponse.setId_token(token);
