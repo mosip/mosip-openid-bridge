@@ -22,7 +22,7 @@ import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.VertxAuthHandler;
 import io.mosip.kernel.auth.defaultadapter.helper.VertxTokenValidationHelper;
-import io.mosip.kernel.openid.bridge.model.MosipUserDto;
+import io.mosip.kernel.core.authmanager.authadapter.model.MosipUserDto;
 import io.vertx.ext.web.RoutingContext;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })

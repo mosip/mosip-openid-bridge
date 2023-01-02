@@ -36,6 +36,19 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.authcodeflowproxy.api.constants.Constants;
+import io.mosip.kernel.authcodeflowproxy.api.constants.Errors;
+import io.mosip.kernel.authcodeflowproxy.api.dto.AccessTokenResponse;
+import io.mosip.kernel.authcodeflowproxy.api.dto.AccessTokenResponseDTO;
+import io.mosip.kernel.authcodeflowproxy.api.dto.IAMErrorResponseDto;
+import io.mosip.kernel.authcodeflowproxy.api.dto.JWSSignatureRequestDto;
+import io.mosip.kernel.authcodeflowproxy.api.dto.JWTSignatureResponseDto;
+import io.mosip.kernel.authcodeflowproxy.api.dto.MosipUserDto;
+import io.mosip.kernel.authcodeflowproxy.api.exception.AuthRestException;
+import io.mosip.kernel.authcodeflowproxy.api.exception.ClientException;
+import io.mosip.kernel.authcodeflowproxy.api.exception.ServiceException;
+import io.mosip.kernel.authcodeflowproxy.api.service.LoginService;
+import io.mosip.kernel.authcodeflowproxy.api.utils.AuthCodeProxyFlowUtils;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.RequestWrapper;
@@ -43,19 +56,6 @@ import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
-import io.mosip.kernel.openid.bridge.api.constants.Constants;
-import io.mosip.kernel.openid.bridge.api.constants.Errors;
-import io.mosip.kernel.openid.bridge.api.exception.AuthRestException;
-import io.mosip.kernel.openid.bridge.api.exception.ClientException;
-import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
-import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
-import io.mosip.kernel.openid.bridge.dto.AccessTokenResponse;
-import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
-import io.mosip.kernel.openid.bridge.dto.IAMErrorResponseDto;
-import io.mosip.kernel.openid.bridge.dto.JWSSignatureRequestDto;
-import io.mosip.kernel.openid.bridge.dto.JWTSignatureResponseDto;
-import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @Service
 public class LoginServiceImpl implements LoginService {

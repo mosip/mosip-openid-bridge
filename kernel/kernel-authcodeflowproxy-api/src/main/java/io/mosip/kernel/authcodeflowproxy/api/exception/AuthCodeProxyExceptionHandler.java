@@ -20,14 +20,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import io.mosip.kernel.authcodeflowproxy.api.constants.Errors;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
-import io.mosip.kernel.openid.bridge.api.constants.Errors;
-import io.mosip.kernel.openid.bridge.api.exception.AuthRestException;
-import io.mosip.kernel.openid.bridge.api.exception.ClientException;
-import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
 
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)

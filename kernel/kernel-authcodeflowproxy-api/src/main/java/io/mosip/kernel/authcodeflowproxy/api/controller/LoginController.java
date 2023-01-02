@@ -20,16 +20,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.mosip.kernel.authcodeflowproxy.api.validator.ValidateTokenUtil;
+import io.mosip.kernel.authcodeflowproxy.api.constants.Errors;
+import io.mosip.kernel.authcodeflowproxy.api.dto.AccessTokenResponseDTO;
+import io.mosip.kernel.authcodeflowproxy.api.dto.MosipUserDto;
+import io.mosip.kernel.authcodeflowproxy.api.exception.ClientException;
+import io.mosip.kernel.authcodeflowproxy.api.exception.ServiceException;
+import io.mosip.kernel.authcodeflowproxy.api.service.LoginService;
+import io.mosip.kernel.authcodeflowproxy.api.service.validator.ValidateTokenHelper;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
-import io.mosip.kernel.openid.bridge.api.constants.Errors;
-import io.mosip.kernel.openid.bridge.api.exception.ClientException;
-import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
-import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
-import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @RestController
 public class LoginController {
@@ -56,7 +56,7 @@ public class LoginController {
 	private LoginService loginService;
 	
 	@Autowired
-	private ValidateTokenUtil validateTokenHelper;
+	private ValidateTokenHelper validateTokenHelper;
 
 	@Autowired
 	private Environment environment;

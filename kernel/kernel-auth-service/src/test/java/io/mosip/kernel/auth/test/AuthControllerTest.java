@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 import io.mosip.kernel.auth.controller.AuthController;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
 import io.mosip.kernel.core.authmanager.model.LoginUser;
-import io.mosip.kernel.openid.bridge.api.service.AuthService;
+import io.mosip.kernel.core.authmanager.spi.AuthService;
 
 /**
  * //@author Ramadurai Pandian
