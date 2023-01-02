@@ -82,7 +82,6 @@ import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
 import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
 import io.mosip.kernel.core.authmanager.spi.AuthService;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
-import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 /**
  * Auth Service for Authentication and Authorization
