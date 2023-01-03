@@ -1,6 +1,5 @@
 package io.mosip.kernel.auth.service.test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
@@ -18,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import io.mosip.kernel.auth.defaultimpl.service.TokenGenerationService;
 import io.mosip.kernel.auth.test.AuthTestBootApplication;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
-import io.mosip.kernel.openid.bridge.api.service.AuthService;
+import io.mosip.kernel.core.authmanager.spi.AuthService;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
 @RunWith(SpringRunner.class)

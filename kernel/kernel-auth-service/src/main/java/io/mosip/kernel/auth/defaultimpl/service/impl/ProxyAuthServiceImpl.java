@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
-import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
@@ -54,7 +53,9 @@ import io.mosip.kernel.core.authmanager.model.UserOtp;
 import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
 import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
 import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.openid.bridge.api.service.AuthService;
+import io.mosip.kernel.core.authmanager.model.UserRoleDto;
+import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
+import io.mosip.kernel.core.authmanager.spi.AuthService;
 
 /**
  * Proxy Implementation of Auth service which will not use IAM just give back

@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.TextCodec;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.handler.CustomJWTAuthHandler;
@@ -38,7 +39,7 @@ public class CustomAuthHandlerTest extends CustomJWTAuthHandler {
 		mosipUserDto.setUserId("110005");
 		SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
-		Key signingKey = new SecretKeySpec("1VMTZoDQr2fkbnVHc8OjsNMSmp3K6agL".getBytes(),
+		Key signingKey = new SecretKeySpec(TextCodec.BASE64.decode("1VMTZoDQr2fkbnVHc8OjsNMSmp3K6agL"),
 				signatureAlgorithm.getJcaName());
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("alg", "HS256");
