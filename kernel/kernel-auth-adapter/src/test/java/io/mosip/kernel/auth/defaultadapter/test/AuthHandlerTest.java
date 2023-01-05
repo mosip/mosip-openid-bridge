@@ -59,7 +59,7 @@ public class AuthHandlerTest extends AuthHandler {
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("alg", "HS256");
 		headers.put("typ", "JWT");
-		String token = Jwts.builder().setHeader(headers).claim(AuthAdapterConstant.EMAIL, "mockuser!mosip.com")
+		String token = Jwts.builder().setHeader(headers).claim(AuthAdapterConstant.EMAIL, "mockuser@mosip.com")
 				.claim(AuthAdapterConstant.MOBILE, "9210283991")
 				.claim(AuthAdapterConstant.PREFERRED_USERNAME, "mock-user").claim(AuthAdapterConstant.ROLES, "ADMIN")
 				.claim("userId", "mockuserid").claim("user_name", "mock-user").setSubject("mock-user")
