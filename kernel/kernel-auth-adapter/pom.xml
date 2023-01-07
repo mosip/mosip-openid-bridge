@@ -9,7 +9,7 @@
 	<artifactId>kernel-auth-adapter</artifactId>
 	<packaging>jar</packaging>
 	<description>auth adapter reference implementation </description>
-	<version>1.2.0.1-B1</version>
+	<version>1.2.0.1-B2</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
