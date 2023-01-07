@@ -15,9 +15,25 @@ public class AuthToken extends UsernamePasswordAuthenticationToken {
 
 	private String token;
 
+	private String idToken;
+
 	public AuthToken(String token) {
 		super(null, null);
 		this.token = token;
+	}
+
+	public AuthToken(String token, String idToken){
+		super(null, null);
+		this.token = token;
+		this.idToken = idToken;
+	}
+
+	public String getIdToken() {
+		return idToken;
+	}
+
+	public void setIdToken(String idToken) {
+		this.idToken = idToken;
 	}
 
 	public String getToken() {
