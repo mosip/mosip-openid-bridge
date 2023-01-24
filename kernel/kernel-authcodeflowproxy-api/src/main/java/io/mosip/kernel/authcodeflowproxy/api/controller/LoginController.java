@@ -9,11 +9,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +65,16 @@ public class LoginController {
 
 	@Value("${auth.validate.id-token:false}")
 	private boolean validateIdToken;
+	
+	@Autowired
+	private AntPathMatcher antPathMatcher;
+	
+	/**
+	 * For offline logout, there is no token invalidation happening in the IdP's
+	 * end. It is expected that the cookies with the tokens only getting expired.
+	 */
+	@Value("${mosip.iam.logout.offline:false}")
+	private boolean offlineLogout;
 
 	@GetMapping(value = "/login/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
@@ -101,7 +113,7 @@ public class LoginController {
 		AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 				redirectURI);
 		String accessToken = jwtResponseDTO.getAccessToken();
-		validateToken(accessToken);
+		validateTokenHelper.validateToken(accessToken);
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
 		if(validateIdToken) {
@@ -111,21 +123,30 @@ public class LoginController {
 				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
 			}
-			validateToken(idToken);
+			validateTokenHelper.validateToken(idToken);
 			Cookie idTokenCookie = new Cookie(idTokenProperty, idToken);
 			setCookieParams(idTokenCookie,true,true,"/");
 			res.addCookie(idTokenCookie);
 		}
 		res.setStatus(302);
-		String url = new String(Base64.decodeBase64(redirectURI.getBytes()));
-		if(url.contains("#")) {
-			url= url.split("#")[0];
-		}
-		if(!allowedUrls.contains(url)) {
-			LOGGER.error("Url {} was not part of allowed url's",url);
+		String redirectUrl = new String(Base64.decodeBase64(redirectURI.getBytes()));
+		
+		boolean matchesAllowedUrls = matchesAllowedUrls(redirectUrl);
+		if(!matchesAllowedUrls) {
+			LOGGER.error("Url {} was not part of allowed url's",redirectUrl);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
-		res.sendRedirect(url);	
+		res.sendRedirect(redirectUrl);	
+	}
+
+	private boolean matchesAllowedUrls(String url) {
+		boolean hasMatch = allowedUrls.contains(url.contains("#") ? url.split("#")[0] : url);
+		if(!hasMatch) {		
+			hasMatch = allowedUrls.stream()
+				.filter(pattern -> antPathMatcher.isPattern(pattern))
+				.anyMatch(pattern -> antPathMatcher.match(pattern, url));
+		}
+		return hasMatch;
 	}
 
 	private void setCookieParams(Cookie idTokenCookie, boolean isHttpOnly, boolean isSecure,String path) {
@@ -134,22 +155,16 @@ public class LoginController {
 		idTokenCookie.setPath(path);
 	}
 
-	private void validateToken(String accessToken) {
-		if(!validateTokenHelper.isTokenValid(accessToken).getKey()){
-			throw new ServiceException(Errors.INVALID_TOKEN.getErrorCode(), Errors.INVALID_TOKEN.getErrorMessage());
-		}
-	}
-
 	@ResponseFilter
 	@GetMapping(value = "/authorize/admin/validateToken")
-	public ResponseWrapper<MosipUserDto> validateAdminToken(HttpServletRequest request, HttpServletResponse res) {
+	public ResponseWrapper<?> validateAdminToken(HttpServletRequest request, HttpServletResponse res) {
 		String authToken = null;
 		Cookie[] cookies = request.getCookies();
 		if (cookies == null) {
 			throw new ClientException(Errors.COOKIE_NOTPRESENT_ERROR.getErrorCode(),
 					Errors.COOKIE_NOTPRESENT_ERROR.getErrorMessage());
 		}
-		MosipUserDto mosipUserDto = null;
+		Object mosipUserDto = null;
 
 		for (Cookie cookie : cookies) {
 			if (cookie.getName().contains(authTokenHeader)) {
@@ -164,7 +179,7 @@ public class LoginController {
 		mosipUserDto = loginService.valdiateToken(authToken);
 		Cookie cookie = loginService.createCookie(authToken);
 		res.addCookie(cookie);
-		ResponseWrapper<MosipUserDto> responseWrapper = new ResponseWrapper<>();
+		ResponseWrapper<Object> responseWrapper = new ResponseWrapper<>();
 		responseWrapper.setResponse(mosipUserDto);
 		return responseWrapper;
 	}
@@ -173,15 +188,27 @@ public class LoginController {
 	@GetMapping(value = "/logout/user")
 	public void logoutUser(
 			@CookieValue(value = "Authorization", required = false) String token,@RequestParam(name = "redirecturi", required = true) String redirectURI, HttpServletResponse res) throws IOException {
-		redirectURI = new String(Base64.decodeBase64(redirectURI));
-		if(redirectURI.contains("#")) {
-			redirectURI= redirectURI.split("#")[0];
-		}
-		if(!allowedUrls.contains(redirectURI)) {
-			LOGGER.error("Url {} was not part of allowed url's",redirectURI);
+		String redirectURL = new String(Base64.decodeBase64(redirectURI));
+		if(!matchesAllowedUrls(redirectURL)) {
+			LOGGER.error("Url {} was not part of allowed url's",redirectURL);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		String uri = loginService.logoutUser(token,redirectURI);
+		
+		if(offlineLogout) {
+			Cookie cookie = loginService.createExpiringCookie();
+			res.addCookie(cookie);
+			
+			if(validateIdToken) {
+				String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
+				//Create expiring id_token cookie
+				Cookie idTokenCookie = new Cookie(idTokenProperty, null);
+				idTokenCookie.setMaxAge(0);
+				setCookieParams(idTokenCookie,true,true,"/");
+				res.addCookie(idTokenCookie);
+			}
+		}
+		
 		res.setStatus(302);
 		res.sendRedirect(uri);
 	}
