@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.TextCodec;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.handler.CustomJWTAuthHandler;
@@ -38,7 +39,7 @@ public class CustomAuthHandlerTest extends CustomJWTAuthHandler {
 		mosipUserDto.setUserId("110005");
 		SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
-		Key signingKey = new SecretKeySpec("1VMTZoDQr2fkbnVHc8OjsNMSmp3K6agL".getBytes(),
+		Key signingKey = new SecretKeySpec(TextCodec.BASE64.decode("MVZNVFpvRFFyMmZrYm5WSGM4T2pzTk1TbXAzSzZhZ0w="),
 				signatureAlgorithm.getJcaName());
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("alg", "HS256");
@@ -93,7 +94,7 @@ public class CustomAuthHandlerTest extends CustomJWTAuthHandler {
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("alg", "HS256");
 		headers.put("typ", "JWT");
-		String token = Jwts.builder().setHeader(headers).claim(AuthAdapterConstant.EMAIL, "mockuser!mosip.com")
+		String token = Jwts.builder().setHeader(headers).claim(AuthAdapterConstant.EMAIL, "mockuser@mosip.com")
 				.claim(AuthAdapterConstant.MOBILE, "9210283991")
 				.claim(AuthAdapterConstant.PREFERRED_USERNAME, "mock-user").claim(AuthAdapterConstant.ROLES, "ADMIN")
 				.claim("userId", "mockuserid").claim("user_name", "mock-user").setSubject("mock-user")
