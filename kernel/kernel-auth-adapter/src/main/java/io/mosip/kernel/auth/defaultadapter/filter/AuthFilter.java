@@ -142,12 +142,12 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 								LOGGER.debug("extract token from cookie named " + cookie.getName());
 								idToken = cookie.getValue();
 								if(validateIdToken){
-									if(idToken == null) {
+									if(idToken == null || idToken.isEmpty()) {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
 								}
-								idTokenSub = getSubClaimValueFromToken(token);
+								idTokenSub = getSubClaimValueFromToken(idToken);
 							}
 						}
 					}
@@ -186,7 +186,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	}
 
 	private String getSubClaimValueFromToken(String token) {
-		return JWT.decode(token).getClaim((String) Constants.SUB).asString();
+		return JWT.decode(token).getClaim(this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME)).asString();
 	}
 
 	@Override

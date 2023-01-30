@@ -148,7 +148,7 @@ public class LoginController {
 	}
 
 	private String getSubClaimValueFromToken(String token) {
-		return JWT.decode(token).getClaim((String) Constants.SUB).asString();
+		return JWT.decode(token).getClaim(this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME)).asString();
 	}
 
 	private boolean matchesAllowedUrls(String url) {
