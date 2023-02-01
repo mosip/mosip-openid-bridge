@@ -153,7 +153,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					}
 				}
 			}
-			if(validateIdToken && idTokenSub != null && idTokenSub.equalsIgnoreCase(authTokenSub)){
+			if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
 				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
 						Errors.INVALID_TOKEN.getErrorMessage());
 			}
