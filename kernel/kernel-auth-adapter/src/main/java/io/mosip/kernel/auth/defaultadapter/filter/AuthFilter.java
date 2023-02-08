@@ -134,7 +134,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					if (cookie.getName().contains(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER)) {
 						LOGGER.debug("extract token from cookie named " + cookie.getName());
 						token = cookie.getValue();
-						authTokenSub = getSubClaimValueFromToken(token);
+						if(validateIdToken){
+							authTokenSub = getSubClaimValueFromToken(token);
+						}
 					} else {
 						String idTokenName=this.environment.getProperty(AuthAdapterConstant.ID_TOKEN);
 						if(idTokenName!=null){
@@ -146,8 +148,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
+									idTokenSub = getSubClaimValueFromToken(idToken);
 								}
-								idTokenSub = getSubClaimValueFromToken(idToken);
+
 							}
 						}
 					}
