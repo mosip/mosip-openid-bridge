@@ -3,39 +3,12 @@
  */
 package io.mosip.kernel.auth.defaultadapter.filter;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-
 import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
@@ -45,6 +18,35 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import io.mosip.kernel.openid.bridge.api.constants.Constants;
+import io.mosip.kernel.openid.bridge.api.constants.Errors;
+import io.mosip.kernel.openid.bridge.api.exception.ClientException;
+import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Ramadurai Saravana Pandian
@@ -61,6 +63,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 	private ObjectMapper mapper;
 	private List<String> allowedHttpMethods;
+
+	@Value("${auth.validate.id-token:false}")
+	private boolean validateIdToken;
 
 	@Autowired
 	private Environment environment;
@@ -120,6 +125,8 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		String token = null;
 		String idToken = null;
 		Cookie[] cookies = null;
+		String authTokenSub = null;
+		String idTokenSub = null;
 		try {
 			cookies = httpServletRequest.getCookies();
 			if (cookies != null) {
@@ -127,16 +134,35 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					if (cookie.getName().contains(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER)) {
 						LOGGER.debug("extract token from cookie named " + cookie.getName());
 						token = cookie.getValue();
+						if(validateIdToken){
+							authTokenSub = AuthCodeProxyFlowUtils.
+									getSubClaimValueFromToken(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+						}
 					} else {
 						String idTokenName=this.environment.getProperty(AuthAdapterConstant.ID_TOKEN);
 						if(idTokenName!=null){
 							if(cookie.getName().contains(idTokenName)){
 								LOGGER.debug("extract token from cookie named " + cookie.getName());
 								idToken = cookie.getValue();
+								if(validateIdToken){
+									if(idToken == null || idToken.isEmpty()) {
+										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
+												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
+									}
+									idTokenSub = AuthCodeProxyFlowUtils.
+											getSubClaimValueFromToken(idToken,
+													this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+
+								}
+
 							}
 						}
 					}
 				}
+			}
+			if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
+				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
+						Errors.INVALID_TOKEN.getErrorMessage());
 			}
 		} catch (Exception e) {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());

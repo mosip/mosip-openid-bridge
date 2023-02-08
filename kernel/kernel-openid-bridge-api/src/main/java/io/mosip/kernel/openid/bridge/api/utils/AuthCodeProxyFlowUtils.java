@@ -24,4 +24,8 @@ public class AuthCodeProxyFlowUtils {
 		}	
 		return decodedJWT.getClaim("iss").asString();
 	}
+
+	public static String getSubClaimValueFromToken(String token, String propertyName) {
+		return JWT.decode(token).getClaim(propertyName).asString();
+	}
 }
