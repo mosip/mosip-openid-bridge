@@ -116,9 +116,9 @@ public class LoginController {
 		validateTokenHelper.validateToken(accessToken);
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
-		String authTokenSub =  AuthCodeProxyFlowUtils.getSubClaimValueFromToken
-				(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 		if(validateIdToken) {
+			String authTokenSub =  AuthCodeProxyFlowUtils.getSubClaimValueFromToken
+					(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
 			String idToken = jwtResponseDTO.getIdToken();
 			if(idToken == null) {
