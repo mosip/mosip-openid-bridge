@@ -3,7 +3,6 @@
  */
 package io.mosip.kernel.auth.defaultadapter.filter;
 
-import com.auth0.jwt.JWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +21,7 @@ import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
+import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +135,8 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 						LOGGER.debug("extract token from cookie named " + cookie.getName());
 						token = cookie.getValue();
 						if(validateIdToken){
-							authTokenSub = getSubClaimValueFromToken(token);
+							authTokenSub = AuthCodeProxyFlowUtils.
+									getSubClaimValueFromToken(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 						}
 					} else {
 						String idTokenName=this.environment.getProperty(AuthAdapterConstant.ID_TOKEN);
@@ -148,7 +149,10 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
-									idTokenSub = getSubClaimValueFromToken(idToken);
+									idTokenSub = AuthCodeProxyFlowUtils.
+											getSubClaimValueFromToken(idToken,
+													this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+
 								}
 
 							}
@@ -186,10 +190,6 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 		LOGGER.debug("Extracted auth token for request " + httpServletRequest.getRequestURL());
 		return getAuthenticationManager().authenticate(authToken);
-	}
-
-	private String getSubClaimValueFromToken(String token) {
-		return JWT.decode(token).getClaim(this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME)).asString();
 	}
 
 	@Override

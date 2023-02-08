@@ -10,6 +10,7 @@ import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
 import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -114,7 +116,8 @@ public class LoginController {
 		validateTokenHelper.validateToken(accessToken);
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
-		String authTokenSub =  getSubClaimValueFromToken(cookie);
+		String authTokenSub =  AuthCodeProxyFlowUtils.getSubClaimValueFromToken
+				(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 		if(validateIdToken) {
 			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
 			String idToken = jwtResponseDTO.getIdToken();
@@ -122,7 +125,8 @@ public class LoginController {
 				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
 			}
-			String idTokenSub = getSubClaimValueFromToken(idToken);
+			String idTokenSub = AuthCodeProxyFlowUtils.getSubClaimValueFromToken(idToken,
+					this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 			if(idTokenSub != null && idTokenSub.equalsIgnoreCase(authTokenSub)){
 				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
 						Errors.INVALID_TOKEN.getErrorMessage());
@@ -143,13 +147,7 @@ public class LoginController {
 		res.sendRedirect(redirectUrl);	
 	}
 
-	private String getSubClaimValueFromToken(Cookie token) {
-		return getSubClaimValueFromToken(token.getValue());
-	}
 
-	private String getSubClaimValueFromToken(String token) {
-		return JWT.decode(token).getClaim(this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME)).asString();
-	}
 
 	private boolean matchesAllowedUrls(String url) {
 		boolean hasMatch = allowedUrls.contains(url.contains("#") ? url.split("#")[0] : url);
