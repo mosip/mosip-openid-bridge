@@ -1,20 +1,24 @@
 package io.mosip.kernel.authcodeflowproxy.api.controller;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.auth0.jwt.JWT;
+import io.mosip.kernel.authcodeflowproxy.api.validator.ValidateTokenUtil;
+import io.mosip.kernel.core.http.ResponseFilter;
+import io.mosip.kernel.core.http.ResponseWrapper;
+import io.mosip.kernel.core.util.EmptyCheckUtils;
+import io.mosip.kernel.openid.bridge.api.constants.Constants;
+import io.mosip.kernel.openid.bridge.api.constants.Errors;
+import io.mosip.kernel.openid.bridge.api.exception.ClientException;
+import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
+import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
+import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,16 +26,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.mosip.kernel.authcodeflowproxy.api.validator.ValidateTokenUtil;
-import io.mosip.kernel.core.http.ResponseFilter;
-import io.mosip.kernel.core.http.ResponseWrapper;
-import io.mosip.kernel.core.util.EmptyCheckUtils;
-import io.mosip.kernel.openid.bridge.api.constants.Errors;
-import io.mosip.kernel.openid.bridge.api.exception.ClientException;
-import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
-import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
-import io.mosip.kernel.openid.bridge.model.MosipUserDto;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class LoginController {
@@ -117,11 +117,19 @@ public class LoginController {
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
 		if(validateIdToken) {
+			String authTokenSub =  AuthCodeProxyFlowUtils.getSubClaimValueFromToken
+					(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
 			String idToken = jwtResponseDTO.getIdToken();
 			if(idToken == null) {
 				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
+			}
+			String idTokenSub = AuthCodeProxyFlowUtils.getSubClaimValueFromToken(idToken,
+					this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+			if(idTokenSub != null && idTokenSub.equalsIgnoreCase(authTokenSub)){
+				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
+						Errors.INVALID_TOKEN.getErrorMessage());
 			}
 			validateTokenHelper.validateToken(idToken);
 			Cookie idTokenCookie = new Cookie(idTokenProperty, idToken);
@@ -138,6 +146,8 @@ public class LoginController {
 		}
 		res.sendRedirect(redirectUrl);	
 	}
+
+
 
 	private boolean matchesAllowedUrls(String url) {
 		boolean hasMatch = allowedUrls.contains(url.contains("#") ? url.split("#")[0] : url);
