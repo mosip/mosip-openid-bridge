@@ -1,6 +1,5 @@
 package io.mosip.kernel.authcodeflowproxy.api.controller;
 
-import com.auth0.jwt.JWT;
 import io.mosip.kernel.authcodeflowproxy.api.validator.ValidateTokenUtil;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.kernel.core.http.ResponseWrapper;
@@ -10,7 +9,7 @@ import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
 import io.mosip.kernel.openid.bridge.api.service.LoginService;
-import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
+import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -117,7 +115,7 @@ public class LoginController {
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
 		if(validateIdToken) {
-			String authTokenSub =  AuthCodeProxyFlowUtils.getSubClaimValueFromToken
+			String authTokenSub =  JWTUtils.getSubClaimValueFromToken
 					(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
 			String idToken = jwtResponseDTO.getIdToken();
@@ -125,7 +123,7 @@ public class LoginController {
 				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
 			}
-			String idTokenSub = AuthCodeProxyFlowUtils.getSubClaimValueFromToken(idToken,
+			String idTokenSub = JWTUtils.getSubClaimValueFromToken(idToken,
 					this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 			if(idTokenSub != null && idTokenSub.equalsIgnoreCase(authTokenSub)){
 				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),

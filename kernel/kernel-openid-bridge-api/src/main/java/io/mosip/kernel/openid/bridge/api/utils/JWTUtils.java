@@ -6,9 +6,9 @@ import java.util.Map;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-public class AuthCodeProxyFlowUtils {
+public class JWTUtils {
 	
-	private AuthCodeProxyFlowUtils() {
+	private JWTUtils() {
 		
 	}
 

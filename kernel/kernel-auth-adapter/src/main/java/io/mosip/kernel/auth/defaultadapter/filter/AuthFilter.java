@@ -21,7 +21,7 @@ import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
-import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
+import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +135,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 						LOGGER.debug("extract token from cookie named " + cookie.getName());
 						token = cookie.getValue();
 						if(validateIdToken){
-							authTokenSub = AuthCodeProxyFlowUtils.
+							authTokenSub = JWTUtils.
 									getSubClaimValueFromToken(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 						}
 					} else {
@@ -149,7 +149,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
-									idTokenSub = AuthCodeProxyFlowUtils.
+									idTokenSub = JWTUtils.
 											getSubClaimValueFromToken(idToken,
 													this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 
