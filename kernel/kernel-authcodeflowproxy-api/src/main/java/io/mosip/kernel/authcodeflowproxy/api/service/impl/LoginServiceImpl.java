@@ -54,7 +54,7 @@ import io.mosip.kernel.openid.bridge.api.exception.AuthRestException;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
 import io.mosip.kernel.openid.bridge.api.service.LoginService;
-import io.mosip.kernel.openid.bridge.api.utils.AuthCodeProxyFlowUtils;
+import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponse;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
 import io.mosip.kernel.openid.bridge.dto.IAMErrorResponseDto;
@@ -364,7 +364,7 @@ public class LoginServiceImpl implements LoginService {
 			return new String(Base64.decodeBase64(redirectURI.getBytes()));
 		}
 		
-		String issuer = AuthCodeProxyFlowUtils.getissuer(token);
+		String issuer = JWTUtils.getissuer(token);
 		StringBuilder urlBuilder = new StringBuilder().append(issuer).append(endSessionEndpointPath);
 		UriComponentsBuilder uriComponentsBuilder;
 		try {
