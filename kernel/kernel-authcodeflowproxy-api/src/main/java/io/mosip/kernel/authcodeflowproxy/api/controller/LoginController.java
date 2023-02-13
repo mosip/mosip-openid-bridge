@@ -114,18 +114,21 @@ public class LoginController {
 		validateTokenHelper.validateToken(accessToken);
 		Cookie cookie = loginService.createCookie(accessToken);
 		res.addCookie(cookie);
+		String subjectClaimNameProperty = this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME);
 		if(validateIdToken) {
 			String authTokenSub =  JWTUtils.getSubClaimValueFromToken
-					(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+					(cookie.getValue(), subjectClaimNameProperty);
 			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
 			String idToken = jwtResponseDTO.getIdToken();
 			if(idToken == null) {
+				LOGGER.error("Id token is null.");
 				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
 			}
 			String idTokenSub = JWTUtils.getSubClaimValueFromToken(idToken,
-					this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
-			if(idTokenSub != null && idTokenSub.equalsIgnoreCase(authTokenSub)){
+					subjectClaimNameProperty);
+			if(idTokenSub != null && !idTokenSub.equalsIgnoreCase(authTokenSub)){
+				LOGGER.error("Id token Sub value and auth token sub value are not matching.");
 				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
 						Errors.INVALID_TOKEN.getErrorMessage());
 			}
