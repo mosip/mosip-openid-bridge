@@ -127,6 +127,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		Cookie[] cookies = null;
 		String authTokenSub = null;
 		String idTokenSub = null;
+		boolean isIdTokenAvailable = false;
 		try {
 			cookies = httpServletRequest.getCookies();
 			if (cookies != null) {
@@ -149,6 +150,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
+									isIdTokenAvailable = true;
 									idTokenSub = JWTUtils.
 											getSubClaimValueFromToken(idToken,
 													this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
@@ -160,12 +162,17 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					}
 				}
 			}
-			if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
-				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
-						Errors.INVALID_TOKEN.getErrorMessage());
-			}
+
 		} catch (Exception e) {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
+		}
+		if(validateIdToken && !isIdTokenAvailable){
+			throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
+					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + "idToken");
+		}
+		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
+			throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
+					Errors.INVALID_TOKEN.getErrorMessage());
 		}
 
 		if (token == null) {
