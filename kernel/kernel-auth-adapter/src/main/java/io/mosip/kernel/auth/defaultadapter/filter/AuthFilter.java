@@ -12,6 +12,7 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
+import io.mosip.kernel.auth.defaultadapter.exception.AuthAdapterException;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -167,11 +168,11 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
 		}
 		if(validateIdToken && !isIdTokenAvailable){
-			throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
-					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + "idToken");
+			throw new AuthAdapterException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
+					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage());
 		}
 		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
-			throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
+			throw new AuthAdapterException(Errors.INVALID_TOKEN.getErrorCode(),
 					Errors.INVALID_TOKEN.getErrorMessage());
 		}
 
