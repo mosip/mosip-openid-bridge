@@ -12,6 +12,7 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
+import io.mosip.kernel.auth.defaultadapter.exception.AuthAdapterException;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -127,6 +128,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		Cookie[] cookies = null;
 		String authTokenSub = null;
 		String idTokenSub = null;
+		boolean isIdTokenAvailable = false;
 		try {
 			cookies = httpServletRequest.getCookies();
 			if (cookies != null) {
@@ -149,6 +151,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
+									isIdTokenAvailable = true;
 									idTokenSub = JWTUtils.
 											getSubClaimValueFromToken(idToken,
 													this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
@@ -160,12 +163,19 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 					}
 				}
 			}
-			if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
-				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
-						Errors.INVALID_TOKEN.getErrorMessage());
-			}
+
 		} catch (Exception e) {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
+		}
+		if(validateIdToken && !isIdTokenAvailable){
+			LOGGER.error("Id token not available.");
+			throw new AuthAdapterException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
+					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage());
+		}
+		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
+			LOGGER.error("Sub of Id token and auth token didn't match.");
+			throw new AuthAdapterException(Errors.INVALID_TOKEN.getErrorCode(),
+					Errors.INVALID_TOKEN.getErrorMessage());
 		}
 
 		if (token == null) {
