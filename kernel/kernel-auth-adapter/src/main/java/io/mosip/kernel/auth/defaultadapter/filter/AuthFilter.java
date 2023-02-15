@@ -168,10 +168,12 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
 		}
 		if(validateIdToken && !isIdTokenAvailable){
+			LOGGER.error("Id token not available.");
 			throw new AuthAdapterException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage());
 		}
 		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
+			LOGGER.error("Sub of Id token and auth token didn't match.");
 			throw new AuthAdapterException(Errors.INVALID_TOKEN.getErrorCode(),
 					Errors.INVALID_TOKEN.getErrorMessage());
 		}
