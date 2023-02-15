@@ -167,16 +167,22 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		} catch (Exception e) {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
 		}
-		if(validateIdToken && !isIdTokenAvailable){
+		if(validateIdToken && !isIdTokenAvailable ||(idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
+			ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
+			ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+					"Authentication Failed");
+			errorResponse.getErrors().add(error);
+			httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+			httpServletResponse.setContentType("application/json");
+			httpServletResponse.setCharacterEncoding("UTF-8");
+			httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
+			if(idTokenSub == null){
+				LOGGER.error("Sub of Id token and auth token didn't match.");
+			}
 			LOGGER.error("Id token not available.");
-			throw new AuthAdapterException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
-					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage());
+			return null;
 		}
-		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
-			LOGGER.error("Sub of Id token and auth token didn't match.");
-			throw new AuthAdapterException(Errors.INVALID_TOKEN.getErrorCode(),
-					Errors.INVALID_TOKEN.getErrorMessage());
-		}
+
 
 		if (token == null) {
 			ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
