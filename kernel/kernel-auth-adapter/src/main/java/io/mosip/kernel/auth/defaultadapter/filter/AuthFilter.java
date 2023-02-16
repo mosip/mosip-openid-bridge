@@ -168,15 +168,17 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		}
 		if(validateIdToken && !isIdTokenAvailable){
 			LOGGER.error("Id token not available.");
-			getErrorResponse(httpServletRequest, httpServletResponse);
+			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
 			LOGGER.error("Sub of Id token and auth token didn't match.");
-			getErrorResponse(httpServletRequest, httpServletResponse);
+			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 
 		if (token == null) {
-			getErrorResponse(httpServletRequest, httpServletResponse);
+			LOGGER.error("\n\n Exception : Authorization token not present > " + httpServletRequest.getRequestURL()
+					+ "\n\n");
+			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 		AuthToken authToken = null;
 		if(idToken==null){
@@ -189,7 +191,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		return getAuthenticationManager().authenticate(authToken);
 	}
 
-	private Authentication getErrorResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+	private Authentication sendAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
 		ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
 		ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
 				"Authentication Failed");
@@ -198,8 +200,6 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		httpServletResponse.setContentType("application/json");
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
-		LOGGER.error("\n\n Exception : Authorization token not present > " + httpServletRequest.getRequestURL()
-				+ "\n\n");
 		return null;
 	}
 
