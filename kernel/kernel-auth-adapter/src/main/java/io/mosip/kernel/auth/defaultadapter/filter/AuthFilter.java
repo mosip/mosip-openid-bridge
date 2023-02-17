@@ -12,7 +12,6 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
-import io.mosip.kernel.auth.defaultadapter.exception.AuthAdapterException;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -169,27 +168,17 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		}
 		if(validateIdToken && !isIdTokenAvailable){
 			LOGGER.error("Id token not available.");
-			throw new AuthAdapterException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
-					Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage());
+			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
 			LOGGER.error("Sub of Id token and auth token didn't match.");
-			throw new AuthAdapterException(Errors.INVALID_TOKEN.getErrorCode(),
-					Errors.INVALID_TOKEN.getErrorMessage());
+			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 
 		if (token == null) {
-			ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
-			ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
-					"Authentication Failed");
-			errorResponse.getErrors().add(error);
-			httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-			httpServletResponse.setContentType("application/json");
-			httpServletResponse.setCharacterEncoding("UTF-8");
-			httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
 			LOGGER.error("\n\n Exception : Authorization token not present > " + httpServletRequest.getRequestURL()
 					+ "\n\n");
-			return null;
+			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 		AuthToken authToken = null;
 		if(idToken==null){
@@ -200,6 +189,18 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 		LOGGER.debug("Extracted auth token for request " + httpServletRequest.getRequestURL());
 		return getAuthenticationManager().authenticate(authToken);
+	}
+
+	private Authentication sendAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+		ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
+		ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+				"Authentication Failed");
+		errorResponse.getErrors().add(error);
+		httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+		httpServletResponse.setContentType("application/json");
+		httpServletResponse.setCharacterEncoding("UTF-8");
+		httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
+		return null;
 	}
 
 	@Override
