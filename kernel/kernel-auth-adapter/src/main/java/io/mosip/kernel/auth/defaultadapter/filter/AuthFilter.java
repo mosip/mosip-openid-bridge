@@ -168,17 +168,17 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		}
 		if(validateIdToken && !isIdTokenAvailable){
 			LOGGER.error("Id token not available.");
-			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
+			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
 			LOGGER.error("Sub of Id token and auth token didn't match.");
-			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
+			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 
 		if (token == null) {
 			LOGGER.error("\n\n Exception : Authorization token not present > " + httpServletRequest.getRequestURL()
 					+ "\n\n");
-			sendAuthenticationFailure(httpServletRequest, httpServletResponse);
+			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 		AuthToken authToken = null;
 		if(idToken==null){
