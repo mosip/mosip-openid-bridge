@@ -21,6 +21,7 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -61,7 +62,9 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
     @Autowired
 	private RestTemplateInterceptor restInterceptor;
 	
-	private RestTemplate restTemplate = null;
+	@Autowired
+	@Qualifier("plainRestTemplate")
+	private RestTemplate restTemplate;
 
 	@Autowired
 	private VertxTokenValidationHelper validationHelper;
@@ -71,27 +74,7 @@ public class VertxAuthHandler implements VertxAuthenticationProvider {
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 	
-	@PostConstruct
-	void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
-		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-		if (sslBypass) {
-			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-					.loadTrustMaterial(null, acceptingTrustStrategy).build();
-			SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
-				public boolean verify(String arg0, SSLSession arg1) {
-					return true;
-				}
-			});
-			httpClientBuilder.setSSLSocketFactory(csf);
-		}
-		requestFactory.setHttpClient(httpClientBuilder.build());
-		List<ClientHttpRequestInterceptor> list = new ArrayList<>();
-		list.add(restInterceptor);
-		restTemplate = new RestTemplate(requestFactory);
-		restTemplate.setInterceptors(list);
-	}
+
 
 	@Generated // coverage exclusion as this is a filter
 	@Override
