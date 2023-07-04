@@ -348,8 +348,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 				ResponseWrapper<String> body = responseEntity.getBody();
 				LOGGER.debug("Response from Compliance Toolkit: " + body.getResponse());
 			} catch (Exception e) {
-				// This is FailSafe
-				System.out.println("error: " + e.getLocalizedMessage());
+				// This is FailSafe, so just log the err
 				LOGGER.error("error connecting to compliance toolkit {}", e.getLocalizedMessage());
 			}
 		}
