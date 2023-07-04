@@ -307,7 +307,11 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			String ctkSaveUrl = environment.getProperty("mosip.compliance.toolkit.saveDataShareToken.url");
 			String ctkInvalidateUrl = environment.getProperty("mosip.compliance.toolkit.invalidateDataShareToken.url");
 			if (ctkSaveUrl == null) {
-				LOGGER.info("Invalid ComplianceToolkit URL {}", ctkSaveUrl);
+				LOGGER.info("Invalid value for property 'mosip.compliance.toolkit.saveDataShareToken.url' {}", ctkSaveUrl);
+				return;
+			}
+			if (ctkInvalidateUrl == null) {
+				LOGGER.info("Invalid value for property 'mosip.compliance.toolkit.invalidateDataShareToken.url' {}", ctkInvalidateUrl);
 				return;
 			}
 			// get the partnerId from URL
