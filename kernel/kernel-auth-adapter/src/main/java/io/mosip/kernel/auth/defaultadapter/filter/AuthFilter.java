@@ -304,9 +304,10 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			}
 		}
 		if (ctkTestCaseId != null && ctkTestRunId != null) {
-			String ctkUrl = environment.getProperty("mosip.compliance.toolkit.saveDataShare.url");
-			if (ctkUrl == null) {
-				LOGGER.info("Invalid ComplianceToolkit URL {}", ctkUrl);
+			String ctkSaveUrl = environment.getProperty("mosip.compliance.toolkit.saveDataShareToken.url");
+			String ctkInvalidateUrl = environment.getProperty("mosip.compliance.toolkit.invalidateDataShareToken.url");
+			if (ctkSaveUrl == null) {
+				LOGGER.info("Invalid ComplianceToolkit URL {}", ctkSaveUrl);
 				return;
 			}
 			// get the partnerId from URL
@@ -331,7 +332,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			valueMap.put(AuthAdapterConstant.CTK_TEST_RUN_ID, ctkTestRunId);
 			valueMap.put(AuthAdapterConstant.TOKEN, token);
 			RequestWrapper<Object> requestWrapper = new RequestWrapper<>();
-			requestWrapper.setId("mosip.toolkit.abis.datashare.savetoken");
+			requestWrapper.setId("mosip.toolkit.abis.datashare.token");
 			requestWrapper.setVersion("1.0");
 			requestWrapper.setRequesttime(LocalDateTime.now());
 			requestWrapper.setRequest(valueMap);
@@ -340,7 +341,11 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			ResponseEntity<ResponseWrapper<String>> responseEntity = null;
 			try {
 				HttpEntity<RequestWrapper<Object>> requestEntity = new HttpEntity<>(requestWrapper, headers);
-				String tokenUrl = new StringBuilder(ctkUrl).toString();
+				String tokenUrl = new StringBuilder(ctkSaveUrl).toString();
+				String ctkInvalidateTestCaseId = environment.getProperty("mosip.compliance.toolkit.invalidateDataShareToken.testCaseId");
+				if (ctkInvalidateTestCaseId != null && ctkInvalidateTestCaseId.equals(ctkTestCaseId)) {
+					tokenUrl = new StringBuilder(ctkInvalidateUrl).toString();
+				}
 				LOGGER.debug("Calling Compliance Toolkit URL: " + tokenUrl);
 				responseEntity = restTemplate.exchange(tokenUrl, HttpMethod.POST, requestEntity,
 						new ParameterizedTypeReference<ResponseWrapper<String>>() {
