@@ -16,6 +16,7 @@ import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.model.AuthToken;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
+import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
@@ -26,13 +27,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.FilterChain;
@@ -44,7 +52,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,6 +79,8 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 	@Autowired
 	private Environment environment;
+	
+	private RestTemplate restTemplate = new RestTemplate();
 
 	@SuppressWarnings("unchecked")
 	public AuthFilter(RequestMatcher requiresAuthenticationRequestMatcher,
@@ -188,7 +200,15 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		}
 
 		LOGGER.debug("Extracted auth token for request " + httpServletRequest.getRequestURL());
-		return getAuthenticationManager().authenticate(authToken);
+		Authentication auth = getAuthenticationManager().authenticate(authToken);
+		/*
+		 * This is custom  fail-safe handling added only for Compliance Toolkit, to enable ABIS
+		 * data share testing.
+		 */
+		if (auth != null && auth.isAuthenticated()) {
+			handleCtkTokenFlow(httpServletRequest, token);
+		}
+		return auth;
 	}
 
 	private Authentication sendAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
@@ -261,6 +281,77 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			return appNamesList.get(0);
 		} else {
 			throw new RuntimeException("property spring.application.name not found");
+		}
+	}
+	
+	/**
+	 * This is custom fail-safe handling added only for Compliance Toolkit, to
+	 * enable ABIS data share testing.
+	 */
+	private void handleCtkTokenFlow(HttpServletRequest httpServletRequest, String token) {
+		String ctkTestCaseId = null;
+		String ctkTestRunId = null;
+		Map<String, String[]> requestParams = httpServletRequest.getParameterMap();
+
+		for (Map.Entry<String, String[]> entry : requestParams.entrySet()) {
+			if (AuthAdapterConstant.CTK_TEST_CASE_ID.equals(entry.getKey()) && entry.getValue().length > 0) {
+				ctkTestCaseId = entry.getValue()[0];
+				LOGGER.debug("Recvd ctkTestCaseId {}", ctkTestCaseId);
+			}
+			if (AuthAdapterConstant.CTK_TEST_RUN_ID.equals(entry.getKey()) && entry.getValue().length > 0) {
+				ctkTestRunId = entry.getValue()[0];
+				LOGGER.debug("Recvd ctkTestRunId {}", ctkTestRunId);
+			}
+		}
+		if (ctkTestCaseId != null && ctkTestRunId != null) {
+			String ctkUrl = environment.getProperty("mosip.compliance.toolkit.saveDataShare.url");
+			if (ctkUrl == null) {
+				LOGGER.info("Invalid ComplianceToolkit URL {}", ctkUrl);
+				return;
+			}
+			// get the partnerId from URL
+			String path = httpServletRequest.getPathInfo();
+			String[] splits = path.split("/");
+			String partnerId = null;
+			if (splits.length > 2) {
+				partnerId = splits[splits.length - 2];
+			}
+			if (partnerId == null) {
+				LOGGER.info("Invalid DataShare URL {}", httpServletRequest.getRequestURI());
+				return;
+			}
+			// add the token first
+			HttpHeaders headers = new HttpHeaders();
+			headers.add(AuthAdapterConstant.AUTH_HEADER_COOKIE, AuthAdapterConstant.AUTH_HEADER + token);
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			// create request
+			Map<String, String> valueMap = new HashMap<String, String>();
+			valueMap.put(AuthAdapterConstant.PARTNER_ID, partnerId);
+			valueMap.put(AuthAdapterConstant.CTK_TEST_CASE_ID, ctkTestCaseId);
+			valueMap.put(AuthAdapterConstant.CTK_TEST_RUN_ID, ctkTestRunId);
+			valueMap.put(AuthAdapterConstant.TOKEN, token);
+			RequestWrapper<Object> requestWrapper = new RequestWrapper<>();
+			requestWrapper.setId("mosip.toolkit.abis.datashare.savetoken");
+			requestWrapper.setVersion("1.0");
+			requestWrapper.setRequesttime(LocalDateTime.now());
+			requestWrapper.setRequest(valueMap);
+			LOGGER.debug("Calling Compliance Toolkit requestWrapper: " + requestWrapper);
+			// ResponseWrapper<String> response = null;
+			ResponseEntity<ResponseWrapper<String>> responseEntity = null;
+			try {
+				HttpEntity<RequestWrapper<Object>> requestEntity = new HttpEntity<>(requestWrapper, headers);
+				String tokenUrl = new StringBuilder(ctkUrl).toString();
+				LOGGER.debug("Calling Compliance Toolkit URL: " + tokenUrl);
+				responseEntity = restTemplate.exchange(tokenUrl, HttpMethod.POST, requestEntity,
+						new ParameterizedTypeReference<ResponseWrapper<String>>() {
+						});
+				ResponseWrapper<String> body = responseEntity.getBody();
+				LOGGER.debug("Response from Compliance Toolkit: " + body.getResponse());
+			} catch (Exception e) {
+				// This is FailSafe
+				System.out.println("error: " + e.getLocalizedMessage());
+				LOGGER.error("error connecting to compliance toolkit {}", e.getLocalizedMessage());
+			}
 		}
 	}
 
