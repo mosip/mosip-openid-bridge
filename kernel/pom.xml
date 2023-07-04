@@ -121,6 +121,8 @@
 	</properties>
 
 	<modules>
+		<module>kernel-openid-bridge-api</module>
+		<module>kernel-authcodeflowproxy-api</module>
 	    <module>kernel-auth-adapter</module>
 		<module>kernel-auth-service</module>
 		</modules>

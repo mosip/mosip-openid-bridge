@@ -1,7 +1,6 @@
 package io.mosip.kernel.auth.controller;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 
@@ -66,6 +65,8 @@ import io.mosip.kernel.core.authmanager.spi.AuthService;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.kernel.core.http.ResponseWrapper;
+import io.mosip.kernel.core.util.exception.JsonMappingException;
+import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
