@@ -687,9 +687,17 @@ public class KeycloakImpl implements DataStore {
 			for (JsonNode jsonNode : node) {
 				if (jsonNode.get(AuthConstant.USER_NAME).textValue().equals(userId)) {
 					JsonNode attriNode = jsonNode.get("attributes");
-					String individualId = attriNode.get(AuthConstant.INDIVIDUAL_ID).get(0).textValue();
-					individualIdDto.setIndividualId(individualId);
-					break;
+					String individualId = null;
+					if (attriNode.has(AuthConstant.INDIVIDUAL_ID))
+						individualId = attriNode.get(AuthConstant.INDIVIDUAL_ID).get(0).textValue();
+					if (attriNode.has(AuthConstant.INDIVIDUALID))
+						individualId = attriNode.get(AuthConstant.INDIVIDUALID).get(0).textValue();
+						
+					if (Objects.nonNull(individualId)) {
+						LOGGER.info("Found Individual Id for the input user: " + userId + ", Id: " + individualId);
+						individualIdDto.setIndividualId(individualId);
+						break;
+					}
 				}
 			}
 			if (individualIdDto.getIndividualId() == null) {
