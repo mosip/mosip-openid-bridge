@@ -110,7 +110,7 @@ public class LoginController {
 			@RequestParam(value="error", required = false) String error,
 			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
 		// Checking error occured during idle timeout during login session
-		if(error != null && !error.isEmpty()){
+		if(error == null && error.isEmpty()){
 			AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 					redirectURI);
 			String accessToken = jwtResponseDTO.getAccessToken();
