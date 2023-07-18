@@ -107,10 +107,10 @@ public class LoginController {
 	@GetMapping(value = "/login-redirect/{redirectURI}")
 	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
 			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam("code") String code, 
-			@RequestParam(value="error", required = false) String error, @RequestParam(value="error_description", required = false) String error_description,
+			@RequestParam(value="error", required = false) String error,
 			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
 		// Checking error occured during idle timeout during login session
-		if(error != "invalid_transaction"){
+		if(error != null && !error.isEmpty()){
 			AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 					redirectURI);
 			String accessToken = jwtResponseDTO.getAccessToken();
@@ -150,7 +150,7 @@ public class LoginController {
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		// If error exist appending that as a query param along with redirecturi
-		if(error == "invalid_transaction"){
+		if(error != null && !error.isEmpty()){
 			redirectUrl = redirectUrl+"?error="+error;
 		}
 		res.sendRedirect(redirectUrl);	
