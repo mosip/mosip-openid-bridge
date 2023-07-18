@@ -254,7 +254,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -282,7 +282,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is(UNAUTHORIZED_STATUS));
 	}
@@ -309,7 +309,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is(401));
 	}
@@ -338,7 +338,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -366,7 +366,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is(401));
 	}
@@ -394,7 +394,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is(401));
 	}
@@ -423,7 +423,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -453,7 +453,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -480,7 +480,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is(401));
 	}
@@ -509,7 +509,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is(401));
 	}
@@ -549,7 +549,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLyMvcmFuZG9tcGF0bS9yYW5kb21wYXRo?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLyMvcmFuZG9tcGF0bS9yYW5kb21wYXRo?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -587,7 +587,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWUtdWkvZGFzaGJvYXJk?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWUtdWkvZGFzaGJvYXJk?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -625,7 +625,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWUtdWkvIy91aW5zZXJ2aWNlcw?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWUtdWkvIy91aW5zZXJ2aWNlcw?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -663,7 +663,7 @@ public class AuthProxyControllerTests {
 		
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWVvdGhlci11aS9kYXNoYm9hcmQ?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwL3NvbWVvdGhlci11aS9kYXNoYm9hcmQ?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 		.andExpect(status().isOk()).andExpect(jsonPath("$.errors[0].errorCode", is(Errors.ALLOWED_URL_EXCEPTION.getErrorCode())));
 	}
@@ -693,7 +693,7 @@ public class AuthProxyControllerTests {
 
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-						"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&claims=mockClaim")
+						"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&claims=mockClaim&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -727,7 +727,7 @@ public class AuthProxyControllerTests {
 						.body(objectMapper.writeValueAsString(accessTokenResponse)));
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-						"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&claims=mockClaim")
+						"/login-redirect/aHR0cDovL2xvY2FsaG9zdDo1MDAwLw==?state=mockstate&session_state=mock-session-state&code=mockcode&claims=mockClaim&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().is3xxRedirection());
 	}
@@ -746,7 +746,7 @@ public class AuthProxyControllerTests {
 				.andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.APPLICATION_JSON)
 						.body(objectMapper.writeValueAsString(errorResponseDto)));
 		Cookie cookie = new Cookie("state", "mockstate");
-		mockMvc.perform(get("/login-redirect/abc?state=mockstate&session_state=mock-session-state&code=mockcode")
+		mockMvc.perform(get("/login-redirect/abc?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 				.contentType(MediaType.APPLICATION_JSON).cookie(cookie)).andExpect(status().is2xxSuccessful())
 				.andExpect(jsonPath("$.errors[0].message", isA(String.class)));
 	}
@@ -798,7 +798,7 @@ public class AuthProxyControllerTests {
 						.body(objectMapper.writeValueAsString(accessTokenResponse)));
 		Cookie cookie = new Cookie("state", "mockstate");
 		mockMvc.perform(get(
-				"/login-redirect/aHR0cDovL2FiOjUwMDAv?state=mockstate&session_state=mock-session-state&code=mockcode")
+				"/login-redirect/aHR0cDovL2FiOjUwMDAv?state=mockstate&session_state=mock-session-state&code=mockcode&error=null")
 						.contentType(MediaType.APPLICATION_JSON).cookie(cookie))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.errors[0].errorCode", is(Errors.ALLOWED_URL_EXCEPTION.getErrorCode())));
