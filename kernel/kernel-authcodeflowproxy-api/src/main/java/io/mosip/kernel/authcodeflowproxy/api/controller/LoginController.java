@@ -106,36 +106,40 @@ public class LoginController {
 
 	@GetMapping(value = "/login-redirect/{redirectURI}")
 	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
-			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam("code") String code,
+			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam("code") String code, 
+			@RequestParam(value="error", required = false) String error, @RequestParam(value="error_description", required = false) String error_description,
 			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
-		AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
-				redirectURI);
-		String accessToken = jwtResponseDTO.getAccessToken();
-		validateTokenHelper.validateToken(accessToken);
-		Cookie cookie = loginService.createCookie(accessToken);
-		res.addCookie(cookie);
-		if(validateIdToken) {
-			String subjectClaimNameProperty = this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME);
-			String authTokenSub =  JWTUtils.getSubClaimValueFromToken
-					(cookie.getValue(), subjectClaimNameProperty);
-			String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
-			String idToken = jwtResponseDTO.getIdToken();
-			if(idToken == null) {
-				LOGGER.error("Id token is null.");
-				throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
-						Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
+		// Checking error occured during idle timeout during login session
+		if(error != "invalid_transaction"){
+			AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
+					redirectURI);
+			String accessToken = jwtResponseDTO.getAccessToken();
+			validateTokenHelper.validateToken(accessToken);
+			Cookie cookie = loginService.createCookie(accessToken);
+			res.addCookie(cookie);
+			if(validateIdToken) {
+				String subjectClaimNameProperty = this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME);
+				String authTokenSub =  JWTUtils.getSubClaimValueFromToken
+						(cookie.getValue(), subjectClaimNameProperty);
+				String idTokenProperty  = this.environment.getProperty(IDTOKEN, ID_TOKEN);
+				String idToken = jwtResponseDTO.getIdToken();
+				if(idToken == null) {
+					LOGGER.error("Id token is null.");
+					throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
+							Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenProperty);
+				}
+				String idTokenSub = JWTUtils.getSubClaimValueFromToken(idToken,
+						subjectClaimNameProperty);
+				if(idTokenSub != null && !idTokenSub.equalsIgnoreCase(authTokenSub)){
+					LOGGER.error("Id token Sub value and auth token sub value are not matching.");
+					throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
+							Errors.INVALID_TOKEN.getErrorMessage());
+				}
+				validateTokenHelper.validateToken(idToken);
+				Cookie idTokenCookie = new Cookie(idTokenProperty, idToken);
+				setCookieParams(idTokenCookie,true,true,"/");
+				res.addCookie(idTokenCookie);
 			}
-			String idTokenSub = JWTUtils.getSubClaimValueFromToken(idToken,
-					subjectClaimNameProperty);
-			if(idTokenSub != null && !idTokenSub.equalsIgnoreCase(authTokenSub)){
-				LOGGER.error("Id token Sub value and auth token sub value are not matching.");
-				throw new ClientException(Errors.INVALID_TOKEN.getErrorCode(),
-						Errors.INVALID_TOKEN.getErrorMessage());
-			}
-			validateTokenHelper.validateToken(idToken);
-			Cookie idTokenCookie = new Cookie(idTokenProperty, idToken);
-			setCookieParams(idTokenCookie,true,true,"/");
-			res.addCookie(idTokenCookie);
 		}
 		res.setStatus(302);
 		String redirectUrl = new String(Base64.decodeBase64(redirectURI.getBytes()));
@@ -144,6 +148,10 @@ public class LoginController {
 		if(!matchesAllowedUrls) {
 			LOGGER.error("Url {} was not part of allowed url's",redirectUrl);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
+		}
+		// If error exist appending that as a query param along with redirecturi
+		if(error == "invalid_transaction"){
+			redirectUrl = redirectUrl+"?error="+error;
 		}
 		res.sendRedirect(redirectUrl);	
 	}
