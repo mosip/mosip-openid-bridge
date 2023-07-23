@@ -106,8 +106,10 @@ public class LoginController {
 
 	@GetMapping(value = "/login-redirect/{redirectURI}")
 	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
-			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam("code") String code,
+			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam("code") String code, 
+			@RequestParam(value="error", required = false) String error,
 			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
+
 		AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 				redirectURI);
 		String accessToken = jwtResponseDTO.getAccessToken();
@@ -144,6 +146,10 @@ public class LoginController {
 		if(!matchesAllowedUrls) {
 			LOGGER.error("Url {} was not part of allowed url's",redirectUrl);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
+		}
+		// If error exist appending that as a query param along with redirecturi
+		if(error != null && !error.isEmpty()){
+			redirectUrl = redirectUrl+"?error="+error;
 		}
 		res.sendRedirect(redirectUrl);	
 	}
