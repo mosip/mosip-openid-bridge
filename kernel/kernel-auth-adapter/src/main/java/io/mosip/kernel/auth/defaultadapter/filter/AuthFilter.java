@@ -76,6 +76,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 
 	@Value("${auth.validate.id-token:false}")
 	private boolean validateIdToken;
+	
+	@Value("${auth.handle.ctk.flow:false}")
+	private boolean flagToHandleCtkFlow;
 
 	@Autowired
 	private Environment environment;
@@ -205,7 +208,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		 * This is custom  fail-safe handling added only for Compliance Toolkit, to enable ABIS
 		 * data share testing.
 		 */
-		if (auth != null && auth.isAuthenticated()) {
+		if (auth != null && auth.isAuthenticated() && flagToHandleCtkFlow) {
 			handleCtkTokenFlow(httpServletRequest, token);
 		}
 		return auth;
