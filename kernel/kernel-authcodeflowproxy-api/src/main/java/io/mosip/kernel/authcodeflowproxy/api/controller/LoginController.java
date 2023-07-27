@@ -106,7 +106,7 @@ public class LoginController {
 
 	@GetMapping(value = "/login-redirect/{redirectURI}")
 	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
-			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam("code",required = false) String code, 
+			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam(value="code", required = false) String code, 
 			@RequestParam(value="error", required = false) String error,
 			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
