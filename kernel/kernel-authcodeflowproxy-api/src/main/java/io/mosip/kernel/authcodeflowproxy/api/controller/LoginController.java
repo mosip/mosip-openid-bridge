@@ -105,10 +105,10 @@ public class LoginController {
 	}
 
 	@GetMapping(value = "/login-redirect/{redirectURI}")
-	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
+	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam(value="state", required = false) String state,
 			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam(value="code", required = false) String code, 
 			@RequestParam(value="error", required = false) String error,
-			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
+			@CookieValue(value="state", required = false) String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
 		AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 				redirectURI);
