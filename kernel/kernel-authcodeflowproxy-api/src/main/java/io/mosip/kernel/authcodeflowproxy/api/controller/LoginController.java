@@ -77,7 +77,8 @@ public class LoginController {
 	@GetMapping(value = "/login/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
 			@PathVariable("redirectURI") String redirectURI,
-			@RequestParam(name = "state", required = false) String stateParam, HttpServletResponse res)
+			@RequestParam(name = "state", required = false) String stateParam, 
+			@RequestParam(name = "ui_locales", required = false) String uiLocales, HttpServletResponse res)
 			throws IOException {
 		String stateValue = EmptyCheckUtils.isNullEmpty(state) ? stateParam : state;
 		if (EmptyCheckUtils.isNullEmpty(stateValue)) {
@@ -96,7 +97,7 @@ public class LoginController {
 					Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
 		}
 		
-		String uri = loginService.login(redirectURI, stateValue);
+		String uri = loginService.login(redirectURI, stateValue, uiLocales);
 		Cookie stateCookie = new Cookie("state", stateValue);
 		setCookieParams(stateCookie,true,true,"/");
 		res.addCookie(stateCookie);
@@ -105,10 +106,10 @@ public class LoginController {
 	}
 
 	@GetMapping(value = "/login-redirect/{redirectURI}")
-	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
+	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam(value="state", required = false) String state,
 			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam(value="code", required = false) String code, 
 			@RequestParam(value="error", required = false) String error,
-			@CookieValue("state") String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
+			@CookieValue(value="state", required = false) String stateCookie, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
 		AccessTokenResponseDTO jwtResponseDTO = loginService.loginRedirect(state, sessionState, code, stateCookie,
 				redirectURI);
