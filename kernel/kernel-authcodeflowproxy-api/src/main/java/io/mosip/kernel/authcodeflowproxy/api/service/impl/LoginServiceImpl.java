@@ -143,7 +143,7 @@ public class LoginServiceImpl implements LoginService {
 	private ValidateTokenUtil validateTokenUtil;
 
 	@Override
-	public String login(String redirectURI, String state) {
+	public String login(String redirectURI, String state, String uiLocales) {
 		Map<String, String> pathParam = new HashMap<>();
 		pathParam.put("realmId", realmID);
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(authorizationEndpoint);
@@ -153,6 +153,9 @@ public class LoginServiceImpl implements LoginService {
 		uriComponentsBuilder.queryParam(Constants.RESPONSE_TYPE, responseType);
 		uriComponentsBuilder.queryParam(Constants.SCOPE, scope);
 		String claim = this.environment.getProperty(Constants.CLAIMS_PROPERTY);
+		if(uiLocales != null){
+			uriComponentsBuilder.queryParam(Constants.UI_LOCALES, uiLocales);
+		}
 		if(claim != null){
 			uriComponentsBuilder.queryParam(Constants.CLAIMS, urlEncode(claim));
 		}
