@@ -346,7 +346,6 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			valueMap.put(AuthAdapterConstant.PARTNER_ID, partnerId);
 			valueMap.put(AuthAdapterConstant.CTK_TEST_CASE_ID, ctkTestCaseId);
 			valueMap.put(AuthAdapterConstant.CTK_TEST_RUN_ID, ctkTestRunId);
-			valueMap.put(AuthAdapterConstant.TOKEN, token);
 			RequestWrapper<Object> requestWrapper = new RequestWrapper<>();
 			requestWrapper.setId("mosip.toolkit.abis.datashare.token");
 			requestWrapper.setVersion("1.0");
