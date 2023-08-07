@@ -83,4 +83,12 @@ public class AuthAdapterConstant {
 
 	public static final String SCOPE = "scope";
 	public static final String ID_TOKEN = "idToken";
+	
+	public static final String CTK_TEST_CASE_ID = "ctkTestCaseId";
+	
+	public static final String CTK_TEST_RUN_ID = "ctkTestRunId";
+	
+	public static final String PARTNER_ID = "partnerId";
+	
+	public static final String TOKEN = "token";
 }
