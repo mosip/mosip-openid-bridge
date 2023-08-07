@@ -367,7 +367,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 				LOGGER.debug("Response from Compliance Toolkit: " + body.getResponse());
 			} catch (Exception e) {
 				// This is FailSafe, so just log the err
-				LOGGER.error("error connecting to compliance toolkit, " + e.getStackTrace());
+				LOGGER.error("error connecting to compliance toolkit: " + e.getStackTrace(), e);
 			}
 		}
 	}
