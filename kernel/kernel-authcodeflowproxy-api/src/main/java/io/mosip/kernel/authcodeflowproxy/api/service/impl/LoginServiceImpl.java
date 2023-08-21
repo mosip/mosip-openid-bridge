@@ -53,7 +53,7 @@ import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.AuthRestException;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.authcodeflowproxy.api.service.LoginServiceV2;
 import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponse;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
@@ -63,7 +63,7 @@ import io.mosip.kernel.openid.bridge.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 @Service
-public class LoginServiceImpl implements LoginService {
+public class LoginServiceImpl implements LoginServiceV2 {
 
 	private static final String TOKEN_VALID = "TOKEN_VALID";
 
@@ -143,7 +143,12 @@ public class LoginServiceImpl implements LoginService {
 	private ValidateTokenUtil validateTokenUtil;
 
 	@Override
-	public String login(String redirectURI, String state, String uiLocales) {
+	public String login(String redirectURI, String state) {
+		return loginV2(redirectURI, state, null);
+	}
+	
+	@Override
+	public String loginV2(String redirectURI, String state, String uiLocales) {
 		Map<String, String> pathParam = new HashMap<>();
 		pathParam.put("realmId", realmID);
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(authorizationEndpoint);
@@ -161,7 +166,7 @@ public class LoginServiceImpl implements LoginService {
 		}
 		return uriComponentsBuilder.buildAndExpand(pathParam).toString();
 	}
-	
+
 	private static String urlEncode(String value) {
 	    try {
 			return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());

@@ -7,7 +7,7 @@ import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 
 public interface LoginService {
 
-	String login(String redirectURI, String state, String uiLocales);
+	String login(String redirectURI, String state);
 
 	Cookie createCookie(String authCookie);
 

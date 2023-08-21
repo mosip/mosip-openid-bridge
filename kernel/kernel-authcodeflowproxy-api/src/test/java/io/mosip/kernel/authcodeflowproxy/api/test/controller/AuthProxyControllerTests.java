@@ -68,7 +68,7 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.openid.bridge.api.constants.AuthConstant;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.authcodeflowproxy.api.service.LoginServiceV2;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponse;
 import io.mosip.kernel.openid.bridge.dto.IAMErrorResponseDto;
 import io.mosip.kernel.openid.bridge.dto.JWTSignatureResponseDto;
@@ -99,7 +99,7 @@ public class AuthProxyControllerTests {
 	private ValidateTokenUtil validateTokenHelper;
 
 	@SpyBean
-	private LoginService loginService;
+	private LoginServiceV2 loginService;
 	
 	@SpyBean
 	private AntPathMatcher antPathMatcher;
