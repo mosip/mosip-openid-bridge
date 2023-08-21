@@ -79,29 +79,7 @@ public class LoginController {
 			@PathVariable("redirectURI") String redirectURI,
 			@RequestParam(name = "state", required = false) String stateParam, HttpServletResponse res)
 			throws IOException {
-		String stateValue = EmptyCheckUtils.isNullEmpty(state) ? stateParam : state;
-		if (EmptyCheckUtils.isNullEmpty(stateValue)) {
-			throw new ServiceException(Errors.STATE_NULL_EXCEPTION.getErrorCode(),
-					Errors.STATE_NULL_EXCEPTION.getErrorMessage());
-		}
-
-		// there is no UUID.parse method till so using this as alternative
-		try {
-			if (!UUID.fromString(stateValue).toString().equals(stateValue)) {
-				throw new ServiceException(Errors.STATE_NOT_UUID_EXCEPTION.getErrorCode(),
-						Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
-			}
-		} catch (IllegalArgumentException exception) {
-			throw new ServiceException(Errors.STATE_NOT_UUID_EXCEPTION.getErrorCode(),
-					Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
-		}
-		
-		String uri = loginService.login(redirectURI, stateValue);
-		Cookie stateCookie = new Cookie("state", stateValue);
-		setCookieParams(stateCookie,true,true,"/");
-		res.addCookie(stateCookie);
-		res.setStatus(302);
-		res.sendRedirect(uri);
+		login(state, redirectURI, stateParam, null, res);
 	}
 
 	@GetMapping(value = "/login/v2/{redirectURI}")
