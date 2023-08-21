@@ -8,7 +8,7 @@ import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.authcodeflowproxy.api.service.LoginServiceV2;
 import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
 import org.apache.commons.codec.binary.Base64;
@@ -53,7 +53,7 @@ public class LoginController {
 	private List<String> allowedUrls;
 
 	@Autowired
-	private LoginService loginService;
+	private LoginServiceV2 loginService;
 	
 	@Autowired
 	private ValidateTokenUtil validateTokenHelper;
@@ -77,6 +77,14 @@ public class LoginController {
 	@GetMapping(value = "/login/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
 			@PathVariable("redirectURI") String redirectURI,
+			@RequestParam(name = "state", required = false) String stateParam, HttpServletResponse res)
+			throws IOException {
+		login(state, redirectURI, stateParam, null, res);
+	}
+
+	@GetMapping(value = "/login/v2/{redirectURI}")
+	public void login(@CookieValue(name = "state", required = false) String state,
+			@PathVariable("redirectURI") String redirectURI,
 			@RequestParam(name = "state", required = false) String stateParam, 
 			@RequestParam(name = "ui_locales", required = false) String uiLocales, HttpServletResponse res)
 			throws IOException {
@@ -97,7 +105,7 @@ public class LoginController {
 					Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
 		}
 		
-		String uri = loginService.login(redirectURI, stateValue, uiLocales);
+		String uri = loginService.loginV2(redirectURI, stateValue, uiLocales);
 		Cookie stateCookie = new Cookie("state", stateValue);
 		setCookieParams(stateCookie,true,true,"/");
 		res.addCookie(stateCookie);
