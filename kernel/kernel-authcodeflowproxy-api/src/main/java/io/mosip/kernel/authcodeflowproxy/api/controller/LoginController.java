@@ -8,7 +8,7 @@ import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.exception.ServiceException;
-import io.mosip.kernel.openid.bridge.api.service.LoginService;
+import io.mosip.kernel.authcodeflowproxy.api.service.LoginServiceV2;
 import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
 import io.mosip.kernel.openid.bridge.dto.AccessTokenResponseDTO;
 import org.apache.commons.codec.binary.Base64;
@@ -53,7 +53,7 @@ public class LoginController {
 	private List<String> allowedUrls;
 
 	@Autowired
-	private LoginService loginService;
+	private LoginServiceV2 loginService;
 	
 	@Autowired
 	private ValidateTokenUtil validateTokenHelper;
@@ -77,6 +77,36 @@ public class LoginController {
 	@GetMapping(value = "/login/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
 			@PathVariable("redirectURI") String redirectURI,
+			@RequestParam(name = "state", required = false) String stateParam, HttpServletResponse res)
+			throws IOException {
+		String stateValue = EmptyCheckUtils.isNullEmpty(state) ? stateParam : state;
+		if (EmptyCheckUtils.isNullEmpty(stateValue)) {
+			throw new ServiceException(Errors.STATE_NULL_EXCEPTION.getErrorCode(),
+					Errors.STATE_NULL_EXCEPTION.getErrorMessage());
+		}
+
+		// there is no UUID.parse method till so using this as alternative
+		try {
+			if (!UUID.fromString(stateValue).toString().equals(stateValue)) {
+				throw new ServiceException(Errors.STATE_NOT_UUID_EXCEPTION.getErrorCode(),
+						Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
+			}
+		} catch (IllegalArgumentException exception) {
+			throw new ServiceException(Errors.STATE_NOT_UUID_EXCEPTION.getErrorCode(),
+					Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
+		}
+		
+		String uri = loginService.login(redirectURI, stateValue);
+		Cookie stateCookie = new Cookie("state", stateValue);
+		setCookieParams(stateCookie,true,true,"/");
+		res.addCookie(stateCookie);
+		res.setStatus(302);
+		res.sendRedirect(uri);
+	}
+
+	@GetMapping(value = "/login/v2/{redirectURI}")
+	public void login(@CookieValue(name = "state", required = false) String state,
+			@PathVariable("redirectURI") String redirectURI,
 			@RequestParam(name = "state", required = false) String stateParam, 
 			@RequestParam(name = "ui_locales", required = false) String uiLocales, HttpServletResponse res)
 			throws IOException {
@@ -97,7 +127,7 @@ public class LoginController {
 					Errors.STATE_NOT_UUID_EXCEPTION.getErrorMessage());
 		}
 		
-		String uri = loginService.login(redirectURI, stateValue, uiLocales);
+		String uri = loginService.loginV2(redirectURI, stateValue, uiLocales);
 		Cookie stateCookie = new Cookie("state", stateValue);
 		setCookieParams(stateCookie,true,true,"/");
 		res.addCookie(stateCookie);
