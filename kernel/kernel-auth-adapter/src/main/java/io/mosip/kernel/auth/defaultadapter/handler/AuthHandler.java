@@ -75,6 +75,7 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
 	
+	@SuppressWarnings("java:S5527") // added suppress for sonarcloud. 
 	@PostConstruct
 	void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();

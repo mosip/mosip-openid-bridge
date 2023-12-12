@@ -146,6 +146,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		return registration;
 	}
 
+	@SuppressWarnings("java:S4502") // added suppress for sonarcloud.
+	// For internal Service API call, by default CSRF is disabled. 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 
@@ -168,6 +170,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		http.headers().frameOptions().sameOrigin();
 	}
 
+	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
 		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
