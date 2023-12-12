@@ -82,6 +82,7 @@ public class LoginController {
 		login(state, redirectURI, stateParam, null, res);
 	}
 
+	@SuppressWarnings({"java:S2092", "java:S3330"}) // added suppress for sonarcloud. The secure flag, httpOnly flag is set to true through setCookieParams method. Line # 111.
 	@GetMapping(value = "/login/v2/{redirectURI}")
 	public void login(@CookieValue(name = "state", required = false) String state,
 			@PathVariable("redirectURI") String redirectURI,
@@ -113,6 +114,8 @@ public class LoginController {
 		res.sendRedirect(uri);
 	}
 
+	@SuppressWarnings({"javasecurity:S5146", "java:S2092", "java:S3330"}) // added suppress for sonarcloud. The URLs whitelisting with the configured value in properties. Line # 156.
+	// The secure flag, httpOnly flag is set to true through setCookieParams method. Line # 151.
 	@GetMapping(value = "/login-redirect/{redirectURI}")
 	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam(value="state", required = false) String state,
 			@RequestParam(value="session_state",required = false) String sessionState, @RequestParam(value="code", required = false) String code, 
@@ -211,13 +214,16 @@ public class LoginController {
 		return responseWrapper;
 	}
 	
+	@SuppressWarnings({"javasecurity:S5146", "java:S2092", "java:S3330"}) // added suppress for sonarcloud. The URLs whitelisting with the configured value in properties. Line # 221.
+	// The secure flag, httpOnly flag is set to true through setCookieParams method. Line # 240.
 	@ResponseFilter
 	@GetMapping(value = "/logout/user")
 	public void logoutUser(
 			@CookieValue(value = "Authorization", required = false) String token,@RequestParam(name = "redirecturi", required = true) String redirectURI, HttpServletResponse res) throws IOException {
 		String redirectURL = new String(Base64.decodeBase64(redirectURI));
 		if(!matchesAllowedUrls(redirectURL)) {
-			LOGGER.error("Url {} was not part of allowed url's",redirectURL);
+			redirectURL = redirectURL.replaceAll("[\n\r]", " ");
+			LOGGER.error("Url {} was not part of allowed url's", redirectURL);
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		String uri = loginService.logoutUser(token,redirectURI);

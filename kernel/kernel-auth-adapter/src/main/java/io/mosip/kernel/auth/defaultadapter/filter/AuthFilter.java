@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -289,6 +291,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		return mapper.writeValueAsString(object);
 	}
 
+	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName(Environment environment) {
 		String appNames = environment.getProperty("spring.application.name");
 		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
@@ -310,12 +313,12 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		String[] testCaseIdArr = requestParams.get(AuthAdapterConstant.CTK_TEST_CASE_ID);
 		if (testCaseIdArr != null && testCaseIdArr.length > 0) {
 			ctkTestCaseId = testCaseIdArr[0];
-			LOGGER.debug("Recvd ctkTestCaseId {}", ctkTestCaseId);
+			LOGGER.debug("Recvd ctkTestCaseId {}", sanitize(ctkTestCaseId));
 		}
 		String[] testRunIdArr = requestParams.get(AuthAdapterConstant.CTK_TEST_RUN_ID);
 		if (testRunIdArr != null && testRunIdArr.length > 0) {
 			ctkTestRunId = testRunIdArr[0];
-			LOGGER.debug("Recvd ctkTestRunId {}", ctkTestRunId);
+			LOGGER.debug("Recvd ctkTestRunId {}", sanitize(ctkTestRunId));
 		}
 		if (ctkTestCaseId != null && ctkTestRunId != null) {
 			if (ctkSaveUrl == null) {
@@ -337,6 +340,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 				LOGGER.info("Invalid DataShare URL {}", httpServletRequest.getRequestURI());
 				return;
 			}
+			LOGGER.debug("Recvd partnerId {}", sanitize(partnerId));
 			// add the token first
 			HttpHeaders headers = new HttpHeaders();
 			headers.add(AuthAdapterConstant.AUTH_HEADER_COOKIE, AuthAdapterConstant.AUTH_HEADER + token);
@@ -351,7 +355,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			requestWrapper.setVersion("1.0");
 			requestWrapper.setRequesttime(LocalDateTime.now());
 			requestWrapper.setRequest(valueMap);
-			LOGGER.debug("Calling Compliance Toolkit with request: " + valueMap);
+			
 			ResponseEntity<ResponseWrapper<String>> responseEntity = null;
 			try {
 				HttpEntity<RequestWrapper<Object>> requestEntity = new HttpEntity<>(requestWrapper, headers);
@@ -364,12 +368,20 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 						new ParameterizedTypeReference<ResponseWrapper<String>>() {
 						});
 				ResponseWrapper<String> body = responseEntity.getBody();
-				LOGGER.debug("Response from Compliance Toolkit: " + body.getResponse());
+				if (body != null) {
+					LOGGER.debug("Response from Compliance Toolkit: " + body.getResponse());
+					return;
+				}
+				LOGGER.debug("Response from Compliance Toolkit response body is null");
 			} catch (Exception e) {
 				// This is FailSafe, so just log the err
 				LOGGER.error("error connecting to compliance toolkit: " + e.getStackTrace(), e);
 			}
 		}
+	}
+
+	private String sanitize(String msg) {
+		return msg.replaceAll("[\n\r]", " ");
 	}
 
 }

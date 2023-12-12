@@ -1,5 +1,7 @@
 package io.mosip.kernel.auth.defaultadapter.helper;
 
+import static io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode.OFFLINE_AUTH_DEPRECATED;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -51,6 +53,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
+import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.util.DateUtils;
@@ -121,6 +124,7 @@ public class ValidateTokenHelper {
 		issuerInternalURI = issuerInternalURI.trim().isEmpty() ? issuerURI : issuerInternalURI;
 	}
 
+	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
 		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
@@ -133,8 +137,7 @@ public class ValidateTokenHelper {
 
 	public MosipUserDto doOfflineLocalTokenValidation(String jwtToken) {
 		LOGGER.info("offline verification for local profile.");
-		DecodedJWT decodedJWT = JWT.require(Algorithm.none()).build().verify(jwtToken);
-		return buildMosipUser(decodedJWT, jwtToken);
+		throw new AuthManagerException(OFFLINE_AUTH_DEPRECATED.getErrorCode(), OFFLINE_AUTH_DEPRECATED.getErrorMessage());
 	}
 
 	public ImmutablePair<Boolean, AuthAdapterErrorCode> isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {

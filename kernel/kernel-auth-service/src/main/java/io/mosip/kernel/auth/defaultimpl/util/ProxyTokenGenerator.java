@@ -25,6 +25,7 @@ public class ProxyTokenGenerator {
 	@Value("${auth.local.userRoles}")
 	String localUserRoles;
 	
+	@SuppressWarnings("java:S5659") // added suppress for sonarcloud. Algorithm none is used for local profiles only.
 	public String getProxyToken(String subject,long exp) {
 		return JWT.create().withSubject(subject).withClaim(AuthConstant.MOBILE, mobileNO)
 				.withClaim(AuthConstant.EMAIL, subject.concat(emailDomain))
