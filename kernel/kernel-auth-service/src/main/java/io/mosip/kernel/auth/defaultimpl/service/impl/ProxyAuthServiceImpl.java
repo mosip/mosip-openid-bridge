@@ -366,19 +366,11 @@ public class ProxyAuthServiceImpl implements AuthService {
 		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
 	}
 	
+	
 	@Override
 	public MosipUserDto valdiateToken(String token) {
 		// this will verify token
-		DecodedJWT decodedJWT = JWT.require(Algorithm.none()).build().verify(token);
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		String user = decodedJWT.getSubject();
-		mosipUserDto.setToken(token);
-		mosipUserDto.setMail(decodedJWT.getClaim(AuthConstant.EMAIL).asString());
-		mosipUserDto.setMobile(decodedJWT.getClaim(AuthConstant.MOBILE).asString());
-		mosipUserDto.setRole(decodedJWT.getClaim(AuthConstant.ROLES).asString());
-		mosipUserDto.setName(user);
-		mosipUserDto.setUserId(user);
-		return mosipUserDto;
+		throw new UnsupportedOperationException("This operation is deprecated in local profile.");
 	}
 
 	/*
