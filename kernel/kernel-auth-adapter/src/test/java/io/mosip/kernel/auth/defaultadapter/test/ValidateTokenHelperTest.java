@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
+import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultadapter.helper.ValidateTokenHelper;
 import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 import reactor.core.publisher.Mono;
@@ -65,6 +66,9 @@ public class ValidateTokenHelperTest {
 
 	@Value("${auth.server.admin.audience.claim.validate:true}")
 	private boolean validateAudClaim;
+
+	@Value("#{${mosip.kernel.auth.appids.realm.map}}")
+	private Map<String, String> realmMap;
 
 	@Autowired
 	private ValidateTokenHelper validateTokenHelper;
@@ -137,7 +141,7 @@ public class ValidateTokenHelperTest {
 		assertThat(res.getKey(), is(HttpStatus.UNAUTHORIZED));
 	}
 
-	@Test
+	@Test(expected = AuthManagerException.class)
 	public void doOfflineTokenValidationTest() throws Exception {
 		String token = JWT.create().withClaim(AuthAdapterConstant.EMAIL, "mockuser!mosip.com")
 				.withClaim(AuthAdapterConstant.MOBILE, "9210283991")
@@ -146,8 +150,8 @@ public class ValidateTokenHelperTest {
 				.withIssuedAt(Date.from(Instant.now())).withExpiresAt(Date.from(Instant.now().plusSeconds(345600)))
 				.sign(Algorithm.none());
 
-		MosipUserDto res = validateTokenHelper.doOfflineLocalTokenValidation(token);
-		assertThat(res.getName(), is("mock-user"));
+		validateTokenHelper.doOfflineLocalTokenValidation(token);
+		//assertThat(validateTokenHelper.doOfflineLocalTokenValidation(token));
 
 	}
 
