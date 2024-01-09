@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.mosip.kernel</groupId>
 	<artifactId>kernel-authcodeflowproxy-api</artifactId>
-	<version>1.2.0.1-B3</version>
+	<version>1.2.0.1-B4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>kernel-authcodeflowproxy-api</name>
 	<description>Mosip commons project </description>
@@ -223,7 +223,7 @@
 		<kernel.core.version>1.2.0.1-B2</kernel.core.version>
 		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
 		<powermock.version>2.0.0</powermock.version>
-		<kernel-openid-bridge-api.version>1.2.0.1-B3</kernel-openid-bridge-api.version>
+		<kernel-openid-bridge-api.version>1.2.0.1-B4-SNAPSHOT</kernel-openid-bridge-api.version>
 	</properties>
 	<dependencies>
 		<dependency>

@@ -1,5 +1,7 @@
 package io.mosip.kernel.auth.defaultadapter.helper;
 
+import static io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode.OFFLINE_AUTH_DEPRECATED;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -16,6 +18,19 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
+
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.JwkProvider;
+import com.auth0.jwk.UrlJwkProvider;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
@@ -36,21 +51,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.auth0.jwk.Jwk;
-import com.auth0.jwk.JwkException;
-import com.auth0.jwk.JwkProvider;
-import com.auth0.jwk.UrlJwkProvider;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.SignatureVerificationException;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
+import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.util.DateUtils;
@@ -74,7 +77,7 @@ public class ValidateTokenHelper {
 	private boolean validateIssuerDomain;
 
 	/**
-	 * This should be same as the value in the token	
+	 * This should be same as the value in the token
 	 */
 	@Value("${auth.server.admin.issuer.uri:}")
 	private String issuerURI;
@@ -99,6 +102,7 @@ public class ValidateTokenHelper {
 	 */
 	@Value("${auth.server.admin.issuer.internal.uri:}")
 	private String issuerInternalURI;
+
 	@Value("${auth.server.admin.audience.claim.validate:true}")
 	private boolean validateAudClaim;
 
@@ -121,6 +125,7 @@ public class ValidateTokenHelper {
 		issuerInternalURI = issuerInternalURI.trim().isEmpty() ? issuerURI : issuerInternalURI;
 	}
 
+	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
 		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
@@ -133,8 +138,7 @@ public class ValidateTokenHelper {
 
 	public MosipUserDto doOfflineLocalTokenValidation(String jwtToken) {
 		LOGGER.info("offline verification for local profile.");
-		DecodedJWT decodedJWT = JWT.require(Algorithm.none()).build().verify(jwtToken);
-		return buildMosipUser(decodedJWT, jwtToken);
+		throw new AuthManagerException(OFFLINE_AUTH_DEPRECATED.getErrorCode(), OFFLINE_AUTH_DEPRECATED.getErrorMessage());
 	}
 
 	public ImmutablePair<Boolean, AuthAdapterErrorCode> isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {
