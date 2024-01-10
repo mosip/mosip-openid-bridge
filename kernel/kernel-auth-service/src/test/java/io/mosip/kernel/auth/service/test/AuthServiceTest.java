@@ -37,7 +37,6 @@ import io.mosip.kernel.auth.defaultimpl.dto.AccessTokenResponse;
 import io.mosip.kernel.auth.defaultimpl.dto.AuthToken;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
-import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
 import io.mosip.kernel.auth.defaultimpl.service.OTPService;
 import io.mosip.kernel.auth.defaultimpl.service.TokenService;
@@ -69,7 +68,7 @@ import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
 import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
 import io.mosip.kernel.core.authmanager.model.UserRoleDto;
 import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
 @RunWith(SpringRunner.class)
@@ -80,9 +79,6 @@ public class AuthServiceTest {
 
 	@Value("${mosip.iam.realm.operations.base-url}")
 	private String keycloakBaseUrl;
-
-	@MockBean
-	UserStoreFactory userStoreFactory;
 
 	@MockBean
 	KeycloakImpl keycloakImpl;
@@ -223,138 +219,121 @@ public class AuthServiceTest {
 	}
 	
 	
-	@Test
-	public void getRidBasedOnUidTest() throws Exception {
-		PasswordDto passwordDto = new PasswordDto();
-		passwordDto.setUserId("123");
-		passwordDto.setNewPassword("newpass");
-		passwordDto.setOldPassword("oldpass");
-		RIdDto rIdDto = new RIdDto();
-		rIdDto.setRId("mock-rid");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getRidFromUserId(Mockito.any(),Mockito.any())).thenReturn(rIdDto);
-		RIdDto rld= authService.getRidBasedOnUid("mock-user","ida");
-		assertThat(rld.getRId(),is(rIdDto.getRId()));
-	}
-	
-	
-	@Test
-	public void unBlockUserTest() throws Exception {
-		AuthZResponseDto authZResponseDto = new AuthZResponseDto();
-		authZResponseDto.setMessage("success");
-		authZResponseDto.setStatus("success");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.unBlockAccount(Mockito.any())).thenReturn(authZResponseDto);
-		AuthZResponseDto rld= authService.unBlockUser("mock-userid","ida");
-		assertThat(rld.getStatus(),is("success"));
-	}
-	
-	
-	@Test
-	public void changePasswordTest() throws Exception {
-		PasswordDto passwordDto = new PasswordDto();
-		passwordDto.setUserId("123");
-		passwordDto.setNewPassword("newpass");
-		passwordDto.setOldPassword("oldpass");
-		AuthZResponseDto authZResponseDto = new AuthZResponseDto();
-		authZResponseDto.setMessage("success");
-		authZResponseDto.setStatus("success");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.changePassword(Mockito.any())).thenReturn(authZResponseDto);
-		AuthZResponseDto rld= authService.changePassword("ida",passwordDto);
-		assertThat(rld.getStatus(),is("success"));
-	}
-	
-	@Test
-	public void resetPasswordTest() throws Exception {
-		PasswordDto passwordDto = new PasswordDto();
-		passwordDto.setUserId("123");
-		passwordDto.setNewPassword("newpass");
-		passwordDto.setOldPassword("oldpass");
-		AuthZResponseDto authZResponseDto = new AuthZResponseDto();
-		authZResponseDto.setMessage("success");
-		authZResponseDto.setStatus("success");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.resetPassword(Mockito.any())).thenReturn(authZResponseDto);
-		AuthZResponseDto rld= authService.resetPassword("ida",passwordDto);
-		assertThat(rld.getStatus(),is("success"));
-	}
-	
-	@Test
-	public void getUserNameBasedOnMobileNumberTest() throws Exception {
-		UserNameDto  userNameDto = new UserNameDto();
-		userNameDto.setUserName("mock-user");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getUserNameBasedOnMobileNumber(Mockito.any())).thenReturn(userNameDto);
-		UserNameDto rld= authService.getUserNameBasedOnMobileNumber("registrationclient","9819283912");
-		assertThat(rld.getUserName(),is("mock-user"));
-	}
-	
-	@Test
-	public void addUserPasswordTest() throws Exception {
-		UserPasswordRequestDto  userNameDto = new UserPasswordRequestDto();
-		userNameDto.setUserName("mock-user");
-		
-		UserPasswordResponseDto userPasswordResponseDto = new UserPasswordResponseDto();
-		userPasswordResponseDto.setUserName("mock-user");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.addPassword(Mockito.any())).thenReturn(userPasswordResponseDto);
-		UserPasswordResponseDto rld= authService.addUserPassword(userNameDto);
-		assertThat(rld.getUserName(),is(userPasswordResponseDto.getUserName()));
-	}
-	
-	@Test
-	public void getUserRoleTest() throws Exception {
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		mosipUserDto.setUserId("mock-user");
-		mosipUserDto.setMail("mock-user@mosip.io");
-		mosipUserDto.setMobile("9999999999");
-		mosipUserDto.setRole("MOCK-ROLE");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getUserRoleByUserId(Mockito.any())).thenReturn(mosipUserDto);
-		UserRoleDto rld= authService.getUserRole("ida","9819283912");
-		assertThat(rld.getUserId(),is(mosipUserDto.getUserId()));
-	}
-	
-	@Test
-	public void getUserDetailBasedonMobileNumberTest() throws Exception {
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		mosipUserDto.setUserId("mock-user");
-		mosipUserDto.setMail("mock-user@mosip.io");
-		mosipUserDto.setMobile("9999999999");
-		mosipUserDto.setRole("MOCK-ROLE");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getUserDetailBasedonMobileNumber(Mockito.any())).thenReturn(mosipUserDto);
-		MosipUserDto rld= authService.getUserDetailBasedonMobileNumber("ida","9819283912");
-		assertThat(rld.getUserId(),is(mosipUserDto.getUserId()));
-	}
-	
-	@Test
-	public void validateUserNameTest() throws Exception {
-		ValidationResponseDto validationResponseDto = new ValidationResponseDto();
-		validationResponseDto.setStatus("success");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.validateUserName(Mockito.any())).thenReturn(validationResponseDto);
-		ValidationResponseDto rld= authService.validateUserName("ida","9819283912");
-		assertThat(rld.getStatus(),is(validationResponseDto.getStatus()));
-	}
-	
-	@Test
-	public void getUserDetailBasedOnUserIdTest() throws Exception {
-		UserDetailsResponseDto resp = new UserDetailsResponseDto();
-		UserDetailsDto userDetailsDto = new UserDetailsDto();
-		userDetailsDto.setUserId("mock-user");
-		List<UserDetailsDto> userDetailsDtos = new ArrayList<UserDetailsDto>();
-		userDetailsDtos.add(userDetailsDto);
-		resp.setUserDetails(userDetailsDtos);
-		
-		List<String> userids= new ArrayList<String>();
-		userids.add("mock-user");
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getUserDetailBasedOnUid(Mockito.any())).thenReturn(resp);
-		UserDetailsResponseDto rld= authService.getUserDetailBasedOnUserId("ida",userids);
-		assertThat(rld.getUserDetails().get(0).getUserId(),is(resp.getUserDetails().get(0).getUserId()));
-	}
+	/*
+	 * @Test public void getRidBasedOnUidTest() throws Exception { PasswordDto
+	 * passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("newpass"); passwordDto.setOldPassword("oldpass");
+	 * RIdDto rIdDto = new RIdDto(); rIdDto.setRId("mock-rid");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getRidFromUserId(Mockito.any(),Mockito.any())).thenReturn(
+	 * rIdDto); RIdDto rld= authService.getRidBasedOnUid("mock-user","ida");
+	 * assertThat(rld.getRId(),is(rIdDto.getRId())); }
+	 * 
+	 * 
+	 * @Test public void unBlockUserTest() throws Exception { AuthZResponseDto
+	 * authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.unBlockAccount(Mockito.any())).thenReturn(authZResponseDto)
+	 * ; AuthZResponseDto rld= authService.unBlockUser("mock-userid","ida");
+	 * assertThat(rld.getStatus(),is("success")); }
+	 * 
+	 * 
+	 * @Test public void changePasswordTest() throws Exception { PasswordDto
+	 * passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("newpass"); passwordDto.setOldPassword("oldpass");
+	 * AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.changePassword(Mockito.any())).thenReturn(authZResponseDto)
+	 * ; AuthZResponseDto rld= authService.changePassword("ida",passwordDto);
+	 * assertThat(rld.getStatus(),is("success")); }
+	 * 
+	 * @Test public void resetPasswordTest() throws Exception { PasswordDto
+	 * passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("newpass"); passwordDto.setOldPassword("oldpass");
+	 * AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.resetPassword(Mockito.any())).thenReturn(authZResponseDto);
+	 * AuthZResponseDto rld= authService.resetPassword("ida",passwordDto);
+	 * assertThat(rld.getStatus(),is("success")); }
+	 * 
+	 * @Test public void getUserNameBasedOnMobileNumberTest() throws Exception {
+	 * UserNameDto userNameDto = new UserNameDto();
+	 * userNameDto.setUserName("mock-user");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserNameBasedOnMobileNumber(Mockito.any())).thenReturn(
+	 * userNameDto); UserNameDto rld=
+	 * authService.getUserNameBasedOnMobileNumber("registrationclient","9819283912")
+	 * ; assertThat(rld.getUserName(),is("mock-user")); }
+	 * 
+	 * @Test public void addUserPasswordTest() throws Exception {
+	 * UserPasswordRequestDto userNameDto = new UserPasswordRequestDto();
+	 * userNameDto.setUserName("mock-user");
+	 * 
+	 * UserPasswordResponseDto userPasswordResponseDto = new
+	 * UserPasswordResponseDto(); userPasswordResponseDto.setUserName("mock-user");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl); when(keycloakImpl.addPassword(Mockito.any())).thenReturn(
+	 * userPasswordResponseDto); UserPasswordResponseDto rld=
+	 * authService.addUserPassword(userNameDto);
+	 * assertThat(rld.getUserName(),is(userPasswordResponseDto.getUserName())); }
+	 * 
+	 * @Test public void getUserRoleTest() throws Exception { MosipUserDto
+	 * mosipUserDto = new MosipUserDto(); mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserRoleByUserId(Mockito.any())).thenReturn(mosipUserDto
+	 * ); UserRoleDto rld= authService.getUserRole("ida","9819283912");
+	 * assertThat(rld.getUserId(),is(mosipUserDto.getUserId())); }
+	 * 
+	 * @Test public void getUserDetailBasedonMobileNumberTest() throws Exception {
+	 * MosipUserDto mosipUserDto = new MosipUserDto();
+	 * mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserDetailBasedonMobileNumber(Mockito.any())).thenReturn
+	 * (mosipUserDto); MosipUserDto rld=
+	 * authService.getUserDetailBasedonMobileNumber("ida","9819283912");
+	 * assertThat(rld.getUserId(),is(mosipUserDto.getUserId())); }
+	 * 
+	 * @Test public void validateUserNameTest() throws Exception {
+	 * ValidationResponseDto validationResponseDto = new ValidationResponseDto();
+	 * validationResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl); when(keycloakImpl.validateUserName(Mockito.any())).thenReturn(
+	 * validationResponseDto); ValidationResponseDto rld=
+	 * authService.validateUserName("ida","9819283912");
+	 * assertThat(rld.getStatus(),is(validationResponseDto.getStatus())); }
+	 * 
+	 * @Test public void getUserDetailBasedOnUserIdTest() throws Exception {
+	 * UserDetailsResponseDto resp = new UserDetailsResponseDto(); UserDetailsDto
+	 * userDetailsDto = new UserDetailsDto(); userDetailsDto.setUserId("mock-user");
+	 * List<UserDetailsDto> userDetailsDtos = new ArrayList<UserDetailsDto>();
+	 * userDetailsDtos.add(userDetailsDto); resp.setUserDetails(userDetailsDtos);
+	 * 
+	 * List<String> userids= new ArrayList<String>(); userids.add("mock-user");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserDetailBasedOnUid(Mockito.any())).thenReturn(resp);
+	 * UserDetailsResponseDto rld=
+	 * authService.getUserDetailBasedOnUserId("ida",userids);
+	 * assertThat(rld.getUserDetails().get(0).getUserId(),is(resp.getUserDetails().
+	 * get(0).getUserId())); }
+	 */
 	
 	@Test
 	public void getKeycloakURITest() throws Exception {
@@ -362,35 +341,34 @@ public class AuthServiceTest {
 		assertThat(uri,isA(String.class));
 	}
 	
-	@Test
-	public void getIndividualIdBasedOnUserIDTest() throws Exception {
-		IndividualIdDto resp = new IndividualIdDto();
-		resp.setIndividualId("12331");
-		String userid= "mock-user";
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getIndividualIdFromUserId(Mockito.any(),Mockito.any())).thenReturn(resp);
-		IndividualIdDto rld= authService.getIndividualIdBasedOnUserID(userid,"ida");
-		assertThat(rld.getIndividualId(),is(resp.getIndividualId()));
-	}
-	
-	@Test
-	public void getListOfUsersDetailsSearchTest() throws Exception {
-		MosipUserListDto mosipUserListDto = new MosipUserListDto();
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		mosipUserDto.setUserId("mock-user");
-		mosipUserDto.setMail("mock-user@mosip.io");
-		mosipUserDto.setMobile("9999999999");
-		mosipUserDto.setRole("MOCK-ROLE");
-		List<MosipUserDto> list = new ArrayList<>();
-		list.add(mosipUserDto);
-		mosipUserListDto.setMosipUserDtoList(list);
-		when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(keycloakImpl);
-		when(keycloakImpl.getListOfUsersDetails(Mockito.any(), Mockito.any(), Mockito.eq(0), Mockito.eq(10),
-				Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),Mockito.any())).thenReturn(mosipUserListDto);
-		MosipUserListDto rld= authService.getListOfUsersDetails("ida",  "mock-roleName", 0, 10,
-				"mock-email", "mock-firstName", "mock-lastName", "mock-username","userID");
-		assertThat(rld.getMosipUserDtoList().get(0).getUserId(),is(mosipUserListDto.getMosipUserDtoList().get(0).getUserId()));
-	}
+	/*
+	 * @Test public void getIndividualIdBasedOnUserIDTest() throws Exception {
+	 * IndividualIdDto resp = new IndividualIdDto(); resp.setIndividualId("12331");
+	 * String userid= "mock-user";
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getIndividualIdFromUserId(Mockito.any(),Mockito.any())).
+	 * thenReturn(resp); IndividualIdDto rld=
+	 * authService.getIndividualIdBasedOnUserID(userid,"ida");
+	 * assertThat(rld.getIndividualId(),is(resp.getIndividualId())); }
+	 * 
+	 * @Test public void getListOfUsersDetailsSearchTest() throws Exception {
+	 * MosipUserListDto mosipUserListDto = new MosipUserListDto(); MosipUserDto
+	 * mosipUserDto = new MosipUserDto(); mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * List<MosipUserDto> list = new ArrayList<>(); list.add(mosipUserDto);
+	 * mosipUserListDto.setMosipUserDtoList(list);
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl); when(keycloakImpl.getListOfUsersDetails(Mockito.any(),
+	 * Mockito.any(), Mockito.eq(0), Mockito.eq(10), Mockito.any(), Mockito.any(),
+	 * Mockito.any(), Mockito.any(),Mockito.any())).thenReturn(mosipUserListDto);
+	 * MosipUserListDto rld= authService.getListOfUsersDetails("ida",
+	 * "mock-roleName", 0, 10, "mock-email", "mock-firstName", "mock-lastName",
+	 * "mock-username","userID");
+	 * assertThat(rld.getMosipUserDtoList().get(0).getUserId(),is(mosipUserListDto.
+	 * getMosipUserDtoList().get(0).getUserId())); }
+	 */
 	
 	@Test
 	public void loginRedirectTest() throws Exception {

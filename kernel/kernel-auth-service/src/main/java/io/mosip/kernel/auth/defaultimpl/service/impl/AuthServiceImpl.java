@@ -45,7 +45,6 @@ import io.mosip.kernel.auth.defaultimpl.dto.KeycloakErrorResponseDto;
 import io.mosip.kernel.auth.defaultimpl.dto.RealmAccessDto;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
-import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
 import io.mosip.kernel.auth.defaultimpl.service.OTPService;
 import io.mosip.kernel.auth.defaultimpl.service.TokenService;
@@ -80,8 +79,8 @@ import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
 import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
 import io.mosip.kernel.core.authmanager.model.UserRoleDto;
 import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 /**
  * Auth Service for Authentication and Authorization
@@ -116,9 +115,6 @@ public class AuthServiceImpl implements AuthService {
 
 	@Value("${mosip.iam.open-id-url}")
 	private String keycloakOpenIdUrl;
-
-	@Autowired
-	UserStoreFactory userStoreFactory;
 
 	@Autowired
 	KeycloakImpl keycloakImpl;
@@ -514,70 +510,9 @@ public class AuthServiceImpl implements AuthService {
 
 	}
 
-	@Deprecated
-	@Override
-	public AuthZResponseDto unBlockUser(String userId, String appId) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).unBlockAccount(userId);
-	}
-
-	@Deprecated
-	@Override
-	public AuthZResponseDto changePassword(String appId, PasswordDto passwordDto) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).changePassword(passwordDto);
-	}
-
-	@Deprecated
-	@Override
-	public AuthZResponseDto resetPassword(String appId, PasswordDto passwordDto) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).resetPassword(passwordDto);
-	}
-
-	@Deprecated
-	@Override
-	public UserNameDto getUserNameBasedOnMobileNumber(String appId, String mobileNumber) throws Exception {
-		return userStoreFactory.getDataStoreBasedOnApp("registrationclient")
-				.getUserNameBasedOnMobileNumber(mobileNumber);
-
-	}
-
 	@Override
 	public MosipUserDto registerUser(UserRegistrationRequestDto userCreationRequestDto) {
 		return keycloakImpl.registerUser(userCreationRequestDto);
-	}
-
-	@Deprecated
-	@Override
-	public UserPasswordResponseDto addUserPassword(UserPasswordRequestDto userPasswordRequestDto) {
-		return userStoreFactory.getDataStoreBasedOnApp(userPasswordRequestDto.getAppId())
-				.addPassword(userPasswordRequestDto);
-	}
-
-	@Override
-	public UserRoleDto getUserRole(String appId, String userId) throws Exception {
-		MosipUserDto mosipuser = null;
-		mosipuser = userStoreFactory.getDataStoreBasedOnApp(appId).getUserRoleByUserId(userId);
-		UserRoleDto userRole = new UserRoleDto();
-		userRole.setUserId(mosipuser.getUserId());
-		userRole.setRole(mosipuser.getRole());
-		return userRole;
-	}
-
-	@Deprecated
-	@Override
-	public MosipUserDto getUserDetailBasedonMobileNumber(String appId, String mobileNumber) throws Exception {
-
-		return userStoreFactory.getDataStoreBasedOnApp(appId).getUserDetailBasedonMobileNumber(mobileNumber);
-	}
-
-	@Deprecated
-	@Override
-	public ValidationResponseDto validateUserName(String appId, String userName) {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).validateUserName(userName);
-	}
-
-	@Override
-	public UserDetailsResponseDto getUserDetailBasedOnUserId(String appId, List<String> userIds) {
-		return userStoreFactory.getDataStoreBasedOnApp(appId).getUserDetailBasedOnUid(userIds);
 	}
 
 	@Override
