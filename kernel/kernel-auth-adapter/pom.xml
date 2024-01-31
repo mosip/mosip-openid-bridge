@@ -8,8 +8,8 @@
 
 	<artifactId>kernel-auth-adapter</artifactId>
 	<packaging>jar</packaging>
-	<description>auth adapter reference implementation </description>
-	<version>1.2.0.1-SNAPSHOT</version>
+	<description>Auth adapter reference implementation - lite version</description>
+	<version>1.2.0.1-B4-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
@@ -150,37 +150,44 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<version>${spring.boot.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 			<version>${spring.boot.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 			<version>${spring.boot.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<version>${spring.security.test.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 			<version>${spring.boot.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
 			<version>${spring-cloud-config.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>${apache.httpcomponents.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
@@ -219,6 +226,7 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<version>${spring.boot.version}</version>
 			<optional>true</optional>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
