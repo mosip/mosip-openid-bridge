@@ -10,6 +10,33 @@
 	<packaging>jar</packaging>
 	<description>Auth adapter reference implementation - lite version</description>
 	<version>1.2.0.1-B4-SNAPSHOT</version>
+
+	<name>Kernel auth adapter lite</name>
+	<url>https://github.com/mosip/mosip-openid-bridge</url>
+
+	<licenses>
+		<license>
+			<name>MPL 2.0</name>
+			<url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>scm:git:git://github.com/mosip/mosip-openid-bridge.git</connection>
+		<developerConnection>scm:git:ssh://github.com:mosip/mosip-openid-bridge.git</developerConnection>
+		<url>https://github.com/mosip/mosip-openid-bridge</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<name>Mosip</name>
+			<email>mosip.emailnotifier@gmail.com</email>
+			<organization>io.mosip</organization>
+			<organizationUrl>https://github.com/mosip/mosip-openid-bridge</organizationUrl>
+		</developer>
+	</developers>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
@@ -439,27 +466,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<scm>
-		<connection>scm:git:git://github.com/mosip/commons.git</connection>
-		<developerConnection>scm:git:ssh://github.com:mosip/commons.git</developerConnection>
-		<url>https://github.com/mosip/commons</url>
-		<tag>HEAD</tag>
-	</scm>
-	<licenses>
-		<license>
-			<name>MPL 2.0</name>
-			<url>https://www.mozilla.org/en-US/MPL/2.0/</url>
-		</license>
-	</licenses>
-	<developers>
-		<developer>
-			<name>Mosip</name>
-			<email>mosip.emailnotifier@gmail.com</email>
-			<organization>io.mosip</organization>
-			<organizationUrl>https://github.com/mosip/commons</organizationUrl>
-		</developer>
-	</developers>
-	<name>common auth adapter</name>
 
-	<url>https://github.com/mosip/commons</url>
+
 </project>
