@@ -22,11 +22,11 @@ on:
       - release*
 
 jobs:
-  build-maven-kernel-auth-service:
+  build-maven-kernel-auth-adapter-lite:
     uses: mosip/kattu/.github/workflows/maven-build.yml@master
     with:
-      SERVICE_LOCATION: kernel
-      BUILD_ARTIFACT: kernel-auth-service
+      SERVICE_LOCATION: kernel/kernel-auth-adapter-lite
+      BUILD_ARTIFACT: kernel-auth-adapter-lite
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
@@ -36,10 +36,10 @@ jobs:
 
   publish_to_nexus:
     if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' && github.event_name != 'release' && github.event_name != 'prerelease' && github.event_name != 'publish' }}"
-    needs: build-maven-kernel-auth-service
+    needs: build-maven-kernel-auth-adapter-lite
     uses: mosip/kattu/.github/workflows/maven-publish-to-nexus.yml@master
     with:
-      SERVICE_LOCATION: kernel
+      SERVICE_LOCATION: kernel/kernel-auth-adapter-lite
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
@@ -48,33 +48,12 @@ jobs:
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
-  build-dockers:
-    needs: build-maven-kernel-auth-service
-    strategy:
-      matrix:
-        include:
-          - SERVICE_LOCATION: 'kernel/kernel-auth-service'
-            SERVICE_NAME: 'kernel-auth-service'
-            BUILD_ARTIFACT: 'kernel-auth-service'
-      fail-fast: false
-    name: ${{ matrix.SERVICE_NAME }}
-    uses: mosip/kattu/.github/workflows/docker-build.yml@master
-    with:
-      SERVICE_LOCATION: ${{ matrix.SERVICE_LOCATION }}
-      SERVICE_NAME: ${{ matrix.SERVICE_NAME }}
-      BUILD_ARTIFACT: ${{ matrix.BUILD_ARTIFACT }}
-    secrets:
-      DEV_NAMESPACE_DOCKER_HUB: ${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}
-      ACTOR_DOCKER_HUB: ${{ secrets.ACTOR_DOCKER_HUB }}
-      RELEASE_DOCKER_HUB: ${{ secrets.RELEASE_DOCKER_HUB }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-
   sonar_analysis:
-    needs: build-maven-kernel-auth-service
+    needs: build-maven-kernel-auth-adapter-lite
     if: "${{  github.event_name != 'pull_request' }}"
     uses: mosip/kattu/.github/workflows/maven-sonar-analysis.yml@master
     with:
-      SERVICE_LOCATION: kernel
+      SERVICE_LOCATION: kernel/kernel-auth-adapter-lite
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       ORG_KEY: ${{ secrets.ORG_KEY }}
