@@ -14,9 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
@@ -60,6 +58,8 @@ import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Ramadurai Saravana Pandian
