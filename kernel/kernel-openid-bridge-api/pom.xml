@@ -13,8 +13,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- maven -->
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<java.version>17</java.version>
 		<maven.compiler.version>3.8.0</maven.compiler.version>
 		<!-- <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version> -->
 
@@ -22,14 +23,14 @@
 		<maven.war.plugin.version>3.1.0</maven.war.plugin.version>
 		<!-- <maven.jacoco.plugin.version>0.8.1</maven.jacoco.plugin.version> -->
 		<!-- <maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version> -->
-		<maven.javadoc.version>3.2.0</maven.javadoc.version>
+		<maven.javadoc.version>3.6.3</maven.javadoc.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 
 		<!-- spring -->
-		<spring.boot.version>2.0.2.RELEASE</spring.boot.version>
-		<spring.data.jpa.version>2.0.7.RELEASE</spring.data.jpa.version>
-		<spring.security.test.version>5.0.5.RELEASE</spring.security.test.version>
-		<spring-cloud-config.version>2.0.4.RELEASE</spring-cloud-config.version>
+		<spring.boot.version>3.2.2</spring.boot.version>
+		<spring.data.jpa.version>3.2.2</spring.data.jpa.version>
+		<spring.security.test.version>6.2.1</spring.security.test.version>
+		<spring-cloud-config.version>4.1.0</spring-cloud-config.version>
 
 		<!-- swagger -->
 		<swagger.core.version>2.0.7</swagger.core.version>
@@ -58,10 +59,10 @@
 		<hibernate.validator.version>6.0.12.Final</hibernate.validator.version>
 
 		<!-- test -->
-		<junit.version>4.12</junit.version>
-		<mockito.version>2.23.4</mockito.version>
-		<powermock.version>1.7.4</powermock.version>
-		<powermock.beta.version>2.0.7</powermock.beta.version>
+		<junit.version>4.13.2</junit.version>
+		<mockito.version>5.10.0</mockito.version>
+		<powermock.version>2.0.9</powermock.version>
+		<powermock.beta.version>2.0.9</powermock.beta.version>
 
 		<!-- logger -->
 		<logback.version>1.2.3</logback.version>
@@ -162,12 +163,6 @@
 		<hibernate.version>5.2.17.Final</hibernate.version>
 		<hibernate.validator.version>6.0.12.Final</hibernate.validator.version>
 
-		<!-- test -->
-		<junit.version>4.12</junit.version>
-		<mockito.version>2.23.4</mockito.version>
-		<powermock.version>1.7.4</powermock.version>
-		<powermock.beta.version>2.0.7</powermock.beta.version>
-
 		<!-- logger -->
 		<logback.version>1.2.3</logback.version>
 		<slf4j.version>1.7.19</slf4j.version>
@@ -220,8 +215,8 @@
 		<aspectjweaver.version>1.8.12</aspectjweaver.version>
 		<micrometer.core.version>1.4.2</micrometer.core.version>
 		<micrometer.registry.prometheus.version>1.4.2</micrometer.registry.prometheus.version>
-		<kernel.core.version>1.2.0.1-B1</kernel.core.version>
-		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
+		<kernel.core.version>1.2.1-SNAPSHOT</kernel.core.version>
+		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
 		<powermock.version>2.0.0</powermock.version>
 	</properties>
 	<dependencies>
