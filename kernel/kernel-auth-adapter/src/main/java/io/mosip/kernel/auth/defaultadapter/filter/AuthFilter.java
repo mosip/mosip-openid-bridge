@@ -146,9 +146,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	}
 
 	@Override
-	public Authentication attemptAuthentication(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse)
-			throws AuthenticationException, JsonProcessingException, IOException {
+	public Authentication attemptAuthentication(jakarta.servlet.http.HttpServletRequest request,
+			jakarta.servlet.http.HttpServletResponse response)
+			throws AuthenticationException, IOException, jakarta.servlet.ServletException {
 		String token = null;
 		String idToken = null;
 		Cookie[] cookies = null;
@@ -389,5 +389,6 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	private String sanitize(String msg) {
 		return msg.replaceAll("[\n\r]", " ");
 	}
+
 
 }
