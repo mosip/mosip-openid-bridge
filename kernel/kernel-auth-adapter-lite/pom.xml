@@ -9,7 +9,7 @@
 	<artifactId>kernel-auth-adapter-lite</artifactId>
 	<packaging>jar</packaging>
 	<description>Auth adapter reference implementation - lite version</description>
-	<version>1.2.0.1-B4-SNAPSHOT</version>
+	<version>1.2.0.1-B4-lite</version>
 
 	<name>Kernel auth adapter lite</name>
 	<url>https://github.com/mosip/mosip-openid-bridge</url>
@@ -170,7 +170,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-openid-bridge-api</artifactId>
-			<version>1.2.0.1-B4-SNAPSHOT</version>
+			<version>1.2.0.1-B4</version>
 		</dependency>
 
 		<dependency>
