@@ -1,6 +1,5 @@
 package io.mosip.kernel.auth.service.test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
@@ -57,5 +56,13 @@ public class TokenGenerationServiceTest {
 		authNResponseDto.setToken("Mock-token");
 		when(authService.authenticateWithSecretKey(Mockito.any())).thenReturn(authNResponseDto);
 		assertThat(tokenGenerationService.getInternalTokenGenerationService(),is("Mock-token"));
+	}
+
+	@Test
+	public void getUINBasedTokenTest() throws Exception  {
+		AuthNResponseDto authNResponseDto = new AuthNResponseDto();
+		authNResponseDto.setToken("Mock-token");
+		when(authService.authenticateWithSecretKey(Mockito.any())).thenReturn(authNResponseDto);
+		assertThat(tokenGenerationService.getUINBasedToken(),is("Mock-token"));
 	}
 }
