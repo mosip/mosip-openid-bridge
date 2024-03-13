@@ -13,15 +13,15 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerExchangeFilterFunction;
+import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -78,7 +78,7 @@ public class BeanConfig {
 	private TokenValidationHelper tokenValidationHelper;
 
 	@Autowired(required = false)
-	private LoadBalancerClient loadBalancerClient;
+	private ReactorLoadBalancerExchangeFilterFunction reactorLoadBalancerExchangeFilterFunction;
 
 	@SuppressWarnings("java:S5527") // added suppress for sonarcloud. 
 	// Server hostname verification is not required because of 2 reasons:
@@ -88,21 +88,29 @@ public class BeanConfig {
 	// which will be used to reach to other servcies.  
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom()
-				.setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute)
-				.setMaxConnTotal(defaultRestTemplateTotalMaxConnections).disableCookieManagement();
+		var connnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
+			     .setMaxConnPerRoute(defaultRestTemplateMaxConnectionPerRoute)
+			     .setMaxConnTotal(defaultRestTemplateTotalMaxConnections);
+		
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-					.loadTrustMaterial(null, acceptingTrustStrategy).build();
+					.loadTrustMaterial(acceptingTrustStrategy).build();
 			SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
 				public boolean verify(String arg0, SSLSession arg1) {
 					return true;
 				}
 			});
-			httpClientBuilder.setSSLSocketFactory(csf);
+			connnectionManagerBuilder.setSSLSocketFactory(csf);
 		}
+		
+		var connectionManager = connnectionManagerBuilder.build();
+		
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setConnectionManager(connectionManager)
+				.disableCookieManagement();
+		
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		restTemplate = new RestTemplate(requestFactory);
@@ -115,9 +123,16 @@ public class BeanConfig {
 	// token
 	@Bean
 	public RestTemplate plainRestTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException{
+		
+		var connnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
+			     .setMaxConnPerRoute(plainRestTemplateMaxConnectionPerRoute)
+			     .setMaxConnTotal(plainRestTemplateTotalMaxConnections);
+		var connectionManager = connnectionManagerBuilder.build();
+		
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
-				.setMaxConnPerRoute(plainRestTemplateMaxConnectionPerRoute)
-				.setMaxConnTotal(plainRestTemplateTotalMaxConnections).disableCookieManagement();
+				.setConnectionManager(connectionManager)
+				.disableCookieManagement();
+		
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		RestTemplate template = new RestTemplate(requestFactory);
@@ -136,21 +151,29 @@ public class BeanConfig {
 	public RestTemplate selfTokenRestTemplate(@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
 			@Autowired TokenHolder<String> cachedTokenObject)
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom()
-				.setMaxConnPerRoute(selfTokenRestTemplateMaxConnectionPerRoute)
-				.setMaxConnTotal(selfTokenRestTemplateTotalMaxConnections).disableCookieManagement();
+		var connnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
+			     .setMaxConnPerRoute(selfTokenRestTemplateMaxConnectionPerRoute)
+			     .setMaxConnTotal(selfTokenRestTemplateTotalMaxConnections);
+		
 		RestTemplate restTemplate = null;
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-					.loadTrustMaterial(null, acceptingTrustStrategy).build();
+					.loadTrustMaterial(acceptingTrustStrategy).build();
 			SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
 				public boolean verify(String arg0, SSLSession arg1) {
 					return true;
 				}
 			});
-			httpClientBuilder.setSSLSocketFactory(csf);
+			connnectionManagerBuilder.setSSLSocketFactory(csf);
 		}
+		
+		var connectionManager = connnectionManagerBuilder.build();
+		
+		HttpClientBuilder httpClientBuilder = HttpClients.custom()
+				.setConnectionManager(connectionManager)
+				.disableCookieManagement();
+		
 		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
@@ -162,9 +185,9 @@ public class BeanConfig {
 	}
 
 	@Bean
-	public WebClient plainWebClient() {
-		ExchangeFilterFunction filterFunction = (loadBalancerClient != null)
-				? new LoadBalancerExchangeFilterFunction(loadBalancerClient)
+	public WebClient plainWebClient(ReactorLoadBalancerExchangeFilterFunction lbFilterFunction) {
+		ExchangeFilterFunction filterFunction = (reactorLoadBalancerExchangeFilterFunction != null)
+				? reactorLoadBalancerExchangeFilterFunction
 				: (req, next) -> {
 					return next.exchange(req);
 				};
