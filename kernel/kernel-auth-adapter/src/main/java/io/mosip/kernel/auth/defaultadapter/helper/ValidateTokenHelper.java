@@ -326,7 +326,7 @@ public class ValidateTokenHelper {
 				errorNode = objectMapper.readTree(statusCodeException.getResponseBodyAsString());
 				LOGGER.error("Token validation failed error {} and message {}",
 						errorNode.get(AuthAdapterConstant.ERROR), errorNode.get(AuthAdapterConstant.ERROR_DESC));
-				return ImmutablePair.of(statusCodeException.getStatusCode(), null);
+				return ImmutablePair.of(HttpStatus.valueOf(statusCodeException.getStatusCode().value()), null);
 			} catch (IOException e) {
 				LOGGER.error("IO Excepton in parsing response {}", e.getMessage());
 			}

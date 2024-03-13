@@ -13,10 +13,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +54,11 @@ import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
 import io.mosip.kernel.openid.bridge.api.exception.ClientException;
 import io.mosip.kernel.openid.bridge.api.utils.JWTUtils;
+import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @author Ramadurai Saravana Pandian
@@ -146,9 +145,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	}
 
 	@Override
-	public Authentication attemptAuthentication(jakarta.servlet.http.HttpServletRequest request,
-			jakarta.servlet.http.HttpServletResponse response)
-			throws AuthenticationException, IOException, jakarta.servlet.ServletException {
+	public Authentication attemptAuthentication(HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+			throws AuthenticationException, IOException, ServletException {
 		String token = null;
 		String idToken = null;
 		Cookie[] cookies = null;
@@ -245,7 +244,7 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
 		return null;
 	}
-
+	
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
 			Authentication authResult) throws IOException, ServletException {
