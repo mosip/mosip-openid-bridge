@@ -16,7 +16,6 @@
 		<!-- maven -->
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
-		<java.version>17</java.version>
 		<maven.compiler.version>3.8.0</maven.compiler.version>
 		<maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
 
@@ -128,7 +127,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.2.1-java17-SNAPSHOT</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -156,7 +155,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-openid-bridge-api</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.2.1-java17-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -304,6 +303,12 @@
 		    <artifactId>jakarta.servlet-api</artifactId>
 		    <version>6.0.0</version>
 		    <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
