@@ -2,14 +2,12 @@ package io.mosip.kernel.auth.defaultadapter.handler;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-import io.mosip.kernel.auth.defaultadapter.config.Generated;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class AuthSuccessHandler implements AuthenticationSuccessHandler {
 

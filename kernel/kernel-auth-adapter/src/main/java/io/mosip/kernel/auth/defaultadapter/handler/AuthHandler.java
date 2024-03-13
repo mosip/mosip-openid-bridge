@@ -14,10 +14,11 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +80,7 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 	@PostConstruct
 	void init() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
+		var connnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		if (sslBypass) {
 			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
@@ -89,8 +91,9 @@ public class AuthHandler extends AbstractUserDetailsAuthenticationProvider {
 					return true;
 				}
 			});
-			httpClientBuilder.setSSLSocketFactory(csf);
+			connnectionManagerBuilder.setSSLSocketFactory(csf);
 		}
+		httpClientBuilder.setConnectionManager(connnectionManagerBuilder.build());
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		List<ClientHttpRequestInterceptor> list = new ArrayList<>();
 		list.add(restInterceptor);
