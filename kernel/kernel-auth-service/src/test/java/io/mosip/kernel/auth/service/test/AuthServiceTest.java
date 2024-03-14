@@ -117,7 +117,6 @@ public class AuthServiceTest {
 		mosipToken.setRefreshToken("mock-token");
 		mosipToken.setExpTime(3600);
 		mosipToken.setRefreshExpTime(3600);
-		mosipToken.setMessage("success");
 		mosipToken.setStatus("success");
 		when(keycloakImpl.isUserAlreadyPresent(Mockito.any(), Mockito.any())).thenReturn(false);
 		when(uinService.getDetailsForValidateOtp(Mockito.any())).thenReturn(mosipUserDto);
