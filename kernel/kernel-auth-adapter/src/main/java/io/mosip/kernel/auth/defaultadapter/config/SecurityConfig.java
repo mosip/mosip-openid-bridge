@@ -41,6 +41,7 @@ import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -97,6 +98,9 @@ public class SecurityConfig {
 	@Autowired
 	private Environment environment;
 	
+	@Autowired 
+	private HttpSecurity http;
+	
 	/**
 	 * It's inject the end-points.
 	 */
@@ -145,8 +149,8 @@ public class SecurityConfig {
 		return registration;
 	}
 
-	@Bean
-    public void filterChain(HttpSecurity http) throws Exception {
+	@PostConstruct
+    public void filterChain() throws Exception {
 
 		if (!isCSRFEnable) {
 			http = http.csrf(httpEntry -> httpEntry.disable());
