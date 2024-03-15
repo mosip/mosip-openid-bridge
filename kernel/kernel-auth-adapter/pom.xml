@@ -235,7 +235,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.2.1-java17-SNAPSHOT</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
