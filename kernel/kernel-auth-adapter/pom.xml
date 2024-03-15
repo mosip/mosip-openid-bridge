@@ -9,7 +9,7 @@
 	<artifactId>kernel-auth-adapter</artifactId>
 	<packaging>jar</packaging>
 	<description>auth adapter reference implementation </description>
-	<version>1.2.1-SNAPSHOT</version>
+	<version>1.2.1-java17-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
@@ -28,9 +28,9 @@
 		<maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
 
 		<!-- spring -->
-		<spring.boot.version>3.2.2</spring.boot.version>
+		<spring.boot.version>3.2.3</spring.boot.version>
 		<spring.data.jpa.version>3.2.2</spring.data.jpa.version>
-		<spring.security.test.version>6.2.1</spring.security.test.version>
+		<spring.security.test.version>6.2.2</spring.security.test.version>
 		<spring-cloud-config.version>4.1.0</spring-cloud-config.version>
 
 		<!-- swagger -->
@@ -115,8 +115,8 @@
 		<io.jsonwebtoken.jjwt.version>0.6.0</io.jsonwebtoken.jjwt.version>
 		<apache.directory.api.version>2.0.0.AM2</apache.directory.api.version>
 		<aspectjweaver.version>1.8.12</aspectjweaver.version>
-		<micrometer.core.version>1.4.2</micrometer.core.version>
-		<micrometer.registry.prometheus.version>1.4.2</micrometer.registry.prometheus.version>
+		<micrometer.core.version>1.12.4</micrometer.core.version>
+		<micrometer.registry.prometheus.version>1.12.4</micrometer.registry.prometheus.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
 		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/verticle/**,**/spi/**,"**/proxy/**","**/ProxyAuthServiceImpl.java","**/ProxyOTPServiceImpl.java","**/dto/**","**/util/**","**/filter/**","**/intercepter/**","**/AuthBootApplication.java","**/AuthSuccessHandler.java"</sonar.coverage.exclusions>
@@ -225,6 +225,10 @@
 					<groupId>com.fasterxml.jackson.core</groupId>
 					<artifactId>jackson-databind</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -235,7 +239,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.0.1-B1</version>
+			<version>1.2.1-java17-SNAPSHOT</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
