@@ -21,9 +21,11 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerClientAutoConfiguration;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -76,9 +78,9 @@ public class BeanConfig {
 
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
-
+	
 	@Autowired(required = false)
-	private ReactorLoadBalancerExchangeFilterFunction reactorLoadBalancerExchangeFilterFunction;
+	private ReactorLoadBalancerExchangeFilterFunction lbFilterFunction;
 
 	@SuppressWarnings("java:S5527") // added suppress for sonarcloud. 
 	// Server hostname verification is not required because of 2 reasons:
@@ -185,9 +187,9 @@ public class BeanConfig {
 	}
 
 	@Bean
-	public WebClient plainWebClient(ReactorLoadBalancerExchangeFilterFunction lbFilterFunction) {
-		ExchangeFilterFunction filterFunction = (reactorLoadBalancerExchangeFilterFunction != null)
-				? reactorLoadBalancerExchangeFilterFunction
+	public WebClient plainWebClient() {
+		ExchangeFilterFunction filterFunction = (lbFilterFunction != null)
+				? lbFilterFunction
 				: (req, next) -> {
 					return next.exchange(req);
 				};
