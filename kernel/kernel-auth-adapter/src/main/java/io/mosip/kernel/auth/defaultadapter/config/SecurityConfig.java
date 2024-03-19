@@ -29,6 +29,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -41,7 +42,6 @@ import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -98,9 +98,6 @@ public class SecurityConfig {
 	@Autowired
 	private Environment environment;
 	
-	@Autowired 
-	private HttpSecurity http;
-	
 	/**
 	 * It's inject the end-points.
 	 */
@@ -149,9 +146,8 @@ public class SecurityConfig {
 		return registration;
 	}
 
-	@PostConstruct
-    public void filterChain() throws Exception {
-
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		if (!isCSRFEnable) {
 			http = http.csrf(httpEntry -> httpEntry.disable());
 		} else{
@@ -171,6 +167,8 @@ public class SecurityConfig {
 			headersEntry.cacheControl(Customizer.withDefaults());
 			headersEntry.frameOptions(frameOptions -> frameOptions.sameOrigin());
 		});
+		
+		return http.build();
 	}
 
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
