@@ -16,18 +16,26 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.version>3.8.0</maven.compiler.version>
-		<!-- <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version> -->
 
 		<maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
 		<maven.war.plugin.version>3.1.0</maven.war.plugin.version>
-		<!-- <maven.jacoco.plugin.version>0.8.1</maven.jacoco.plugin.version> -->
-		<!-- <maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version> -->
 		<maven.javadoc.version>3.6.3</maven.javadoc.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 
 		<kernel.core.version>1.2.1-java17-SNAPSHOT</kernel.core.version>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-bom</artifactId>
+				<version>1.2.1-java21-SNAPSHOT</version>
+				<type>pom</type>
+			    <scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
@@ -37,23 +45,19 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<version>${spring.boot.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.auth0</groupId>
 			<artifactId>jwks-rsa</artifactId>
-			<version>0.18.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-api-mockito2</artifactId>
-			<version>${powermock.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
-			<version>${powermock.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
