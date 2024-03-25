@@ -8,9 +8,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +22,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -44,6 +42,8 @@ import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Holds the main configuration for authentication and authorization using
@@ -71,9 +71,9 @@ import io.mosip.kernel.core.util.EmptyCheckUtils;
  **/
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @Order(2)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
 
@@ -97,7 +97,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private Environment environment;
-
+	
 	/**
 	 * It's inject the end-points.
 	 */
@@ -146,28 +146,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		return registration;
 	}
 
-	@SuppressWarnings("java:S4502") // added suppress for sonarcloud.
-	// For internal Service API call, by default CSRF is disabled. 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		if (!isCSRFEnable) {
-			http = http.csrf().disable();
+			http = http.csrf(httpEntry -> httpEntry.disable());
 		} else{
-			http.csrf().ignoringAntMatchers(csrfIgnoreUrls)
-				.csrfTokenRepository(this.getCsrfTokenRepository());
+			http.csrf(httpEntry -> httpEntry.ignoringRequestMatchers(csrfIgnoreUrls)
+					.csrfTokenRepository(this.getCsrfTokenRepository()));
 		}
-
-		http.authorizeRequests().antMatchers("*").authenticated().and().exceptionHandling()
-				.authenticationEntryPoint(new AuthEntryPoint()).and().sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		
+		http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("*").authenticated());
+		http.exceptionHandling(exceptionConfigurer -> exceptionConfigurer.authenticationEntryPoint(new AuthEntryPoint()));
+		http.sessionManagement(sessionConfigurer -> sessionConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		http.addFilterBefore(authFilter(), UsernamePasswordAuthenticationFilter.class);
 		if (isCORSEnable) {
 			http.addFilterBefore(new CorsFilter(origins), AuthFilter.class);
 		}
-		http.headers().cacheControl();
-		http.headers().frameOptions().sameOrigin();
+		http.headers(headersEntry -> {
+			headersEntry.cacheControl(Customizer.withDefaults());
+			headersEntry.frameOptions(frameOptions -> frameOptions.sameOrigin());
+		});
+		
+		return http.build();
 	}
 
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
@@ -191,9 +192,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 class AuthEntryPoint implements AuthenticationEntryPoint {
 
 	@Override
-	public void commence(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
-			AuthenticationException e) throws IOException {
-		httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "UNAUTHORIZED");
+	public void commence(jakarta.servlet.http.HttpServletRequest request,
+			jakarta.servlet.http.HttpServletResponse response, AuthenticationException authException)
+			throws IOException, ServletException {
+		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "UNAUTHORIZED");
 	}
 
 }
