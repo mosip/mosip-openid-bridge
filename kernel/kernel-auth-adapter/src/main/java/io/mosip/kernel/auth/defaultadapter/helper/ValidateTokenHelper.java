@@ -77,7 +77,7 @@ public class ValidateTokenHelper {
 	private boolean validateIssuerDomain;
 
 	/**
-	 * This should be same as the value in the token	
+	 * This should be same as the value in the token
 	 */
 	@Value("${auth.server.admin.issuer.uri:}")
 	private String issuerURI;
@@ -102,6 +102,7 @@ public class ValidateTokenHelper {
 	 */
 	@Value("${auth.server.admin.issuer.internal.uri:}")
 	private String issuerInternalURI;
+
 	@Value("${auth.server.admin.audience.claim.validate:true}")
 	private boolean validateAudClaim;
 
