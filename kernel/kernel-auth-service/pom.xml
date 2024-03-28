@@ -8,7 +8,7 @@
 
 	<artifactId>kernel-auth-service</artifactId>
 	<packaging>jar</packaging>
-	<version>1.2.0.1</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
@@ -221,7 +221,7 @@
 		<micrometer.core.version>1.4.2</micrometer.core.version>
 		<micrometer.registry.prometheus.version>1.4.2</micrometer.registry.prometheus.version>
 		<springdoc.version>1.5.10</springdoc.version>
-		<kernel-openid-bridge-api.version>1.2.0.1</kernel-openid-bridge-api.version>
+		<kernel-openid-bridge-api.version>1.2.1-SNAPSHOT</kernel-openid-bridge-api.version>
 		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/verticle/**,**/spi/**,"**/proxy/**","**/ProxyAuthServiceImpl.java","**/ProxyOTPServiceImpl.java","**/dto/**","**/util/**","**/filter/**","**/intercepter/**","**/AuthBootApplication.java"</sonar.coverage.exclusions>
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**,"**/ProxyAuthServiceImpl.java","**/ProxyTokenGenerator.java"</sonar.cpd.exclusions>
 	</properties>
@@ -229,7 +229,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
-			<version>1.2.0.1</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
@@ -285,7 +285,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-templatemanager-velocity</artifactId>
-			<version>1.2.0.1</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -306,7 +306,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.0.1</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
