@@ -50,7 +50,7 @@ public class BeanConfig {
 	@Autowired
 	private Environment environment;
 
-	@Autowired
+	@Autowired 
 	private RestTemplateInterceptor defaultInterceptor;
 
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
@@ -208,7 +208,7 @@ public class BeanConfig {
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
-		if (!EmptyCheckUtils.isNullEmpty(appNames)) {
+		if (appNames != null && !EmptyCheckUtils.isNullEmpty(appNames)) {
 			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
 			return appNamesList.get(0);
 		} else {
