@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * The Class AuthTestBootApplication.
  */
-@SpringBootApplication(scanBasePackages = { "io.mosip.kernel.auth.*" })
+@SpringBootApplication(scanBasePackages = { "io.mosip.kernel.*" })
 public class AuthTestBootApplication {
 
 	/**

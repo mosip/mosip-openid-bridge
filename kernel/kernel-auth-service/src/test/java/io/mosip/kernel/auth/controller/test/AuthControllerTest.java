@@ -23,20 +23,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.auth.controller.AuthController;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
-import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
 import io.mosip.kernel.auth.defaultimpl.dto.UserDetailsRequestDto;
 import io.mosip.kernel.auth.test.AuthTestBootApplication;
-import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
 import io.mosip.kernel.core.authmanager.model.AuthNResponse;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
 import io.mosip.kernel.core.authmanager.model.ClientSecret;
 import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserDto;
@@ -44,18 +40,10 @@ import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserSalt;
 import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
 import io.mosip.kernel.core.authmanager.model.RIdDto;
 import io.mosip.kernel.core.authmanager.model.Role;
 import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
 import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserRoleDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.openid.bridge.api.service.AuthService;
@@ -70,6 +58,9 @@ public class AuthControllerTest {
 
 	@Value("${mosip.kernel.auth-code-url-splitter:#URISPLITTER#}")
 	private String urlSplitter;
+
+	@Value("#{'${auth.allowed.urls}'.split(',')}")
+	private List<String> allowedUrls;
 
 	/**
 	 * Autowired reference for {@link MosipEnvironment}

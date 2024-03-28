@@ -202,6 +202,14 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		}
 
 		if (token == null) {
+			ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
+			ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+					"Authentication Failed");
+			errorResponse.getErrors().add(error);
+			httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+			httpServletResponse.setContentType("application/json");
+			httpServletResponse.setCharacterEncoding("UTF-8");
+			httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
 			LOGGER.error("\n\n Exception : Authorization token not present > " + httpServletRequest.getRequestURL()
 					+ "\n\n");
 			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
