@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 import org.junit.Before;
 import org.junit.Test;
