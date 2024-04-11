@@ -5,7 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.directory.api.ldap.model.password.PasswordDetails;
