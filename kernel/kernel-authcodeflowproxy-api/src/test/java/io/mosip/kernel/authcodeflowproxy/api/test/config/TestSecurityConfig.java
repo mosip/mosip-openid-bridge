@@ -4,15 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -24,10 +21,12 @@ import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = false)
-public class TestSecurityConfig extends WebSecurityConfigurerAdapter  {
+@EnableMethodSecurity
+public class TestSecurityConfig {
 
 	@Bean
 	public RestTemplate restTemplate() {
@@ -39,11 +38,11 @@ public class TestSecurityConfig extends WebSecurityConfigurerAdapter  {
 		return new DefaultHttpFirewall();
 	}
 
-	@Override
-	public void configure(WebSecurity webSecurity) throws Exception {
-		webSecurity.ignoring().antMatchers("**");
-		super.configure(webSecurity);
+	@Bean
+	public WebSecurity configure(WebSecurity webSecurity) throws Exception {
+		webSecurity.ignoring().requestMatchers("**");
 		webSecurity.httpFirewall(defaultHttpFirewall());
+		return webSecurity;
 	}
 
 	private String[] allowedEndPoints() {
@@ -52,13 +51,14 @@ public class TestSecurityConfig extends WebSecurityConfigurerAdapter  {
 				"/*/configuration/security", "/*/swagger-resources/**", "/*/swagger-ui.html" };
 	}
 
-	@Override
-	protected void configure(final HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.csrf().disable();
-		httpSecurity.httpBasic().and().authorizeRequests().anyRequest().authenticated().and().sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().exceptionHandling()
-				.authenticationEntryPoint(unauthorizedEntryPoint());
-	}
+//	@Bean
+//	protected HttpSecurity configure(final HttpSecurity httpSecurity) throws Exception {
+//		httpSecurity.csrf().disable();
+//		httpSecurity.httpBasic().and().authorizeRequests().anyRequest().authenticated().and().sessionManagement()
+//				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().exceptionHandling()
+//				.authenticationEntryPoint(unauthorizedEntryPoint());
+//		return httpSecurity;
+//	}
 
 	@Bean
 	public AuthenticationEntryPoint unauthorizedEntryPoint() {
