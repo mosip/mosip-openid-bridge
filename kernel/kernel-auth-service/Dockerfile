@@ -1,13 +1,5 @@
 FROM openjdk:11
 
-ARG SOURCE
-ARG COMMIT_HASH
-ARG COMMIT_ID
-ARG BUILD_TIME
-LABEL source=${SOURCE}
-LABEL commit_hash=${COMMIT_HASH}
-LABEL commit_id=${COMMIT_ID}
-LABEL build_time=${BUILD_TIME}
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG spring_config_label
 
@@ -23,6 +15,18 @@ ARG is_glowroot
 # can be passed during Docker build as build time environment for artifactory URL
 ARG artifactory_url
 
+# can be passed during Docker build as build time environment for github branch to pickup configuration from.
+ARG container_user=mosip
+ARG container_user_group=mosip
+ARG container_user_uid=1001
+ARG container_user_gid=1001
+
+# can be passed during Docker build as build time environment for label related addition to docker.
+ARG SOURCE
+ARG COMMIT_HASH
+ARG COMMIT_ID
+ARG BUILD_TIME
+
 # environment variable to pass active profile such as DEV, QA etc at docker runtime
 ENV active_profile_env=${active_profile}
 
@@ -37,26 +41,15 @@ ENV is_glowroot_env=${is_glowroot}
 
 # environment variable to pass artifactory url, at docker runtime
 ENV artifactory_url_env=${artifactory_url}
+
 # environment variable to pass iam_adapter url, at docker runtime
 ENV iam_adapter_url_env=${iam_adapter_url}
 
-# can be passed during Docker build as build time environment for github branch to pickup configuration from.
-ARG container_user=mosip
-
-# can be passed during Docker build as build time environment for github branch to pickup configuration from.
-ARG container_user_group=mosip
-
-# can be passed during Docker build as build time environment for github branch to pickup configuration from.
-ARG container_user_uid=1001
-
-# can be passed during Docker build as build time environment for github branch to pickup configuration from.
-ARG container_user_gid=1001
-
-# install packages and create user
-RUN apt-get -y update \
-&& apt-get install -y unzip \
-&& groupadd -g ${container_user_gid} ${container_user_group} \
-&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user}
+# can be passed during Docker build as build time environment for label.
+LABEL source=${SOURCE}
+LABEL commit_hash=${COMMIT_HASH}
+LABEL commit_id=${COMMIT_ID}
+LABEL build_time=${BUILD_TIME}
 
 # change volume to whichever storage directory you want to use for this container.
 VOLUME /tmp
@@ -68,17 +61,21 @@ ENV work_dir=/home/${container_user}
 
 ARG loader_path=${work_dir}/additional_jars/
 
-RUN mkdir -p ${loader_path}
-
 ENV loader_path_env=${loader_path}
 
 ADD ./target/*.jar /target/
-RUN find /target -name '*.jar' -executable -type f "-print0" | xargs "-0" cp -t / \
-    && rm -rf /target \
-    && mv /*.jar ${work_dir}/kernel-auth-service.jar
 
 # change permissions of file inside working dir
-RUN chown -R ${container_user}:${container_user} /home/${container_user}
+# install packages and create user
+RUN apt-get -y update \
+&& apt-get install -y unzip \
+&& groupadd -g ${container_user_gid} ${container_user_group} \
+&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user} \
+&& find /target -name '*.jar' -executable -type f "-print0" | xargs "-0" cp -t / \
+&& rm -rf /target \
+&& mv /*.jar ${work_dir}/kernel-auth-service.jar \
+&& mkdir -p ${loader_path} \
+&& chown -R ${container_user}:${container_user} /home/${container_user}
 
 # select container user for all tasks
 USER ${container_user_uid}:${container_user_gid}
