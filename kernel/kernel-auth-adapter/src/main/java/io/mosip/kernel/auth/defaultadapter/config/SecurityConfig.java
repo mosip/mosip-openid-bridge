@@ -155,7 +155,13 @@ public class SecurityConfig {
 					.csrfTokenRepository(this.getCsrfTokenRepository()));
 		}
 		
-		http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("*").authenticated());
+		String[] exclusionPatterns = Stream.concat(noAuthenticationEndPoint.getGlobal().getEndPoints().stream(),
+				noAuthenticationEndPoint.getService().getEndPoints().stream()).toArray(size -> new String[size]);
+		
+		http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
+				.requestMatchers(exclusionPatterns).permitAll()
+				.anyRequest().authenticated()
+				);
 		http.exceptionHandling(exceptionConfigurer -> exceptionConfigurer.authenticationEntryPoint(new AuthEntryPoint()));
 		http.sessionManagement(sessionConfigurer -> sessionConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
