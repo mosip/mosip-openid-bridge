@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,6 +42,8 @@ import io.mosip.kernel.auth.defaultadapter.filter.AuthFilter;
 import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
+import io.mosip.kernel.auth.defaultadapter.model.GlobalEndPoint;
+import io.mosip.kernel.auth.defaultadapter.model.ServiceEndPoint;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -155,8 +158,12 @@ public class SecurityConfig {
 					.csrfTokenRepository(this.getCsrfTokenRepository()));
 		}
 		
-		String[] exclusionPatterns = Stream.concat(noAuthenticationEndPoint.getGlobal().getEndPoints().stream(),
-				noAuthenticationEndPoint.getService().getEndPoints().stream()).toArray(size -> new String[size]);
+		String[] exclusionPatterns = Stream.concat(
+				Optional.ofNullable(noAuthenticationEndPoint.getGlobal()).map(GlobalEndPoint::getEndPoints)
+						.map(List::stream).orElseGet(() -> Stream.of()),
+				Optional.ofNullable(noAuthenticationEndPoint.getService()).map(ServiceEndPoint::getEndPoints)
+						.map(List::stream).orElseGet(() -> Stream.of()))
+				.toArray(size -> new String[size]);
 		
 		http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
 				.requestMatchers(exclusionPatterns).permitAll()
