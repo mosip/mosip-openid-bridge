@@ -71,7 +71,7 @@ RUN apk -q update \
 && find /target -name '*.jar' -executable -type f "-print0" | xargs "-0" cp -t / \
 && rm -rf /target \
 && mv /*.jar ${work_dir}/kernel-auth-service.jar \
-&& mkdir -p ${loader_path}
+&& mkdir -p ${loader_path} \
 # change permissions of file inside working dir \
 && chown -R ${container_user}:${container_user} /home/${container_user}
 
