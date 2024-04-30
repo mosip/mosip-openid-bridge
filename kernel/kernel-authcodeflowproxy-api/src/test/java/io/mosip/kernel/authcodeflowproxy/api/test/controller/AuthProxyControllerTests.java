@@ -78,7 +78,7 @@ import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 @AutoConfigureMockMvc
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(SpringRunner.class)
-@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*", "com.sun.org.apache.xalan.*" })
+@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*", "com.sun.org.apache.xalan.*", "javax.crypto.*" })
 @PrepareForTest(Algorithm.class)
 public class AuthProxyControllerTests {
 
