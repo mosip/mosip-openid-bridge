@@ -57,4 +57,12 @@ public class TokenGenerationServiceTest {
 		when(authService.authenticateWithSecretKey(Mockito.any())).thenReturn(authNResponseDto);
 		assertThat(tokenGenerationService.getInternalTokenGenerationService(),is("Mock-token"));
 	}
+
+	@Test
+	public void getUINBasedTokenTest() throws Exception  {
+		AuthNResponseDto authNResponseDto = new AuthNResponseDto();
+		authNResponseDto.setToken("Mock-token");
+		when(authService.authenticateWithSecretKey(Mockito.any())).thenReturn(authNResponseDto);
+		assertThat(tokenGenerationService.getUINBasedToken(),is("Mock-token"));
+	}
 }
