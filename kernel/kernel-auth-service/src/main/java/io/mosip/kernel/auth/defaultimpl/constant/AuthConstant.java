@@ -108,5 +108,7 @@ public class AuthConstant {
 	public static final String REALM = "realm";
 	
 	public static final String ROLE_NAME="role-name";
+	
+	public static final String USER_ID="userId";
 
 }
