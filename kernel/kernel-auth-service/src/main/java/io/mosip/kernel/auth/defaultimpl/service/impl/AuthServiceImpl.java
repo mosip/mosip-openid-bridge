@@ -712,7 +712,6 @@ public class AuthServiceImpl implements AuthService {
 		map.add(AuthConstant.PASSWORDCONSTANT, password);
 		map.add(AuthConstant.CLIENT_ID, clientID);
 		map.add(AuthConstant.CLIENT_SECRET, clientSecret);
-		map.add(AuthConstant.USER_ID, username);
 		return map;
 	}
 
