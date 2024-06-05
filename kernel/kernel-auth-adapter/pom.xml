@@ -9,13 +9,13 @@
 	<artifactId>kernel-auth-adapter</artifactId>
 	<packaging>jar</packaging>
 	<description>auth adapter reference implementation </description>
-	<version>1.2.1-java17-SNAPSHOT</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
 		<!-- maven -->
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
 		<maven.compiler.version>3.8.0</maven.compiler.version>
 		<maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
 
@@ -46,13 +46,13 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
-			<version>1.2.1-java17-SNAPSHOT</version>
+			<version>1.2.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-openid-bridge-api</artifactId>
-			<version>1.2.1-java17-SNAPSHOT</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -103,7 +103,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.1-java17-SNAPSHOT</version>
+			<version>1.2.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
