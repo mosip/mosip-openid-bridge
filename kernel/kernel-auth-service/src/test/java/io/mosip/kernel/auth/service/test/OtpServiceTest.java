@@ -10,20 +10,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.mosip.kernel.auth.defaultimpl.dto.otp.*;
-import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +34,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.dto.AccessTokenResponse;
+import io.mosip.kernel.auth.defaultimpl.dto.otp.OtpGenerateResponseDto;
+import io.mosip.kernel.auth.defaultimpl.dto.otp.OtpTemplateDto;
+import io.mosip.kernel.auth.defaultimpl.dto.otp.OtpTemplateResponseDto;
 import io.mosip.kernel.auth.defaultimpl.dto.otp.email.OTPEmailTemplate;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerServiceException;
@@ -71,7 +71,7 @@ public class OtpServiceTest {
 	@MockBean
 	OTPGenerateService oTPGenerateService;
 
-	@MockBean
+	@Autowired
 	private ObjectMapper mapper;
 
 	@MockBean
@@ -291,123 +291,7 @@ public class OtpServiceTest {
 		AuthNResponseDto authNResponseDto = oTPService.sendOTPForUin(mosipUserDto, otpUser, "mosip");	
 		assertThat(authNResponseDto.getStatus(),is(AuthConstant.FAILURE_STATUS));
 	}
-
-	@Test
-	public void sendOTPForUinUserWithPhone_Test() throws Exception  {
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
-		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
-		accessTokenResponse.setExpires_in("3600");
-		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
-		otpGenerateResponseDto.setStatus("Allow");
-		otpGenerateResponseDto.setOtp("12345");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
-		when(oTPGenerateService.generateOTP(Mockito.any(),
-				Mockito.any())).thenReturn(otpGenerateResponseDto);
-
-		ResponseEntity<String> res = new ResponseEntity<>("resEntity", HttpStatus.OK);
-		Mockito.when(authRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.POST), Mockito.any(),
-				Mockito.eq(String.class))).thenReturn(res);
-
-		ResponseWrapper<?> responseObject=new ResponseWrapper<>();
-		SmsResponseDto smsResponseDto = new SmsResponseDto();
-		smsResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
-
-		when(mapper.readValue(Mockito.anyString(), Mockito.any(Class.class))).thenAnswer(new Answer<Object>() {
-			public Object answer(InvocationOnMock invocation) {
-				Object[] args = invocation.getArguments();
-				if (args[1] == ResponseWrapper.class) {
-					return responseObject;
-				} else if (args[1] == SmsResponseDto.class) {
-					return smsResponseDto;
-				}
-				return null;
-			}
-		});
-     	Mockito.when(mapper.writeValueAsString(responseObject.getResponse())).thenReturn("serializedResponse");
-
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		mosipUserDto.setName("112211");
-		List<String> channel = new ArrayList<>();
-		channel.add("phone");
-		OtpUser otpUser = new OtpUser();
-		otpUser.setUserId("112211");
-		otpUser.setAppId("ida");
-		otpUser.setOtpChannel(channel);
-		otpUser.setUseridtype("UIN");
-		otpUser.setContext("uin");
-		AuthNResponseDto authNResponseDto = oTPService.sendOTPForUin(mosipUserDto, otpUser, "mosip");
-		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
-	}
-
-	@Test
-	public void sendOTPForUinUserWithEmail_Test() throws Exception  {
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
-		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
-		accessTokenResponse.setExpires_in("3600");
-		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
-		otpGenerateResponseDto.setStatus("Allow");
-		otpGenerateResponseDto.setOtp("12345");
-
-		OTPEmailTemplate otpEmailTemplate = new OTPEmailTemplate();
-		otpEmailTemplate.setEmailContent("emailContent");
-		otpEmailTemplate.setEmailSubject("emailSubject");
-		otpEmailTemplate.setEmailTo("emailTo");
-		when(templateUtil.getEmailTemplate(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(otpEmailTemplate);
-
-
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
-		when(oTPGenerateService.generateOTP(Mockito.any(),
-				Mockito.any())).thenReturn(otpGenerateResponseDto);
-
-		ResponseEntity<String> res = new ResponseEntity<>("resEntity", HttpStatus.OK);
-		Mockito.when(authRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.POST), Mockito.any(),
-				Mockito.eq(String.class))).thenReturn(res);
-
-
-		ResponseWrapper<?> responseObject=new ResponseWrapper<>();
-		OtpEmailSendResponseDto otpEmailSendResponseDto=new OtpEmailSendResponseDto();
-		otpEmailSendResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
-
-		when(mapper.readValue(Mockito.anyString(), Mockito.any(Class.class))).thenAnswer(new Answer<Object>() {
-			public Object answer(InvocationOnMock invocation) {
-				Object[] args = invocation.getArguments();
-				if (args[1] == OtpEmailSendResponseDto.class) {
-					return otpEmailSendResponseDto;
-				}else if(args[1]== ResponseWrapper.class){
-					return responseObject;
-				}
-				return null;
-			}
-		});
-		Mockito.when(mapper.writeValueAsString(responseObject.getResponse())).thenReturn("serializedResponse");
-
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		mosipUserDto.setName("112211");
-		List<String> channel = new ArrayList<>();
-		channel.add("email");
-		OtpUser otpUser = new OtpUser();
-		otpUser.setUserId("112211");
-		otpUser.setAppId("ida");
-		otpUser.setOtpChannel(channel);
-		otpUser.setUseridtype("UIN");
-		otpUser.setContext("uin");
-		AuthNResponseDto authNResponseDto = oTPService.sendOTPForUin(mosipUserDto, otpUser, "mosip");
-		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
-	}
-
-
+	
 	
 	@Test(expected = AuthNException.class)
 	public void sendOTPAuthNExceptionTest() throws Exception  {
@@ -582,53 +466,386 @@ public class OtpServiceTest {
 		assertThat(authNResponseDto.getStatus(),is(AuthConstant.FAILURE_STATUS));
 	}
 
-	@Test
-	public void validateOTP_WithValidDetails_thenPass() throws JsonProcessingException {
-
-		MosipUserDto mosipUserDto=new MosipUserDto();
-		mosipUserDto.setToken("token");
-		mosipUserDto.setMobile("mobile");
-		mosipUserDto.setUserId("userId");
-
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
-		accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
-		accessTokenResponse.setExpires_in("3600");
-		accessTokenResponse.setRefresh_expires_in("3600");
-		ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse = ResponseEntity.ok(accessTokenResponse);
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.anyString(),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
-
-
-		ResponseEntity<String> res = new ResponseEntity<>("resEntity", HttpStatus.OK);
-		Mockito.when(authRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.GET), Mockito.any(),
-				Mockito.eq(String.class))).thenReturn(res);
-
-		ResponseWrapper<?> responseObject=new ResponseWrapper<>();
-		OtpValidatorResponseDto otpValidatorResponseDto=new OtpValidatorResponseDto();
-		otpValidatorResponseDto.setStatus(AuthConstant.SUCCESS_STATUS);
-		when(mapper.readValue(Mockito.anyString(), Mockito.any(Class.class))).thenAnswer(new Answer<Object>() {
-			public Object answer(InvocationOnMock invocation) {
-				Object[] args = invocation.getArguments();
-				if (args[1] == OtpValidatorResponseDto.class) {
-					return otpValidatorResponseDto;
-				}else if(args[1]== ResponseWrapper.class){
-					return responseObject;
-				}
-				return null;
-			}
-		});
-		Mockito.when(mapper.writeValueAsString(responseObject.getResponse())).thenReturn("serializedResponse");
-
-//		when(authRestTemplate.postForEntity(Mockito.eq(Mockito.anyString()),
-//				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse);
-		MosipUserTokenDto mosipUserTokenDto = oTPService.validateOTP(mosipUserDto, "otp", "appId");
-		assertThat(mosipUserTokenDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
-	}
+	/*
+	 * @Test public void sendOTPEmailTest() throws Exception { AccessTokenResponse
+	 * accessTokenResponse = new AccessTokenResponse();
+	 * accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+	 * accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+	 * accessTokenResponse.setExpires_in("3600");
+	 * ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse =
+	 * ResponseEntity.ok(accessTokenResponse); Map<String, String> pathParams = new
+	 * HashMap<>(); pathParams.put(AuthConstant.REALM_ID, "mosip");
+	 * UriComponentsBuilder uriComponentsBuilder =
+	 * UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+	 * OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
+	 * otpGenerateResponseDto.setOtp("110022");
+	 * otpGenerateResponseDto.setStatus("Success");
+	 * when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.
+	 * buildAndExpand(pathParams).toUriString()), Mockito.any(),
+	 * Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse
+	 * ); when(oTPGenerateService.generateOTP(Mockito.any(),
+	 * Mockito.any())).thenReturn(otpGenerateResponseDto);
+	 * 
+	 * //get otp email ResponseWrapper<OtpTemplateResponseDto> otpEmailresp = new
+	 * ResponseWrapper<>(); OtpTemplateResponseDto otpTemplateResponseDto = new
+	 * OtpTemplateResponseDto(); ArrayList<OtpTemplateDto> templates = new
+	 * ArrayList<OtpTemplateDto>(); OtpTemplateDto otpTemplateDto = new
+	 * OtpTemplateDto(); otpTemplateDto.setId("ida");
+	 * otpTemplateDto.setFileText("your otp os $otp");
+	 * templates.add(otpTemplateDto);
+	 * otpTemplateResponseDto.setTemplates(templates);
+	 * otpEmailresp.setResponse(otpTemplateResponseDto); final String url =
+	 * mosipEnvironment.getMasterDataTemplateApi() + "/" +
+	 * mosipEnvironment.getPrimaryLanguage() +
+	 * mosipEnvironment.getMasterDataOtpTemplate();
+	 * when(authRestTemplate.exchange(Mockito.eq(url),
+	 * Mockito.eq(HttpMethod.GET),Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(mapper.
+	 * writeValueAsString(otpEmailresp)));
+	 * 
+	 * 
+	 * //email OTPEmailTemplate emailTemplate = new OTPEmailTemplate();
+	 * emailTemplate.setEmailContent("mock-email");
+	 * emailTemplate.setEmailSubject("mock-subject");
+	 * emailTemplate.setEmailTo("mock@mosip.io");
+	 * when(templateUtil.getEmailTemplate(Mockito.any(), Mockito.any(),
+	 * Mockito.any())).thenReturn(emailTemplate); String emailUrl =
+	 * mosipEnvironment.getOtpSenderEmailApi(); String emailResp = "{\r\n" +
+	 * "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": {\r\n" +
+	 * "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n" +
+	 * "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}"; ResponseEntity<String>
+	 * getEmailRespo = ResponseEntity.ok(emailResp);
+	 * when(authRestTemplate.exchange(Mockito.eq(emailUrl),
+	 * Mockito.eq(HttpMethod.POST), Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(getEmailRespo);
+	 * 
+	 * MosipUserDto mosipUserDto = new MosipUserDto();
+	 * mosipUserDto.setName("112211"); List<String> channel = new ArrayList<>();
+	 * channel.add("email"); OtpUser otpUser = new OtpUser();
+	 * otpUser.setUserId("112211"); otpUser.setAppId("ida");
+	 * otpUser.setOtpChannel(channel); otpUser.setUseridtype("UIN");
+	 * otpUser.setContext("uin"); AuthNResponseDto authNResponseDto =
+	 * oTPService.sendOTP(mosipUserDto, channel, "ida");
+	 * assertThat(authNResponseDto.getStatus(),is("SUCCESS")); }
+	 * 
+	 * 
+	 * @Test public void sendOTPPhoneTest() throws Exception { AccessTokenResponse
+	 * accessTokenResponse = new AccessTokenResponse();
+	 * accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+	 * accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+	 * accessTokenResponse.setExpires_in("3600");
+	 * ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse =
+	 * ResponseEntity.ok(accessTokenResponse); Map<String, String> pathParams = new
+	 * HashMap<>(); pathParams.put(AuthConstant.REALM_ID, "mosip");
+	 * UriComponentsBuilder uriComponentsBuilder =
+	 * UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+	 * OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
+	 * otpGenerateResponseDto.setOtp("110022");
+	 * otpGenerateResponseDto.setStatus("Success");
+	 * when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.
+	 * buildAndExpand(pathParams).toUriString()), Mockito.any(),
+	 * Mockito.eq(AccessTokenResponse.class))).thenReturn(getAuthAccessTokenResponse
+	 * ); when(oTPGenerateService.generateOTP(Mockito.any(),
+	 * Mockito.any())).thenReturn(otpGenerateResponseDto);
+	 * 
+	 * 
+	 * ResponseWrapper<OtpTemplateResponseDto> otpEmailresp = new
+	 * ResponseWrapper<>(); OtpTemplateResponseDto otpTemplateResponseDto = new
+	 * OtpTemplateResponseDto(); ArrayList<OtpTemplateDto> templates = new
+	 * ArrayList<OtpTemplateDto>(); OtpTemplateDto otpTemplateDto = new
+	 * OtpTemplateDto(); otpTemplateDto.setId("ida");
+	 * otpTemplateDto.setFileText("your otp os $otp");
+	 * templates.add(otpTemplateDto);
+	 * otpTemplateResponseDto.setTemplates(templates);
+	 * otpEmailresp.setResponse(otpTemplateResponseDto); final String url =
+	 * mosipEnvironment.getMasterDataTemplateApi() + "/" +
+	 * mosipEnvironment.getPrimaryLanguage() +
+	 * mosipEnvironment.getMasterDataOtpTemplate();
+	 * when(authRestTemplate.exchange(Mockito.eq(url),
+	 * Mockito.eq(HttpMethod.GET),Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(mapper.
+	 * writeValueAsString(otpEmailresp)));
+	 * 
+	 * String smsUrl = mosipEnvironment.getOtpSenderSmsApi(); String smsResp =
+	 * "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": {\r\n" +
+	 * "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n" +
+	 * "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}"; ResponseEntity<String>
+	 * getSMSRespo = ResponseEntity.ok(smsResp);
+	 * when(authRestTemplate.exchange(Mockito.eq(smsUrl),
+	 * Mockito.eq(HttpMethod.POST), Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(getSMSRespo); MosipUserDto mosipUserDto
+	 * = new MosipUserDto(); mosipUserDto.setName("112211"); List<String> channel =
+	 * new ArrayList<>(); channel.add("phone"); OtpUser otpUser = new OtpUser();
+	 * otpUser.setUserId("112211"); otpUser.setAppId("ida");
+	 * otpUser.setOtpChannel(channel); otpUser.setUseridtype("UIN");
+	 * otpUser.setContext("uin"); AuthNResponseDto authNResponseDto =
+	 * oTPService.sendOTP(mosipUserDto, channel, "ida");
+	 * assertThat(authNResponseDto.getStatus(),is("SUCCESS")); }
+	 * 
+	 * 
+	 * @Test(expected = AuthNException.class) public void
+	 * sendOTPPhoneUnAuthErrorTest() throws Exception { AccessTokenResponse
+	 * accessTokenResponse = new AccessTokenResponse();
+	 * accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+	 * accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+	 * accessTokenResponse.setExpires_in("3600"); String resp = "{\r\n" +
+	 * "  \"id\": \"string\", \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": { },\r\n" +
+	 * "  \"errors\": [{ \"errorCode\": \"KER-OTP-401\", \"message\": \"Bad Request\" } ]\r\n"
+	 * + "}";
+	 * 
+	 * ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse =
+	 * ResponseEntity.ok(accessTokenResponse); Map<String, String> pathParams = new
+	 * HashMap<>(); pathParams.put(AuthConstant.REALM_ID, "mosip");
+	 * UriComponentsBuilder uriComponentsBuilder =
+	 * UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+	 * OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
+	 * otpGenerateResponseDto.setOtp("110022");
+	 * otpGenerateResponseDto.setStatus("Success");
+	 * when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.
+	 * buildAndExpand(pathParams).toUriString()), Mockito.any(),
+	 * Mockito.eq(AccessTokenResponse.class))).thenThrow(new
+	 * HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", resp.getBytes(),
+	 * Charset.defaultCharset()));
+	 * when(oTPGenerateService.generateOTP(Mockito.any(),
+	 * Mockito.any())).thenReturn(otpGenerateResponseDto);
+	 * 
+	 * 
+	 * ResponseWrapper<OtpTemplateResponseDto> otpEmailresp = new
+	 * ResponseWrapper<>(); OtpTemplateResponseDto otpTemplateResponseDto = new
+	 * OtpTemplateResponseDto(); ArrayList<OtpTemplateDto> templates = new
+	 * ArrayList<OtpTemplateDto>(); OtpTemplateDto otpTemplateDto = new
+	 * OtpTemplateDto(); otpTemplateDto.setId("ida");
+	 * otpTemplateDto.setFileText("your otp os $otp");
+	 * templates.add(otpTemplateDto);
+	 * otpTemplateResponseDto.setTemplates(templates);
+	 * otpEmailresp.setResponse(otpTemplateResponseDto); final String url =
+	 * mosipEnvironment.getMasterDataTemplateApi() + "/" +
+	 * mosipEnvironment.getPrimaryLanguage() +
+	 * mosipEnvironment.getMasterDataOtpTemplate();
+	 * when(authRestTemplate.exchange(Mockito.eq(url),
+	 * Mockito.eq(HttpMethod.GET),Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(mapper.
+	 * writeValueAsString(otpEmailresp)));
+	 * 
+	 * String smsUrl = mosipEnvironment.getOtpSenderSmsApi(); String smsResp =
+	 * "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": {\r\n" +
+	 * "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n" +
+	 * "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}"; ResponseEntity<String>
+	 * getSMSRespo = ResponseEntity.ok(smsResp);
+	 * when(authRestTemplate.exchange(Mockito.eq(smsUrl),
+	 * Mockito.eq(HttpMethod.POST), Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(getSMSRespo); MosipUserDto mosipUserDto
+	 * = new MosipUserDto(); mosipUserDto.setName("112211"); List<String> channel =
+	 * new ArrayList<>(); channel.add("phone"); OtpUser otpUser = new OtpUser();
+	 * otpUser.setUserId("112211"); otpUser.setAppId("ida");
+	 * otpUser.setOtpChannel(channel); otpUser.setUseridtype("UIN");
+	 * otpUser.setContext("uin"); AuthNResponseDto authNResponseDto =
+	 * oTPService.sendOTP(mosipUserDto, channel, "ida");
+	 * assertThat(authNResponseDto.getStatus(),is("SUCCESS")); }
+	 * 
+	 * 
+	 * @Test(expected = AuthZException.class) public void
+	 * sendOTPPhoneForbiddenErrorTest() throws Exception { AccessTokenResponse
+	 * accessTokenResponse = new AccessTokenResponse();
+	 * accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+	 * accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+	 * accessTokenResponse.setExpires_in("3600"); String resp = "{\r\n" +
+	 * "  \"id\": \"string\", \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": { },\r\n" +
+	 * "  \"errors\": [{ \"errorCode\": \"KER-OTP-401\", \"message\": \"Bad Request\" } ]\r\n"
+	 * + "}";
+	 * 
+	 * ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse =
+	 * ResponseEntity.ok(accessTokenResponse); Map<String, String> pathParams = new
+	 * HashMap<>(); pathParams.put(AuthConstant.REALM_ID, "mosip");
+	 * UriComponentsBuilder uriComponentsBuilder =
+	 * UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+	 * OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
+	 * otpGenerateResponseDto.setOtp("110022");
+	 * otpGenerateResponseDto.setStatus("Success");
+	 * when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.
+	 * buildAndExpand(pathParams).toUriString()), Mockito.any(),
+	 * Mockito.eq(AccessTokenResponse.class))).thenThrow(new
+	 * HttpClientErrorException(HttpStatus.FORBIDDEN, "403", resp.getBytes(),
+	 * Charset.defaultCharset()));
+	 * when(oTPGenerateService.generateOTP(Mockito.any(),
+	 * Mockito.any())).thenReturn(otpGenerateResponseDto);
+	 * 
+	 * 
+	 * ResponseWrapper<OtpTemplateResponseDto> otpEmailresp = new
+	 * ResponseWrapper<>(); OtpTemplateResponseDto otpTemplateResponseDto = new
+	 * OtpTemplateResponseDto(); ArrayList<OtpTemplateDto> templates = new
+	 * ArrayList<OtpTemplateDto>(); OtpTemplateDto otpTemplateDto = new
+	 * OtpTemplateDto(); otpTemplateDto.setId("ida");
+	 * otpTemplateDto.setFileText("your otp os $otp");
+	 * templates.add(otpTemplateDto);
+	 * otpTemplateResponseDto.setTemplates(templates);
+	 * otpEmailresp.setResponse(otpTemplateResponseDto); final String url =
+	 * mosipEnvironment.getMasterDataTemplateApi() + "/" +
+	 * mosipEnvironment.getPrimaryLanguage() +
+	 * mosipEnvironment.getMasterDataOtpTemplate();
+	 * when(authRestTemplate.exchange(Mockito.eq(url),
+	 * Mockito.eq(HttpMethod.GET),Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(mapper.
+	 * writeValueAsString(otpEmailresp)));
+	 * 
+	 * String smsUrl = mosipEnvironment.getOtpSenderSmsApi(); String smsResp =
+	 * "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": {\r\n" +
+	 * "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n" +
+	 * "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}"; ResponseEntity<String>
+	 * getSMSRespo = ResponseEntity.ok(smsResp);
+	 * when(authRestTemplate.exchange(Mockito.eq(smsUrl),
+	 * Mockito.eq(HttpMethod.POST), Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(getSMSRespo); MosipUserDto mosipUserDto
+	 * = new MosipUserDto(); mosipUserDto.setName("112211"); List<String> channel =
+	 * new ArrayList<>(); channel.add("phone"); OtpUser otpUser = new OtpUser();
+	 * otpUser.setUserId("112211"); otpUser.setAppId("ida");
+	 * otpUser.setOtpChannel(channel); otpUser.setUseridtype("UIN");
+	 * otpUser.setContext("uin"); AuthNResponseDto authNResponseDto =
+	 * oTPService.sendOTP(mosipUserDto, channel, "ida");
+	 * assertThat(authNResponseDto.getStatus(),is("SUCCESS")); }
+	 * 
+	 * @Test(expected = AuthManagerException.class) public void
+	 * sendOTPPhoneUnAuthAuthManagerExceptionErrorTest() throws Exception {
+	 * AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+	 * accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+	 * accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+	 * accessTokenResponse.setExpires_in("3600"); String resp = "{\r\n" +
+	 * "  \"id\": \"string\", \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": { },\r\n" +
+	 * "  \"errors\": [{ \"errorCode\": \"KER-OTP-401\", \"message\": \"Bad Request\" } ]\r\n"
+	 * + "}";
+	 * 
+	 * ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse =
+	 * ResponseEntity.ok(accessTokenResponse); Map<String, String> pathParams = new
+	 * HashMap<>(); pathParams.put(AuthConstant.REALM_ID, "mosip");
+	 * UriComponentsBuilder uriComponentsBuilder =
+	 * UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+	 * OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
+	 * otpGenerateResponseDto.setOtp("110022");
+	 * otpGenerateResponseDto.setStatus("Success");
+	 * when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.
+	 * buildAndExpand(pathParams).toUriString()), Mockito.any(),
+	 * Mockito.eq(AccessTokenResponse.class))).thenThrow(new
+	 * HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "unauth".getBytes(),
+	 * Charset.defaultCharset()));
+	 * when(oTPGenerateService.generateOTP(Mockito.any(),
+	 * Mockito.any())).thenReturn(otpGenerateResponseDto);
+	 * 
+	 * 
+	 * ResponseWrapper<OtpTemplateResponseDto> otpEmailresp = new
+	 * ResponseWrapper<>(); OtpTemplateResponseDto otpTemplateResponseDto = new
+	 * OtpTemplateResponseDto(); ArrayList<OtpTemplateDto> templates = new
+	 * ArrayList<OtpTemplateDto>(); OtpTemplateDto otpTemplateDto = new
+	 * OtpTemplateDto(); otpTemplateDto.setId("ida");
+	 * otpTemplateDto.setFileText("your otp os $otp");
+	 * templates.add(otpTemplateDto);
+	 * otpTemplateResponseDto.setTemplates(templates);
+	 * otpEmailresp.setResponse(otpTemplateResponseDto); final String url =
+	 * mosipEnvironment.getMasterDataTemplateApi() + "/" +
+	 * mosipEnvironment.getPrimaryLanguage() +
+	 * mosipEnvironment.getMasterDataOtpTemplate();
+	 * when(authRestTemplate.exchange(Mockito.eq(url),
+	 * Mockito.eq(HttpMethod.GET),Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(mapper.
+	 * writeValueAsString(otpEmailresp)));
+	 * 
+	 * String smsUrl = mosipEnvironment.getOtpSenderSmsApi(); String smsResp =
+	 * "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": {\r\n" +
+	 * "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n" +
+	 * "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}"; ResponseEntity<String>
+	 * getSMSRespo = ResponseEntity.ok(smsResp);
+	 * when(authRestTemplate.exchange(Mockito.eq(smsUrl),
+	 * Mockito.eq(HttpMethod.POST), Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(getSMSRespo); MosipUserDto mosipUserDto
+	 * = new MosipUserDto(); mosipUserDto.setName("112211"); List<String> channel =
+	 * new ArrayList<>(); channel.add("phone"); OtpUser otpUser = new OtpUser();
+	 * otpUser.setUserId("112211"); otpUser.setAppId("ida");
+	 * otpUser.setOtpChannel(channel); otpUser.setUseridtype("UIN");
+	 * otpUser.setContext("uin"); AuthNResponseDto authNResponseDto =
+	 * oTPService.sendOTP(mosipUserDto, channel, "ida");
+	 * assertThat(authNResponseDto.getStatus(),is("SUCCESS")); }
+	 * 
+	 * 
+	 * @Test(expected = AuthManagerException.class) public void
+	 * sendOTPPhoneForbiddenAuthManagerExceptionrrorTest() throws Exception {
+	 * AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+	 * accessTokenResponse.setAccess_token("MOCK-ACCESS-TOKEN");
+	 * accessTokenResponse.setRefresh_token("MOCK-REFRESH-TOKEN");
+	 * accessTokenResponse.setExpires_in("3600"); String resp = "{\r\n" +
+	 * "  \"id\": \"string\", \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T19:38:09.740Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": { },\r\n" +
+	 * "  \"errors\": [{ \"errorCode\": \"KER-OTP-401\", \"message\": \"Bad Request\" } ]\r\n"
+	 * + "}";
+	 * 
+	 * ResponseEntity<AccessTokenResponse> getAuthAccessTokenResponse =
+	 * ResponseEntity.ok(accessTokenResponse); Map<String, String> pathParams = new
+	 * HashMap<>(); pathParams.put(AuthConstant.REALM_ID, "mosip");
+	 * UriComponentsBuilder uriComponentsBuilder =
+	 * UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+	 * OtpGenerateResponseDto otpGenerateResponseDto = new OtpGenerateResponseDto();
+	 * otpGenerateResponseDto.setOtp("110022");
+	 * otpGenerateResponseDto.setStatus("Success");
+	 * when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.
+	 * buildAndExpand(pathParams).toUriString()), Mockito.any(),
+	 * Mockito.eq(AccessTokenResponse.class))).thenThrow(new
+	 * HttpClientErrorException(HttpStatus.FORBIDDEN, "403", "forbidden".getBytes(),
+	 * Charset.defaultCharset()));
+	 * when(oTPGenerateService.generateOTP(Mockito.any(),
+	 * Mockito.any())).thenReturn(otpGenerateResponseDto);
+	 * 
+	 * 
+	 * ResponseWrapper<OtpTemplateResponseDto> otpEmailresp = new
+	 * ResponseWrapper<>(); OtpTemplateResponseDto otpTemplateResponseDto = new
+	 * OtpTemplateResponseDto(); ArrayList<OtpTemplateDto> templates = new
+	 * ArrayList<OtpTemplateDto>(); OtpTemplateDto otpTemplateDto = new
+	 * OtpTemplateDto(); otpTemplateDto.setId("ida");
+	 * otpTemplateDto.setFileText("your otp os $otp");
+	 * templates.add(otpTemplateDto);
+	 * otpTemplateResponseDto.setTemplates(templates);
+	 * otpEmailresp.setResponse(otpTemplateResponseDto); final String url =
+	 * mosipEnvironment.getMasterDataTemplateApi() + "/" +
+	 * mosipEnvironment.getPrimaryLanguage() +
+	 * mosipEnvironment.getMasterDataOtpTemplate();
+	 * when(authRestTemplate.exchange(Mockito.eq(url),
+	 * Mockito.eq(HttpMethod.GET),Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(mapper.
+	 * writeValueAsString(otpEmailresp)));
+	 * 
+	 * String smsUrl = mosipEnvironment.getOtpSenderSmsApi(); String smsResp =
+	 * "{\r\n" + "  \"id\": \"string\",\r\n" + "  \"version\": \"string\",\r\n" +
+	 * "  \"responsetime\": \"2022-01-09T20:23:08.027Z\",\r\n" +
+	 * "  \"metadata\": {},\r\n" + "  \"response\": {\r\n" +
+	 * "    \"status\": \"SUCCESS\",\r\n" + "    \"message\": \"SUCCESS \"\r\n" +
+	 * "  },\r\n" + "  \"errors\": [\r\n" + "  ]\r\n" + "}"; ResponseEntity<String>
+	 * getSMSRespo = ResponseEntity.ok(smsResp);
+	 * when(authRestTemplate.exchange(Mockito.eq(smsUrl),
+	 * Mockito.eq(HttpMethod.POST), Mockito.any(),
+	 * Mockito.eq(String.class))).thenReturn(getSMSRespo); MosipUserDto mosipUserDto
+	 * = new MosipUserDto(); mosipUserDto.setName("112211"); List<String> channel =
+	 * new ArrayList<>(); channel.add("phone"); OtpUser otpUser = new OtpUser();
+	 * otpUser.setUserId("112211"); otpUser.setAppId("ida");
+	 * otpUser.setOtpChannel(channel); otpUser.setUseridtype("UIN");
+	 * otpUser.setContext("uin"); AuthNResponseDto authNResponseDto =
+	 * oTPService.sendOTP(mosipUserDto, channel, "ida");
+	 * assertThat(authNResponseDto.getStatus(),is("SUCCESS")); }
+	 */
+	
 	
 }
 

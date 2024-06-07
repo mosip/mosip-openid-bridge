@@ -35,7 +35,7 @@ public class AuthControllerTest {
 	/**
 	 * Test method for {//@link
 	 * io.mosip.kernel.auth.controller.AuthController#authenticateUseridPwd(io.mosip.kernel.auth.entities.LoginUser,
-	 * javax.servlet.http.HttpServletResponse)}. //@throws Exception
+	 * jakarta.servlet.http.HttpServletResponse)}. //@throws Exception
 	 */
 	// @Test
 	public void testAuthenticateUseridPwd() throws Exception {
@@ -56,7 +56,7 @@ public class AuthControllerTest {
 	/**
 	 * Test method for {//@link
 	 * io.mosip.kernel.auth.controller.AuthController#userIdOTP(io.mosip.kernel.auth.entities.UserOtp,
-	 * javax.servlet.http.HttpServletResponse)}.
+	 * jakarta.servlet.http.HttpServletResponse)}.
 	 */
 	// @Test
 	public void testUserIdOTP() {
@@ -66,7 +66,7 @@ public class AuthControllerTest {
 	/**
 	 * Test method for {//@link
 	 * io.mosip.kernel.auth.controller.AuthController#clientIdSecretKey(io.mosip.kernel.auth.entities.ClientSecret,
-	 * javax.servlet.http.HttpServletResponse)}.
+	 * jakarta.servlet.http.HttpServletResponse)}.
 	 */
 	// @Test
 	public void testClientIdSecretKey() {
@@ -75,8 +75,8 @@ public class AuthControllerTest {
 
 	/**
 	 * Test method for {//@link
-	 * io.mosip.kernel.auth.controller.AuthController#validateToken(javax.servlet.http.HttpServletRequest,
-	 * javax.servlet.http.HttpServletResponse)}.
+	 * io.mosip.kernel.auth.controller.AuthController#validateToken(jakarta.servlet.http.HttpServletRequest,
+	 * jakarta.servlet.http.HttpServletResponse)}.
 	 */
 	// @Test
 	public void testValidateToken() {
@@ -85,8 +85,8 @@ public class AuthControllerTest {
 
 	/**
 	 * Test method for {//@link
-	 * io.mosip.kernel.auth.controller.AuthController#retryToken(javax.servlet.http.HttpServletRequest,
-	 * javax.servlet.http.HttpServletResponse)}.
+	 * io.mosip.kernel.auth.controller.AuthController#retryToken(jakarta.servlet.http.HttpServletRequest,
+	 * jakarta.servlet.http.HttpServletResponse)}.
 	 */
 	// @Test
 	public void testRetryToken() {
@@ -95,8 +95,8 @@ public class AuthControllerTest {
 
 	/**
 	 * Test method for {//@link
-	 * io.mosip.kernel.auth.controller.AuthController#invalidateToken(javax.servlet.http.HttpServletRequest,
-	 * javax.servlet.http.HttpServletResponse)}.
+	 * io.mosip.kernel.auth.controller.AuthController#invalidateToken(jakarta.servlet.http.HttpServletRequest,
+	 * jakarta.servlet.http.HttpServletResponse)}.
 	 */
 	// @Test
 	public void testInvalidateToken() {

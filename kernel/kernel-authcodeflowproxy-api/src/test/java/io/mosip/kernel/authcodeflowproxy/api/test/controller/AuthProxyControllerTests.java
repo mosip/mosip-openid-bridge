@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +78,7 @@ import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 @AutoConfigureMockMvc
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(SpringRunner.class)
-@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*", "com.sun.org.apache.xalan.*" })
+@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*", "com.sun.org.apache.xalan.*", "javax.crypto.*" })
 @PrepareForTest(Algorithm.class)
 public class AuthProxyControllerTests {
 

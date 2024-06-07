@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -220,7 +220,7 @@ public class LoginServiceImpl implements LoginServiceV2 {
 			List<ServiceError> validationErrorList = ExceptionUtils.getServiceErrorList(responseBody);
 
 			if (!validationErrorList.isEmpty()) {
-				throw new AuthRestException(validationErrorList, e.getStatusCode());
+				throw new AuthRestException(validationErrorList, HttpStatus.valueOf(e.getStatusCode().value()));
 			} else {
 				throw new ServiceException(Errors.REST_EXCEPTION.getErrorCode(), e.getResponseBodyAsString());
 			}
@@ -230,7 +230,7 @@ public class LoginServiceImpl implements LoginServiceV2 {
 		List<ServiceError> validationErrorList = ExceptionUtils.getServiceErrorList(responseBody);
 
 		if (!validationErrorList.isEmpty()) {
-			throw new AuthRestException(validationErrorList, response.getStatusCode());
+			throw new AuthRestException(validationErrorList, HttpStatus.valueOf(response.getStatusCode().value()));
 		}
 		ResponseWrapper<?> responseObject;
 		MosipUserDto mosipUserDto;

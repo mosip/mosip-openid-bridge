@@ -5,6 +5,7 @@ package io.mosip.kernel.auth.defaultimpl.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import io.mosip.kernel.auth.defaultimpl.service.TokenGenerationService;
@@ -20,6 +21,7 @@ import io.mosip.kernel.openid.bridge.api.service.AuthService;
 @Component
 public class TokenGenerationServiceImpl implements TokenGenerationService {
 
+	@Lazy
 	@Autowired
 	AuthService authService;
 
