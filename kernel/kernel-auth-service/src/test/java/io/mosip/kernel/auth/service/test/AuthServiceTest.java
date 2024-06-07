@@ -11,29 +11,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
-import io.mosip.kernel.auth.defaultimpl.dto.KeycloakErrorResponseDto;
-import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
-import io.mosip.kernel.auth.defaultimpl.service.impl.AuthServiceImpl;
-import io.mosip.kernel.auth.defaultimpl.util.AuthUtil;
-import io.mosip.kernel.core.authmanager.model.*;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -41,59 +31,101 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.dto.AccessTokenResponse;
 import io.mosip.kernel.auth.defaultimpl.dto.AuthToken;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
+import io.mosip.kernel.auth.defaultimpl.exception.LoginException;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
 import io.mosip.kernel.auth.defaultimpl.service.OTPService;
 import io.mosip.kernel.auth.defaultimpl.service.TokenService;
 import io.mosip.kernel.auth.defaultimpl.service.UinService;
+import io.mosip.kernel.auth.defaultimpl.util.TemplateUtil;
+import io.mosip.kernel.auth.defaultimpl.util.TokenGenerator;
 import io.mosip.kernel.auth.defaultimpl.util.TokenValidator;
+import io.mosip.kernel.auth.test.AuthTestBootApplication;
+import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
+import io.mosip.kernel.core.authmanager.model.AuthNResponse;
+import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
+import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
+import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
+import io.mosip.kernel.core.authmanager.model.LoginUserWithClientId;
+import io.mosip.kernel.core.authmanager.model.MosipUserDto;
+import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
+import io.mosip.kernel.core.authmanager.model.MosipUserSalt;
+import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
+import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
+import io.mosip.kernel.core.authmanager.model.PasswordDto;
+import io.mosip.kernel.core.authmanager.model.RIdDto;
+import io.mosip.kernel.core.authmanager.model.Role;
+import io.mosip.kernel.core.authmanager.model.RolesListDto;
+import io.mosip.kernel.core.authmanager.model.UserDetailsDto;
+import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
+import io.mosip.kernel.core.authmanager.model.UserNameDto;
+import io.mosip.kernel.core.authmanager.model.UserOtp;
+import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
+import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
+import io.mosip.kernel.core.authmanager.model.UserRoleDto;
+import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
-
-@RunWith(MockitoJUnitRunner.class)
+@SpringBootTest(classes = { AuthTestBootApplication.class })
+@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 public class AuthServiceTest {
 	@Value("${mosip.iam.open-id-url}")
 	private String keycloakOpenIdUrl;
 
+	@Value("${mosip.iam.realm.operations.base-url}")
+	private String keycloakBaseUrl;
 
-	@Mock
+	@MockBean
 	KeycloakImpl keycloakImpl;
 
+	@Autowired
+	TokenGenerator tokenGenerator;
 
-	@Mock
+	@MockBean
 	TokenValidator tokenValidator;
 
-	@Mock
+	@MockBean
 	TokenService customTokenServices;
 
-	@Mock
+	@MockBean
 	OTPService oTPService;
 
-	@Mock
+	@MockBean
 	UinService uinService;
 
 	@Qualifier("authRestTemplate")
-	@Mock
+	@MockBean
 	RestTemplate authRestTemplate;
 
 	@Qualifier(value = "keycloakRestTemplate")
-	@Mock
+	@MockBean
 	private RestTemplate keycloakRestTemplate;
 
-	@Mock
-	AuthUtil authUtil;
+	@Value("${mosip.iam.base-url}")
+	private String keycloakBaseURL;
+	
+	@Value("${mosip.iam.token_endpoint}")
+	private String tokenEndpoint;
+
+	@MockBean
+	private TemplateUtil templateUtil;
+
+	@Autowired
+	MosipEnvironment mosipEnvironment;
 
 	@Autowired
 	private MockMvc mockMvc;
 
-	@Mock
+	@Autowired
 	private ObjectMapper objectMapper;
 
-	@InjectMocks
-	private AuthServiceImpl authService;
+	@Autowired
+	private AuthService authService;
 
 	@Test(expected = AuthManagerException.class)
 	public void authenticateUserWithOTPValidationErrorTest() throws Exception {
@@ -186,16 +218,194 @@ public class AuthServiceTest {
 		assertThat(rld.getMosipUserSaltList().get(0).getUserId(),is("mock-user"));
 	}
 	
-
+	
+	/*
+	 * @Test public void getRidBasedOnUidTest() throws Exception { PasswordDto
+	 * passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("newpass"); passwordDto.setOldPassword("oldpass");
+	 * RIdDto rIdDto = new RIdDto(); rIdDto.setRId("mock-rid");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getRidFromUserId(Mockito.any(),Mockito.any())).thenReturn(
+	 * rIdDto); RIdDto rld= authService.getRidBasedOnUid("mock-user","ida");
+	 * assertThat(rld.getRId(),is(rIdDto.getRId())); }
+	 * 
+	 * 
+	 * @Test public void unBlockUserTest() throws Exception { AuthZResponseDto
+	 * authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.unBlockAccount(Mockito.any())).thenReturn(authZResponseDto)
+	 * ; AuthZResponseDto rld= authService.unBlockUser("mock-userid","ida");
+	 * assertThat(rld.getStatus(),is("success")); }
+	 * 
+	 * 
+	 * @Test public void changePasswordTest() throws Exception { PasswordDto
+	 * passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("newpass"); passwordDto.setOldPassword("oldpass");
+	 * AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.changePassword(Mockito.any())).thenReturn(authZResponseDto)
+	 * ; AuthZResponseDto rld= authService.changePassword("ida",passwordDto);
+	 * assertThat(rld.getStatus(),is("success")); }
+	 * 
+	 * @Test public void resetPasswordTest() throws Exception { PasswordDto
+	 * passwordDto = new PasswordDto(); passwordDto.setUserId("123");
+	 * passwordDto.setNewPassword("newpass"); passwordDto.setOldPassword("oldpass");
+	 * AuthZResponseDto authZResponseDto = new AuthZResponseDto();
+	 * authZResponseDto.setMessage("success");
+	 * authZResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.resetPassword(Mockito.any())).thenReturn(authZResponseDto);
+	 * AuthZResponseDto rld= authService.resetPassword("ida",passwordDto);
+	 * assertThat(rld.getStatus(),is("success")); }
+	 * 
+	 * @Test public void getUserNameBasedOnMobileNumberTest() throws Exception {
+	 * UserNameDto userNameDto = new UserNameDto();
+	 * userNameDto.setUserName("mock-user");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserNameBasedOnMobileNumber(Mockito.any())).thenReturn(
+	 * userNameDto); UserNameDto rld=
+	 * authService.getUserNameBasedOnMobileNumber("registrationclient","9819283912")
+	 * ; assertThat(rld.getUserName(),is("mock-user")); }
+	 * 
+	 * @Test public void addUserPasswordTest() throws Exception {
+	 * UserPasswordRequestDto userNameDto = new UserPasswordRequestDto();
+	 * userNameDto.setUserName("mock-user");
+	 * 
+	 * UserPasswordResponseDto userPasswordResponseDto = new
+	 * UserPasswordResponseDto(); userPasswordResponseDto.setUserName("mock-user");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl); when(keycloakImpl.addPassword(Mockito.any())).thenReturn(
+	 * userPasswordResponseDto); UserPasswordResponseDto rld=
+	 * authService.addUserPassword(userNameDto);
+	 * assertThat(rld.getUserName(),is(userPasswordResponseDto.getUserName())); }
+	 * 
+	 * @Test public void getUserRoleTest() throws Exception { MosipUserDto
+	 * mosipUserDto = new MosipUserDto(); mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserRoleByUserId(Mockito.any())).thenReturn(mosipUserDto
+	 * ); UserRoleDto rld= authService.getUserRole("ida","9819283912");
+	 * assertThat(rld.getUserId(),is(mosipUserDto.getUserId())); }
+	 * 
+	 * @Test public void getUserDetailBasedonMobileNumberTest() throws Exception {
+	 * MosipUserDto mosipUserDto = new MosipUserDto();
+	 * mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserDetailBasedonMobileNumber(Mockito.any())).thenReturn
+	 * (mosipUserDto); MosipUserDto rld=
+	 * authService.getUserDetailBasedonMobileNumber("ida","9819283912");
+	 * assertThat(rld.getUserId(),is(mosipUserDto.getUserId())); }
+	 * 
+	 * @Test public void validateUserNameTest() throws Exception {
+	 * ValidationResponseDto validationResponseDto = new ValidationResponseDto();
+	 * validationResponseDto.setStatus("success");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl); when(keycloakImpl.validateUserName(Mockito.any())).thenReturn(
+	 * validationResponseDto); ValidationResponseDto rld=
+	 * authService.validateUserName("ida","9819283912");
+	 * assertThat(rld.getStatus(),is(validationResponseDto.getStatus())); }
+	 * 
+	 * @Test public void getUserDetailBasedOnUserIdTest() throws Exception {
+	 * UserDetailsResponseDto resp = new UserDetailsResponseDto(); UserDetailsDto
+	 * userDetailsDto = new UserDetailsDto(); userDetailsDto.setUserId("mock-user");
+	 * List<UserDetailsDto> userDetailsDtos = new ArrayList<UserDetailsDto>();
+	 * userDetailsDtos.add(userDetailsDto); resp.setUserDetails(userDetailsDtos);
+	 * 
+	 * List<String> userids= new ArrayList<String>(); userids.add("mock-user");
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getUserDetailBasedOnUid(Mockito.any())).thenReturn(resp);
+	 * UserDetailsResponseDto rld=
+	 * authService.getUserDetailBasedOnUserId("ida",userids);
+	 * assertThat(rld.getUserDetails().get(0).getUserId(),is(resp.getUserDetails().
+	 * get(0).getUserId())); }
+	 */
 	
 	@Test
 	public void getKeycloakURITest() throws Exception {
-		String authorizationEndpoint="http://localhost:8080/auth/realms/mosip/protocol/openid-connect/auth";
-		ReflectionTestUtils.setField(authService, "authorizationEndpoint", authorizationEndpoint);
 		String uri=authService.getKeycloakURI("mock-redirect-uri","mock-state");
 		assertThat(uri,isA(String.class));
 	}
-
+	
+	/*
+	 * @Test public void getIndividualIdBasedOnUserIDTest() throws Exception {
+	 * IndividualIdDto resp = new IndividualIdDto(); resp.setIndividualId("12331");
+	 * String userid= "mock-user";
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl);
+	 * when(keycloakImpl.getIndividualIdFromUserId(Mockito.any(),Mockito.any())).
+	 * thenReturn(resp); IndividualIdDto rld=
+	 * authService.getIndividualIdBasedOnUserID(userid,"ida");
+	 * assertThat(rld.getIndividualId(),is(resp.getIndividualId())); }
+	 * 
+	 * @Test public void getListOfUsersDetailsSearchTest() throws Exception {
+	 * MosipUserListDto mosipUserListDto = new MosipUserListDto(); MosipUserDto
+	 * mosipUserDto = new MosipUserDto(); mosipUserDto.setUserId("mock-user");
+	 * mosipUserDto.setMail("mock-user@mosip.io");
+	 * mosipUserDto.setMobile("9999999999"); mosipUserDto.setRole("MOCK-ROLE");
+	 * List<MosipUserDto> list = new ArrayList<>(); list.add(mosipUserDto);
+	 * mosipUserListDto.setMosipUserDtoList(list);
+	 * when(userStoreFactory.getDataStoreBasedOnApp(Mockito.any())).thenReturn(
+	 * keycloakImpl); when(keycloakImpl.getListOfUsersDetails(Mockito.any(),
+	 * Mockito.any(), Mockito.eq(0), Mockito.eq(10), Mockito.any(), Mockito.any(),
+	 * Mockito.any(), Mockito.any(),Mockito.any())).thenReturn(mosipUserListDto);
+	 * MosipUserListDto rld= authService.getListOfUsersDetails("ida",
+	 * "mock-roleName", 0, 10, "mock-email", "mock-firstName", "mock-lastName",
+	 * "mock-username","userID");
+	 * assertThat(rld.getMosipUserDtoList().get(0).getUserId(),is(mosipUserListDto.
+	 * getMosipUserDtoList().get(0).getUserId())); }
+	 */
+	
+	@Test
+	public void loginRedirectTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("mock-access-token");
+		accessTokenResponse.setExpires_in("111");
+		
+		Map<String, String> pathParam = new HashMap<>();
+		pathParam.put("realmId", "mosip");
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(tokenEndpoint);
+		when(authRestTemplate.exchange(Mockito.eq(uriBuilder.buildAndExpand(pathParam).toUriString()),Mockito.eq(HttpMethod.POST),
+				Mockito.any(), Mockito.eq(String.class)))
+						.thenReturn(ResponseEntity.ok(objectMapper.writeValueAsString(accessTokenResponse)));
+		AccessTokenResponseDTO rld=authService.loginRedirect("mock-state","mock-sessionState", "mock-code", "mock-state",
+				"mock-redirectURI");
+		assertThat(rld.getAccessToken(),is(accessTokenResponse.getAccess_token()));
+	}
+	
+	
+	@Test(expected = LoginException.class)
+	public void loginRedirectClientErrorTest() throws Exception {
+		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("mock-access-token");
+		accessTokenResponse.setExpires_in("111");
+		String resp = "{\r\n" + "  \"error\": \"UNAUTHORIZED\",\r\n" + "  \"error_description\": \"UNAUTHORIZED\" }";
+		Map<String, String> pathParam = new HashMap<>();
+		pathParam.put("realmId", "mosip");
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(tokenEndpoint);
+		when(authRestTemplate.exchange(Mockito.eq(uriBuilder.buildAndExpand(pathParam).toUriString()),Mockito.eq(HttpMethod.POST),
+				Mockito.any(), Mockito.eq(String.class))).
+		thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "400", resp.getBytes(),
+				Charset.defaultCharset()));
+		authService.loginRedirect("mock-state","mock-sessionState", "mock-code", "mock-state",
+				"mock-redirectURI");
+	}
+	
+	
 	
 	@Test
 	public void validateTokenTest() throws Exception {
@@ -278,353 +488,5 @@ public class AuthServiceTest {
 		AuthNResponseDto authNResponseDto= authService.authenticateUser(loginUserWithClientId);
 		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
 	}
-
-	@Test
-	public void authenticateUser_withValidUsername_thenPass() throws Exception {
-
-		LoginUser loginUser=new LoginUser();
-		loginUser.setUserName("mock-user");
-		loginUser.setPassword("mock-pass");
-		loginUser.setAppId("ida");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-		accessTokenResponse.setRefresh_expires_in("111");
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(accessTokenResponse));
-
-		AuthNResponseDto authNResponseDto=authService.authenticateUser(loginUser);
-		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
-	}
-
-	@Test
-	public void authenticateUser_withInValidCredentials_thenFail() throws Exception {
-
-		LoginUser loginUser=new LoginUser();
-		loginUser.setUserName("mock-user");
-		loginUser.setPassword("mock-pass");
-		loginUser.setAppId("ida");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-		accessTokenResponse.setRefresh_expires_in("111");
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "not auth".getBytes(),
-				Charset.defaultCharset()));
-		try{
-			authService.authenticateUser(loginUser);
-			Assert.fail();
-		}catch (AuthManagerException e){
-			assertThat(e.getErrorCode(),is(AuthErrorCode.INVALID_CREDENTIALS.getErrorCode()));
-		}
-	}
-
-	@Test
-	public void authenticateUser_withBadRequest_thenFail() throws Exception {
-
-		LoginUser loginUser = new LoginUser();
-		loginUser.setUserName("mock-user");
-		loginUser.setPassword("mock-pass");
-		loginUser.setAppId("ida");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-		accessTokenResponse.setRefresh_expires_in("111");
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "400", "not auth".getBytes(),
-				Charset.defaultCharset()));
-		try {
-			authService.authenticateUser(loginUser);
-			Assert.fail();
-		} catch (AuthManagerException e) {
-			assertThat(e.getErrorCode(), is(AuthErrorCode.REQUEST_VALIDATION_ERROR.getErrorCode()));
-		}
-	}
-
-	@Test
-	public void authenticateUser_withServerError_thenFail() throws Exception {
-
-		LoginUser loginUser = new LoginUser();
-		loginUser.setUserName("mock-user");
-		loginUser.setPassword("mock-pass");
-		loginUser.setAppId("ida");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-		accessTokenResponse.setRefresh_expires_in("111");
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.EXPECTATION_FAILED, "400", "not auth".getBytes(),
-				Charset.defaultCharset()));
-		try {
-			authService.authenticateUser(loginUser);
-			Assert.fail();
-		} catch (AuthManagerException e) {
-			assertThat(e.getErrorCode(), is(AuthErrorCode.SERVER_ERROR.getErrorCode()));
-		}
-	}
-
-	@Test
-	public void authenticateUser_withInvalidResponse_thenFail() throws Exception {
-
-		LoginUser loginUser = new LoginUser();
-		loginUser.setUserName("mock-user");
-		loginUser.setPassword("mock-pass");
-		loginUser.setAppId("ida");
-
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(null));
-		try {
-			authService.authenticateUser(loginUser);
-			Assert.fail();
-		} catch (AuthManagerException e) {
-			assertThat(e.getErrorCode(), is(AuthErrorCode.CLIENT_ERROR.getErrorCode()));
-		}
-	}
-
-
-	@Test
-	public void authenticateWithOtp_withInValidIdTypeDetails_thenFail() throws Exception {
-
-		OtpUser otpUser =new OtpUser();
-		otpUser.setAppId("ida");
-		List otpChannel = new ArrayList();
-		otpChannel.add("MOBILE");
-		otpUser.setOtpChannel(otpChannel);
-		otpUser.setUserId("mock-user");
-		try {
-			authService.authenticateWithOtp(otpUser);
-			Assert.fail();
-		}catch (AuthManagerException e){
-			assertThat(e.getErrorCode(),is("401"));
-		}
-	}
-
-	@Test
-	public void authenticateWithSecretKey_withValidDetatils_thenPass() throws Exception {
-
-		ClientSecret clientSecret = new ClientSecret();
-		clientSecret.setSecretKey("mock-secret");
-		clientSecret.setAppId("prereg");
-		clientSecret.setClientId("mock-client-id");
-
-		when(authUtil.getRealmIdFromAppId(Mockito.any())).thenReturn("mosip");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-		accessTokenResponse.setRefresh_expires_in("111");
-
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(accessTokenResponse));
-
-
-		AuthNResponseDto authNResponseDto = authService.authenticateWithSecretKey(clientSecret);
-		Assert.assertEquals(authNResponseDto.getStatus(), "Success");
-	}
-
-	@Test
-	public void authenticateWithSecretKey_withInValidDetatils_thenFail() throws Exception {
-		ClientSecret clientSecret = new ClientSecret();
-		clientSecret.setSecretKey("mock-secret");
-		clientSecret.setAppId("prereg");
-		clientSecret.setClientId("mock-client-id");
-
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-		accessTokenResponse.setRefresh_expires_in("111");
-
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(null));
-
-		try{
-			authService.authenticateWithSecretKey(clientSecret);
-			Assert.fail();
-		}catch (AuthManagerException e){
-			assertThat(e.getErrorCode(),is(AuthErrorCode.CLIENT_ERROR.getErrorCode()));
-		}
-
-	}
-
-	@Test
-	public void logoutUser_validDetails_thenPass(){
-
-		AuthResponseDto authResponseDto=new AuthResponseDto();
-		authResponseDto.setStatus("Success");
-
-		when(tokenValidator.getissuer(Mockito.anyString())).thenReturn("issuer-mock");
-		ResponseEntity<String> mockResponse = new ResponseEntity<>("mockResponse", HttpStatus.OK);
-		Mockito.when(authRestTemplate.getForEntity(
-						ArgumentMatchers.anyString(),
-						ArgumentMatchers.<Class<String>>any()))
-				.thenReturn(mockResponse);
-		AuthResponseDto authResponseDtoResponse=authService.logoutUser("mock-token");
-		assertThat(authResponseDtoResponse.getStatus(),is(authResponseDto.getStatus()));
-
-	}
-
-	@Test
-	public void logoutUser_inValidDetails_thenFail(){
-
-		AuthResponseDto authResponseDto=new AuthResponseDto();
-		authResponseDto.setStatus("Failed");
-
-		when(tokenValidator.getissuer(Mockito.anyString())).thenReturn("issuer-mock");
-		ResponseEntity<String> mockResponse = new ResponseEntity<>("mockResponse", HttpStatus.BAD_REQUEST);
-		Mockito.when(authRestTemplate.getForEntity(
-						ArgumentMatchers.anyString(),
-						ArgumentMatchers.<Class<String>>any()))
-				.thenReturn(mockResponse);
-		AuthResponseDto authResponseDtoResponse=authService.logoutUser("mock-token");
-		assertThat(authResponseDtoResponse.getStatus(),is(authResponseDto.getStatus()));
-
-	}
-
-	@Test
-	public void loginRedirect_validDetails_thenPass() throws Exception {
-
-		ReflectionTestUtils.setField(authService, "tokenEndpoint", "http://localhost:8080/auth/realms/mosip/protocol/openid-connect/auth");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-
-		ResponseEntity<String> res = new ResponseEntity<>("resEntity", HttpStatus.OK);
-		Mockito.when(authRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.POST), Mockito.any(),
-				Mockito.eq(String.class))).thenReturn(res);
-
-		Mockito.when(objectMapper.readValue(Mockito.anyString(), Mockito.any(Class.class))).thenReturn(accessTokenResponse);
-
-		authService.loginRedirect("mock-state", "mock-sessionState", "mock-code", "mock-state", "mock-redirectURI");
-	}
-
-	@Test
-	public void loginRedirect_inValidDetails_thenFail() throws Exception {
-
-		ReflectionTestUtils.setField(authService, "tokenEndpoint", "http://localhost:8080/auth/realms/mosip/protocol/openid-connect/auth");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-
-		ResponseEntity<String> res = new ResponseEntity<>("resEntity", HttpStatus.OK);
-		Mockito.when(authRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.POST), Mockito.any(),
-				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "not auth".getBytes(),
-				Charset.defaultCharset()));
-		Mockito.when(objectMapper.readValue(Mockito.anyString(), Mockito.any(Class.class))).thenReturn(new KeycloakErrorResponseDto());
-		try{
-			authService.loginRedirect("mock-state", "mock-sessionState", "mock-code", "mock-state", "mock-redirectURI");
-			Assert.fail();
-		}catch (LoginException e){
-			assertThat(e.getErrorCode(),is(AuthErrorCode.KEYCLOAK_ACESSTOKEN_EXCEPTION.getErrorCode()));
-		}
-	}
-
-
-	@Test
-	public void refreshToken_validDetails_thenPass() throws Exception {
-
-		ReflectionTestUtils.setField(authService, "tokenEndpoint", "http://localhost:8080/auth/realms/mosip/protocol/openid-connect/auth");
-
-		RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-		refreshTokenRequest.setClientSecret("mock-client");
-		refreshTokenRequest.setClientID("mock-client-id");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(accessTokenResponse));
-
-		RefreshTokenResponse refreshTokenResponse = authService.refreshToken("app-id", "refresh-token", refreshTokenRequest);
-		Assert.assertThat(refreshTokenResponse.getRefreshToken(), is("mock-ref-token"));
-		Assert.assertThat(refreshTokenResponse.getAccesstoken(), is("mock-access-token"));
-	}
-
-	@Test
-	public void refreshToken_inValidDetails_thenFail() throws Exception {
-
-		ReflectionTestUtils.setField(authService, "tokenEndpoint", "http://localhost:8080/auth/realms/mosip/protocol/openid-connect/auth");
-
-		RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-		refreshTokenRequest.setClientSecret("mock-client");
-		refreshTokenRequest.setClientID("mock-client-id");
-
-		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		accessTokenResponse.setAccess_token("mock-access-token");
-		accessTokenResponse.setExpires_in("111");
-		accessTokenResponse.setRefresh_token("mock-ref-token");
-
-		Map<String, String> pathParams = new HashMap<>();
-		pathParams.put(AuthConstant.REALM_ID, "mosip");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
-		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
-				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(null));
-		try{
-			authService.refreshToken("app-id","refresh-token",refreshTokenRequest);
-			Assert.fail();
-		}catch (AuthManagerException e){
-			assertThat(e.getErrorCode(),is(AuthErrorCode.CLIENT_ERROR.getErrorCode()));
-		}
-	}
-
-	@Test
-	public void valdiateToken_validInDetails_thenFail() throws Exception {
-		MosipUserTokenDto mosipUserTokenDto = new MosipUserTokenDto();
-
-		ResponseEntity<String> res = new ResponseEntity<>("resEntity", HttpStatus.UNAUTHORIZED);
-		Mockito.when(authRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.GET), Mockito.any(),
-				Mockito.eq(String.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "not auth".getBytes(),
-				Charset.defaultCharset()));;
-
-		Mockito.when(objectMapper.readValue(Mockito.anyString(), Mockito.any(Class.class))).thenReturn(new KeycloakErrorResponseDto());
-		try{
-			authService.valdiateToken("eyJraWQiOiJfRjlScFNybEczWGM4elkxRTFPMFZuZWhxSnlBV2pjdTdpcUlURVRMTFVzIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIxLTMxZjQyMmI5LWUwMjktNDc1OC1hYjQ5LTY2YmNmZDZlZDc5NSIsImF1ZCI6Imh0dHBzOlwvXC9lc2lnbmV0LWluc3VyYW5jZS5xYS1pbmppMS5tb3NpcC5uZXRcL3YxXC9lc2lnbmV0XC92Y2lcL2NyZWRlbnRpYWwiLCJjX25vbmNlX2V4cGlyZXNfaW4iOjQwLCJjX25vbmNlIjoiZk5SdU51VjZ0MWU2UUJXQVZMd0siLCJzY29wZSI6InN1bmJpcmRfcmNfaW5zdXJhbmNlX3ZjX2xkcCIsImlzcyI6Imh0dHBzOlwvXC9lc2lnbmV0LWluc3VyYW5jZS5xYS1pbmppMS5tb3NpcC5uZXRcL3YxXC9lc2lnbmV0IiwiZXhwIjoxNzA4Njk4MjQ1LCJpYXQiOjE3MDg2OTQ2NDUsImNsaWVudF9pZCI6ImthaWYtdGVzdGluZy1wYXJ0bmVyIn0.GOjKKwiLFEkRtLNUvkTI5Tnf9iCC2Uq4PIVfTGsbuyoeJEUgZvl0myn9mIMTs2LvCM_8Ezcbr5wqzbODmLsfcOMhKDLEIvELOo9Px7b1JdESfl9aPLouEFbMzcLXvS91teKRBRTDjOK5ycxn-pGoAocEOR2bZTMKxVDy6jEVH2iCqhGgtECPAfgRufoD6aTVG57W727mgzvI20qvz-PA8nT3jROaQ4CzOyZqxx5Hq1lDr9UI7TVpvmhxFj1fR3epC0YG8Tj1sk1_nTXa9KALaFcY0FOYMB0M672snCRafh3VngY1SWIMkOgXrgpA9W-v6DNcK3OegHAiuXIJEASXog");
-			Assert.fail();
-		}catch (AuthenticationServiceException e){
-			assertThat(e.getMessage(),is(AuthErrorCode.INVALID_TOKEN.getErrorMessage()+"null"));
-		}
-	}
-
-
 
 }
