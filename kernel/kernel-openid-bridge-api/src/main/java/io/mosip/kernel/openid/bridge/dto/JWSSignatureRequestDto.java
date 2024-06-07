@@ -1,6 +1,6 @@
 package io.mosip.kernel.openid.bridge.dto;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
