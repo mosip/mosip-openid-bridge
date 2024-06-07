@@ -4,15 +4,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.www.NonceExpiredException;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -59,6 +55,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 /**
  * Controller APIs for Authentication and Authorization
@@ -94,6 +94,7 @@ public class AuthController {
 	 * Autowired reference for {@link AuthService}
 	 */
 
+	@Lazy
 	@Autowired
 	private AuthService authService;
 
