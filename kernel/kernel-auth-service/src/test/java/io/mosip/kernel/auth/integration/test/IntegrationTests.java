@@ -106,6 +106,9 @@ public class IntegrationTests {
 	@Value("${mosip.iam.base-url}")
 	private String keycloakBaseURL;
 
+	@Value("${mosip.iam.userinfo_endpoint}")
+	private String keycloakUserInfoUrl;
+
 	@MockBean
 	private TemplateUtil templateUtil;
 
@@ -1161,9 +1164,7 @@ public class IntegrationTests {
 		mosipUserDto.setRole("MOCK-ROLE");
 		responseWrapper.setResponse(mosipUserDto);
 
-		StringBuilder urlBuilder = new StringBuilder().append(keycloakBaseURL).append("/auth/realms/").append("mosip")
-				.append("/protocol/openid-connect/userinfo");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(urlBuilder.toString());
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakUserInfoUrl);
 		String resp = "{\r\n" + "  \"error\": \"UNAUTHORIZED\",\r\n" + "  \"error_description\": \"UNAUTHORIZED\" }";
 
 		when(authRestTemplate.exchange(Mockito.eq(uriComponentsBuilder.toUriString()), Mockito.eq(HttpMethod.GET),
