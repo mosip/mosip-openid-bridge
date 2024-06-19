@@ -520,7 +520,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public MosipUserDto valdiateToken(String token) {
-		Map<String, String> pathparams = new HashMap<>();
+
 		if (EmptyCheckUtils.isNullEmpty(token)) {
 			throw new AuthenticationServiceException(AuthErrorCode.INVALID_TOKEN.getErrorMessage());
 		}
@@ -545,7 +545,7 @@ public class AuthServiceImpl implements AuthService {
 
 		HttpEntity<String> httpRequest = new HttpEntity<>(headers);
 		try {
-			response = authRestTemplate.exchange(uriComponentsBuilder.buildAndExpand(pathparams).toUriString(),
+			response = authRestTemplate.exchange(uriComponentsBuilder.buildAndExpand(pathParams).toUriString(),
 					HttpMethod.GET, httpRequest, String.class);
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			LOGGER.error("Token validation failed for accessToken {}", accessToken);
