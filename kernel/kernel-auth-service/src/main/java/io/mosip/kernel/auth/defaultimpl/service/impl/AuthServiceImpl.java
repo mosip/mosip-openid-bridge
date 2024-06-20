@@ -176,6 +176,9 @@ public class AuthServiceImpl implements AuthService {
 	@Value("${mosip.iam.base-url}")
 	private String keycloakBaseURL;
 
+	@Value("${mosip.iam.userinfo_endpoint:}")
+	private String keycloakUserInfoUrl;
+
 	@Autowired
 	private AuthUtil authUtil;
 
@@ -517,7 +520,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public MosipUserDto valdiateToken(String token) {
-		Map<String, String> pathparams = new HashMap<>();
+
 		if (EmptyCheckUtils.isNullEmpty(token)) {
 			throw new AuthenticationServiceException(AuthErrorCode.INVALID_TOKEN.getErrorMessage());
 		}
@@ -528,9 +531,11 @@ public class AuthServiceImpl implements AuthService {
 
 		ResponseEntity<String> response = null;
 		MosipUserDto mosipUserDto = null;
-		StringBuilder urlBuilder = new StringBuilder().append(keycloakBaseURL).append("/auth/realms/").append(realm)
-				.append("/protocol/openid-connect/userinfo");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(urlBuilder.toString());
+
+		Map<String, String> pathParams = new HashMap<>();
+		pathParams.put(AuthConstant.REALM_ID, realm);
+
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakUserInfoUrl);
 		LOGGER.info("validate token request to " + uriComponentsBuilder.toUriString());
 
 		HttpHeaders headers = new HttpHeaders();
@@ -540,7 +545,7 @@ public class AuthServiceImpl implements AuthService {
 
 		HttpEntity<String> httpRequest = new HttpEntity<>(headers);
 		try {
-			response = authRestTemplate.exchange(uriComponentsBuilder.buildAndExpand(pathparams).toUriString(),
+			response = authRestTemplate.exchange(uriComponentsBuilder.buildAndExpand(pathParams).toUriString(),
 					HttpMethod.GET, httpRequest, String.class);
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			LOGGER.error("Token validation failed for accessToken {}", accessToken);
