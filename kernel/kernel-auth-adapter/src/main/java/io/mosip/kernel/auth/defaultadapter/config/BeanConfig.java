@@ -21,11 +21,9 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerClientAutoConfiguration;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -33,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
@@ -75,6 +74,9 @@ public class BeanConfig {
 
 	@Value("${mosip.kernel.http.plain.restTemplate.total-max-connections:100}")
 	private Integer plainRestTemplateTotalMaxConnections;
+
+	@Value("${mosip.kernel.webclient.exchange.strategy.max-in-memory-size.mbs:0}")
+	private Integer exchangeStrategyMaxMemory;
 
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
@@ -226,8 +228,23 @@ public class BeanConfig {
 	public WebClient selfTokenWebClient(@Autowired @Qualifier("plainWebClient") WebClient plainWebClient,
 			@Autowired TokenHolder<String> cachedTokenObject) {
 		String applName = getApplicationName();
-		return WebClient.builder().filter(new SelfTokenExchangeFilterFunction(environment, plainWebClient,
-				cachedTokenObject, tokenHelper, tokenValidationHelper, applName)).build();
+		
+		if (exchangeStrategyMaxMemory <= 0)
+			return WebClient.builder()
+							.filter(new SelfTokenExchangeFilterFunction(environment, plainWebClient,
+									cachedTokenObject, tokenHelper, tokenValidationHelper, applName))
+							.build();
+		// Added ExchangeStrategies to increase the buffer size for requests between service.
+		// Found size limitation issue in ID Repo service which is invoking encrypt API of keymanager service.
+		int size = exchangeStrategyMaxMemory * 1024 * 1024;
+		ExchangeStrategies strategies = ExchangeStrategies.builder()
+										.codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
+										.build();
+		return WebClient.builder()
+						.filter(new SelfTokenExchangeFilterFunction(environment, plainWebClient,
+								cachedTokenObject, tokenHelper, tokenValidationHelper, applName))
+						.exchangeStrategies(strategies)
+						.build();
 	}
 
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
