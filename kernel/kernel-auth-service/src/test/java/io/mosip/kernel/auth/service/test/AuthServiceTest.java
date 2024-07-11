@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
+import io.mosip.kernel.auth.defaultimpl.util.AuthUtil;
+import io.mosip.kernel.core.authmanager.model.*;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -20,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,29 +50,6 @@ import io.mosip.kernel.auth.defaultimpl.util.TemplateUtil;
 import io.mosip.kernel.auth.defaultimpl.util.TokenGenerator;
 import io.mosip.kernel.auth.defaultimpl.util.TokenValidator;
 import io.mosip.kernel.auth.test.AuthTestBootApplication;
-import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
-import io.mosip.kernel.core.authmanager.model.AuthNResponse;
-import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
-import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
-import io.mosip.kernel.core.authmanager.model.LoginUserWithClientId;
-import io.mosip.kernel.core.authmanager.model.MosipUserDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserSalt;
-import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
-import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
-import io.mosip.kernel.core.authmanager.model.RIdDto;
-import io.mosip.kernel.core.authmanager.model.Role;
-import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
-import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserRoleDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
 import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
@@ -101,6 +83,9 @@ public class AuthServiceTest {
 	@Qualifier("authRestTemplate")
 	@MockBean
 	RestTemplate authRestTemplate;
+
+	@MockBean
+	AuthUtil authUtil;
 
 	@Qualifier(value = "keycloakRestTemplate")
 	@MockBean
@@ -454,6 +439,7 @@ public class AuthServiceTest {
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, "mosip");
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authUtil.getRealmIdFromAppId(Mockito.anyString())).thenReturn("mosip");
 		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
 				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenReturn(ResponseEntity.ok(accessTokenResponse));
 		LoginUserWithClientId loginUserWithClientId = new LoginUserWithClientId();
@@ -476,6 +462,7 @@ public class AuthServiceTest {
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, "mosip");
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakOpenIdUrl + "/token");
+		when(authUtil.getRealmIdFromAppId(Mockito.anyString())).thenReturn("mosip");
 		when(authRestTemplate.postForEntity(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toUriString()),
 				Mockito.any(), Mockito.eq(AccessTokenResponse.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401", "not auth".getBytes(),
 						Charset.defaultCharset()));
@@ -488,5 +475,74 @@ public class AuthServiceTest {
 		AuthNResponseDto authNResponseDto= authService.authenticateUser(loginUserWithClientId);
 		assertThat(authNResponseDto.getStatus(),is(AuthConstant.SUCCESS_STATUS));
 	}
+
+
+
+	@Test
+	public void authenticateUser_withValidDetails_thenPass() throws Exception {
+
+		AccessTokenResponse accessTokenResponse=new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("accessToken");
+		accessTokenResponse.setRefresh_token("refresh_token");
+		accessTokenResponse.setScope("openId");
+		accessTokenResponse.setExpires_in("111");
+		accessTokenResponse.setRefresh_expires_in("111");
+		when(authUtil.getRealmIdFromAppId(Mockito.anyString())).thenReturn("mosip");
+		when(authRestTemplate.postForEntity(Mockito.anyString(), Mockito.any(HttpEntity.class), Mockito.eq(AccessTokenResponse.class)))
+				.thenReturn(new ResponseEntity<>(accessTokenResponse, HttpStatus.OK));
+
+		LoginUser loginUser = new LoginUser(); // Populate loginUser fields
+		AuthNResponseDto result = authService.authenticateUser(loginUser);
+
+
+		Assert.assertNotNull(result);
+		Assert.assertEquals("accessToken", result.getToken()); // Adjust according to expected values
+
+	}
+
+	@Test
+	public void authenticateUser_withErrorResponse400_thenFail() throws Exception {
+
+		AccessTokenResponse accessTokenResponse=new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("accessToken");
+		accessTokenResponse.setRefresh_token("refresh_token");
+		accessTokenResponse.setScope("openId");
+		accessTokenResponse.setExpires_in("111");
+		accessTokenResponse.setRefresh_expires_in("111");
+		when(authUtil.getRealmIdFromAppId(Mockito.anyString())).thenReturn("mosip");
+		when(authRestTemplate.postForEntity(Mockito.anyString(), Mockito.any(HttpEntity.class), Mockito.eq(AccessTokenResponse.class)))
+				.thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "400"));
+
+		LoginUser loginUser = new LoginUser(); // Populate loginUser fields
+		try{
+			authService.authenticateUser(loginUser);
+		}catch (Exception e){
+			Assert.assertEquals(e.getMessage(), AuthErrorCode.REQUEST_VALIDATION_ERROR.getErrorMessage());
+		}
+
+	}
+
+	@Test
+	public void authenticateUser_withErrorResponse401_thenFail() throws Exception {
+
+		AccessTokenResponse accessTokenResponse=new AccessTokenResponse();
+		accessTokenResponse.setAccess_token("accessToken");
+		accessTokenResponse.setRefresh_token("refresh_token");
+		accessTokenResponse.setScope("openId");
+		accessTokenResponse.setExpires_in("111");
+		accessTokenResponse.setRefresh_expires_in("111");
+		when(authUtil.getRealmIdFromAppId(Mockito.anyString())).thenReturn("mosip");
+		when(authRestTemplate.postForEntity(Mockito.anyString(), Mockito.any(HttpEntity.class), Mockito.eq(AccessTokenResponse.class)))
+				.thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "401"));
+
+		LoginUser loginUser = new LoginUser(); // Populate loginUser fields
+		try{
+			authService.authenticateUser(loginUser);
+		}catch (Exception e){
+			Assert.assertEquals(e.getMessage(), AuthErrorCode.INVALID_CREDENTIALS.getErrorMessage());
+		}
+
+	}
+
 
 }
