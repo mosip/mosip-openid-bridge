@@ -1,17 +1,17 @@
 #!/bin/bash
-# Restart the kernel services
+# Restart the authmanager services
 
 if [ $# -ge 1 ] ; then
   export KUBECONFIG=$1
 fi
 
-function Restarting_kernel() {
+function Restarting_authmanager() {
   NS=kernel
   kubectl -n $NS rollout restart deploy
 
   kubectl -n $NS  get deploy -o name |  xargs -n1 -t  kubectl -n $NS rollout status
 
-  echo Restarted kernel services
+  echo Restarted authmanager services
   return 0
 }
 
@@ -21,4 +21,4 @@ set -o errexit   ## set -e : exit the script if any statement returns a non-true
 set -o nounset   ## set -u : exit the script if you try to use an uninitialised variable
 set -o errtrace  # trace ERR through 'time command' and other functions
 set -o pipefail  # trace ERR through pipes
-Restarting_kernel   # calling function
+Restarting_authmanager   # calling function
