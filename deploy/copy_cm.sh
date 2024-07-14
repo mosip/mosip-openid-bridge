@@ -4,7 +4,7 @@
 
 function copying_cm() {
   UTIL_URL=https://github.com/mosip/mosip-infra/blob/master/deployment/v3/utils/copy_cm_func.sh
-  COPY_UTIL=../copy_cm_func.sh
+  COPY_UTIL=./copy_cm_func.sh
   DST_NS=kernel
 
   wget -q $UTIL_URL -O copy_cm_func.sh && chmod +x copy_cm_func.sh
