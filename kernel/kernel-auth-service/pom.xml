@@ -29,7 +29,7 @@
 		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/verticle/**,**/spi/**,"**/proxy/**","**/ProxyAuthServiceImpl.java","**/ProxyOTPServiceImpl.java","**/dto/**","**/util/**","**/filter/**","**/intercepter/**","**/AuthBootApplication.java"</sonar.coverage.exclusions>
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**,"**/ProxyAuthServiceImpl.java","**/ProxyTokenGenerator.java"</sonar.cpd.exclusions>
 		
-		<apache.directory.api.version>2.0.0.AM2</apache.directory.api.version>
+		<apache.directory.api.version>2.0.1</apache.directory.api.version>
 
 	</properties>
 	<dependencyManagement>
