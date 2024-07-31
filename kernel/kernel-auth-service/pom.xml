@@ -8,7 +8,7 @@
 
 	<artifactId>kernel-auth-service</artifactId>
 	<packaging>jar</packaging>
-	<version>1.2.1-SNAPSHOT</version>
+	<version>1.3.0-B1-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
@@ -25,7 +25,7 @@
 		<maven.javadoc.version>3.2.0</maven.javadoc.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 
-		<kernel-openid-bridge-api.version>1.2.1-SNAPSHOT</kernel-openid-bridge-api.version>
+		<kernel-openid-bridge-api.version>1.3.0-B1-SNAPSHOT</kernel-openid-bridge-api.version>
 		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/verticle/**,**/spi/**,"**/proxy/**","**/ProxyAuthServiceImpl.java","**/ProxyOTPServiceImpl.java","**/dto/**","**/util/**","**/filter/**","**/intercepter/**","**/AuthBootApplication.java"</sonar.coverage.exclusions>
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**,"**/ProxyAuthServiceImpl.java","**/ProxyTokenGenerator.java"</sonar.cpd.exclusions>
 		
@@ -37,7 +37,7 @@
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-bom</artifactId>
-				<version>1.2.1-SNAPSHOT</version>
+				<version>1.3.0-B1-SNAPSHOT</version>
 				<type>pom</type>
 			    <scope>import</scope>
 			</dependency>
@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3.0-B1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
@@ -102,7 +102,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-templatemanager-velocity</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3.0-B1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3.0-B1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
