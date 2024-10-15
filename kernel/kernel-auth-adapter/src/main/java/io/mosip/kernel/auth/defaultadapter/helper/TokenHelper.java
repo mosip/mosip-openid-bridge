@@ -123,22 +123,20 @@ public class TokenHelper {
 		if (Objects.isNull(realm))
 			return null;
 		String tokenUrl = new StringBuilder(issuerInternalURI).append(realm).append(tokenPath).toString();
-		ClientResponse response = webClient.method(HttpMethod.POST)
-										   .uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())
-										   .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-										   .body(BodyInserters.fromFormData(valueMap))
-										   .exchange().block();
-		if (response !=null && response.statusCode() == HttpStatus.OK) {
-			ObjectNode responseBody = response.bodyToMono(ObjectNode.class).block();
-			String accessToken = null;
-			if(responseBody!=null)
-				accessToken = responseBody.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
+		ObjectNode response = webClient.post()
+		          .uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())
+		          .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+		          .body(BodyInserters.fromFormData(valueMap))
+		          .retrieve().bodyToMono(ObjectNode.class).block();
+		
+		if (response !=null && !response.isEmpty() ) {
+			String accessToken = response.get(AuthAdapterConstant.ACCESS_TOKEN).asText();			
 			if (Objects.nonNull(accessToken)) {
 				LOGGER.info("Found Token in response body and returning the Token(WebClient)");
 				return accessToken;
 			}
 		} 
-
+		
 		LOGGER.error("Error connecting to OIDC service (WebClient) {} or UNKNOWN Error.", AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 		return null;
 	}
