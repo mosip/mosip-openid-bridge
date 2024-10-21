@@ -45,7 +45,6 @@ public class SelfTokenExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private TokenValidationHelper tokenValidationHelper;
 
-	@Autowired
     private WebClient webClient;
 
     public SelfTokenExchangeFilterFunction(Environment environment, WebClient webClient,
