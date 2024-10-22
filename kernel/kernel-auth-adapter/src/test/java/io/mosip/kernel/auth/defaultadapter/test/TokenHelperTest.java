@@ -10,6 +10,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,9 +26,12 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodyUriSpec;
 import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
+import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import io.mosip.kernel.auth.defaultadapter.exception.AuthRestException;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
@@ -54,6 +58,9 @@ public class TokenHelperTest {
 	
 	@Autowired
 	private TokenHelper tokenHelper;
+
+	@Mock
+	private WebClient.ResponseSpec responseSpec;
 	
 	
 	private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
@@ -106,13 +113,15 @@ public class TokenHelperTest {
 	public void getClientTokenWebClientTest() throws Exception {
 		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{\"access_token\":\"mock-token\"}";
+		ObjectNode actualObj = (ObjectNode)mapper.readTree(resp);
 		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
 		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
-		when(webClient.method(HttpMethod.POST)).thenReturn(requestBodyUriSpec);
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
 		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodyUriSpec);
 		when(requestBodyUriSpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodyUriSpec);
 		when(requestBodyUriSpec.body(Mockito.any())).thenReturn(requestHeadersSpec);
-		when(requestHeadersSpec.exchange()).thenReturn(Mono.just(ClientResponse.create(HttpStatus.OK).header("Content-type", "application/json").body(resp).build()));
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(ObjectNode.class)).thenReturn(Mono.just(actualObj));
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
 	    assertTrue(token.equals("mock-token"));
 	}
@@ -120,14 +129,14 @@ public class TokenHelperTest {
 	@Test
 	public void getClientTokenWebClientErrorTest() throws Exception {
 		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
-		String resp= "{\"access_token\":\"mock-token\"}";
 		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
 		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
-		when(webClient.method(HttpMethod.POST)).thenReturn(requestBodyUriSpec);
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
 		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodyUriSpec);
 		when(requestBodyUriSpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodyUriSpec);
 		when(requestBodyUriSpec.body(Mockito.any())).thenReturn(requestHeadersSpec);
-		when(requestHeadersSpec.exchange()).thenReturn(Mono.just(ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).header("Content-type", "application/json").body(resp).build()));
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(ObjectNode.class)).thenReturn(Mono.just(mapper.createObjectNode()));
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
 	    assertNull(token);
 	}
