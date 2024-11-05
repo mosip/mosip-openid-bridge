@@ -13,7 +13,7 @@ This library provides server side functions related login using authorization co
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-authcodeflowproxy-api</artifactId>
-			<version>1.2.0</version>
+			<version>${project.version}</version>
 		</dependency>
 ```
 
