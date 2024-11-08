@@ -12,6 +12,12 @@ and mvn version - 3.9.6
     $ mvn install -DskipTests=true -Dmaven.javadoc.skip=true -Dgpg.skip=true
     ```
 
+2. Build Docker for a service:
+    ```
+    $ cd <service folder>
+    $ docker build -f Dockerfile
+    ```
+
 ## Configuration files
 Kernel Auth Service uses the following configuration files:
 ```
