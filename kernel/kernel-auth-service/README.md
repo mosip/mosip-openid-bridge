@@ -31,6 +31,6 @@ Need to run the config-server along with the files mentioned above in order to r
 [Configuration-Kernel](https://github.com/mosip/mosip-config/blob/master/kernel-default.properties) defined here.
 
 ## APIs
-API documentation is available [here](https://mosip.github.io/documentation/1.2.0/authentication-service.html).
+API documentation is available [here](https://mosip.github.io/documentation/1.2.0/kernel-authentication-manager-service.html).
 
 Refer [Module Configuration](https://docs.mosip.io/1.2.0/modules/module-configuration) for location of these files.
