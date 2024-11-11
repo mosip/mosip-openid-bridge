@@ -12,7 +12,7 @@ This library provides server side functions related login using authorization co
 ```
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-authcodeflowproxy-api</artifactId>
+			<artifactId>kernel-openid-bridge-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 ```
@@ -34,12 +34,5 @@ mosip.iam.token_endpoint=${mosip.iam.base-url}/auth/realms/{realmId}/protocol/op
 3. Add following package to scan for beans
 
 ```
-io.mosip.kernel.authcodeflowproxy.api.*
+io.mosip.kernel-openid-bridge-api.*
 ```
-
-4. When the server is up it will have 4 new rest apis.
-
-#Note:
-For old commit history on this module please refer to MOSIP Commons repository under kernel folder (https://github.com/mosip/commons/tree/develop/kernel/kernel-authcodeflowproxy-api).
-
-
