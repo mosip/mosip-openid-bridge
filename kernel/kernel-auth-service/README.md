@@ -21,15 +21,10 @@ and mvn version - 3.9.6
 ## Configuration files
 Kernel Auth Service uses the following configuration files that are accessible in this [repository](https://github.com/mosip/mosip-config/tree/master).
 Please refer to the required released tagged version for configuration.
-```
-application-default.properties
-kernel-default.properties
-```
-Need to run the config-server along with the files mentioned above in order to run the kernel-auth service.
+1. [Configuration-Application](https://github.com/mosip/mosip-config/blob/master/application-default.properties)
+2. [Configuration-Kernel](https://github.com/mosip/mosip-config/blob/master/kernel-default.properties)
 
-## Configuration
-[Configuration-Application](https://github.com/mosip/mosip-config/blob/master/application-default.properties) and
-[Configuration-Kernel](https://github.com/mosip/mosip-config/blob/master/kernel-default.properties) defined here.
+Need to run the config-server along with the files mentioned above in order to run the kernel-auth service.
 
 ## APIs
 API documentation is available [here](https://mosip.github.io/documentation/1.2.0/kernel-authentication-manager-service.html).
