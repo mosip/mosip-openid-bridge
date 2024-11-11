@@ -1,4 +1,4 @@
-## Kernel Authcodeflowproxy Api
+## Kernel openid bridge Api
 
 ## Overview
 This library provides server side functions related login using authorization code flow. The Authorization Code grant type is used by confidential and public clients to exchange an authorization code for an access token. For an overview on Authorization Code grant type [refer](https://oauth.net/2/grant-types/authorization-code/).
