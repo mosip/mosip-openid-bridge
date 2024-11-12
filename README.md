@@ -6,7 +6,7 @@
 ## Overview
 Contains the following components:
 
-1. [Kernel Auth Adapater](kernel/kernel-auth-adapter)
+1. [Kernel Auth Adapter](kernel/kernel-auth-adapter)
 2. [Kernel Auth Service](kernel/kernel-auth-service)
 
 ## Functionality
@@ -15,6 +15,12 @@ Contains the following components:
 -  Validate token.
 -  Refresh token.
 -  Invalidate token on token expiry.
+
+## APIs
+API documentation is available [here](https://mosip.github.io/documentation/1.2.0/kernel-authentication-manager-service.html).
+
+## Deploy
+To deploy Auth Service on Kubernetes cluster using Dockers refer to [Sandbox Deployment](https://docs.mosip.io/1.2.0/deploymentnew/v3-installation).
 
 ## License
 This project is licensed under the terms of [Mozilla Public License 2.0](LICENSE)
