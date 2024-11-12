@@ -4,7 +4,7 @@
 Contains REST API's to authenticate MOSIP services.  The API documentation for this service is available [here](https://mosip.github.io/documentation/)
 
 ## Build & run (for developers)
-The project requires JDK 1.21.
+The project requires JDK 21.0.3
 and mvn version - 3.9.6
 1. Build and install:
     ```
@@ -12,37 +12,21 @@ and mvn version - 3.9.6
     $ mvn install -DskipTests=true -Dmaven.javadoc.skip=true -Dgpg.skip=true
     ```
 
-### Remove the version-specific suffix (PostgreSQL95Dialect) from the Hibernate dialect configuration
-   ```
-   hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-   ```
-This is for better compatibility with future PostgreSQL versions.
-
-### Configure ANT Path Matcher for Spring Boot 3.x compatibility.
-   ```
-   spring.mvc.pathmatch.matching-strategy=ANT_PATH_MATCHER
-   ```
-This is to maintain compatibility with existing ANT-style path patterns.
-
-### Add auth-adapter in a class-path to run a kernel-auth service
-   ```
-   <dependency>
-       <groupId>io.mosip.kernel</groupId>
-       <artifactId>kernel-auth-adapter</artifactId>
-       <version>${kernel.auth.adapter.version}</version>
-   </dependency>
-   ```
-
-## Configuration files
-Kernel Auth Service uses the following configuration files:
-```
-application-default.properties
-kernel-default.properties
-```
-Need to run the config-server along with the files mentioned above in order to run the kernel-auth service.
+2. Build Docker for a service:
+    ```
+    $ cd <service folder>
+    $ docker build -f Dockerfile
+    ```
 
 ## Configuration
-[Configuration-Application](https://github.com/mosip/mosip-config/blob/develop/application-default.properties) and
-[Configuration-Kernel](https://github.com/mosip/mosip-config/blob/develop/kernel-default.properties) defined here.
+Kernel Auth Service uses the following configuration files that are accessible in this [repository](https://github.com/mosip/mosip-config/tree/master).
+Please refer to the required released tagged version for configuration.
+1. [Configuration-Application](https://github.com/mosip/mosip-config/blob/master/application-default.properties)
+2. [Configuration-Kernel](https://github.com/mosip/mosip-config/blob/master/kernel-default.properties)
+
+Need to run the config-server along with the files mentioned above in order to run the kernel-auth service.
+
+## APIs
+API documentation is available [here](https://mosip.github.io/documentation/1.2.0/kernel-authentication-manager-service.html).
 
 Refer [Module Configuration](https://docs.mosip.io/1.2.0/modules/module-configuration) for location of these files.
