@@ -157,7 +157,7 @@ public class LoginController {
 		
 		boolean matchesAllowedUrls = matchesAllowedUrls(redirectUrl);
 		if(!matchesAllowedUrls) {
-			LOGGER.error("Url {} was not part of allowed url's",redirectUrl);
+			LOGGER.error("Url {} was not part of allowed url's", redirectUrl.replaceAll("[\n\r]", "_"));
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		// If error exist appending that as a query param along with redirecturi
@@ -223,7 +223,7 @@ public class LoginController {
 		String redirectURL = new String(Base64.decodeBase64(redirectURI));
 		if(!matchesAllowedUrls(redirectURL)) {
 			redirectURL = redirectURL.replaceAll("[\n\r]", " ");
-			LOGGER.error("Url {} was not part of allowed url's", redirectURL);
+			LOGGER.error("Url {} was not part of allowed url's", redirectURL.replaceAll("[\n\r]", "_"));
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
 		String uri = loginService.logoutUser(token,redirectURI);
