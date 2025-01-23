@@ -348,12 +348,12 @@ public class AuthController {
 		for (Cookie cookie : cookies) {
 			if (cookie.getName().contains(AuthConstant.REFRESH_TOKEN)) {
 				refreshToken = cookie.getValue();
-				LOGGER.info("refresh token for app " + appId + " from cookie " + cookie.getName());
+				LOGGER.info("refresh token for app " + appId.replaceAll("[\n\r]", "_") + " from cookie " + cookie.getName());
 			}
 		}
 		Objects.requireNonNull(refreshToken, "No refresh token cookie found");
 		RefreshTokenResponse mosipUserDtoToken = authService.refreshToken(appId, refreshToken, refreshTokenRequest);
-		LOGGER.info("New refresh token obtained for app " + appId + " expires (access token) by "
+		LOGGER.info("New refresh token obtained for app " + appId.replaceAll("[\n\r]", "_") + " expires (access token) by "
 				+ mosipUserDtoToken.getAccessTokenExpTime() + " refresh token expires in "
 				+ mosipUserDtoToken.getRefreshTokenExpTime());
 		Cookie cookie = createCookie(mosipUserDtoToken.getAccesstoken(), mosipEnvironment.getTokenExpiry());
@@ -417,7 +417,7 @@ public class AuthController {
 	public ResponseWrapper<RolesListDto> getAllRoles(@PathVariable("appid") String appId) throws Exception {
 		ResponseWrapper<RolesListDto> responseWrapper = new ResponseWrapper<>();
 		RolesListDto rolesListDto = authService.getAllRoles(appId);
-		LOGGER.info("Get roles for " + appId + ". Total roles:  " + rolesListDto.getRoles().size());
+		LOGGER.info("Get roles for " + appId.replaceAll("[\n\r]", "_") + ". Total roles:  " + rolesListDto.getRoles().size());
 		responseWrapper.setResponse(rolesListDto);
 		return responseWrapper;
 	}
@@ -437,7 +437,7 @@ public class AuthController {
 		ResponseWrapper<MosipUserListDto> responseWrapper = new ResponseWrapper<>();
 		MosipUserListDto mosipUsers = authService.getListOfUsersDetails(userDetails.getRequest().getUserDetails(),
 				appId);
-		LOGGER.info("Get userdetails for " + appId + ". Total users:  " + mosipUsers.getMosipUserDtoList().size());
+		LOGGER.info("Get userdetails for " + appId.replaceAll("[\n\r]", "_") + ". Total users:  " + mosipUsers.getMosipUserDtoList().size());
 		responseWrapper.setResponse(mosipUsers);
 		return responseWrapper;
 	}
@@ -457,7 +457,7 @@ public class AuthController {
 		ResponseWrapper<MosipUserSaltListDto> responseWrapper = new ResponseWrapper<>();
 		MosipUserSaltListDto mosipUsers = authService
 				.getAllUserDetailsWithSalt(userDetails.getRequest().getUserDetails(), appId);
-		LOGGER.info("Get usersaltdetails for " + appId + ". Total user salts:  "
+		LOGGER.info("Get usersaltdetails for " + appId.replaceAll("[\n\r]", "_") + ". Total user salts:  "
 				+ mosipUsers.getMosipUserSaltList().size());
 		responseWrapper.setResponse(mosipUsers);
 		return responseWrapper;
@@ -483,7 +483,7 @@ public class AuthController {
 			throws Exception {
 		ResponseWrapper<RIdDto> responseWrapper = new ResponseWrapper<>();
 		RIdDto rIdDto = authService.getRidBasedOnUid(userId, appId);
-		LOGGER.info("Get rid for " + appId + ". Rid:  " + rIdDto.getRId());
+		LOGGER.info("Get rid for " + appId.replaceAll("[\n\r]", "_") + ". Rid:  " + rIdDto.getRId());
 		responseWrapper.setResponse(rIdDto);
 		return responseWrapper;
 	}
@@ -601,7 +601,7 @@ public class AuthController {
 		for (Cookie cookie : cookies) {
 			if (cookie.getName().contains(AuthConstant.REFRESH_TOKEN)) {
 				refreshToken = cookie.getValue();
-				LOGGER.info("refresh token for app " + appId + " from cookie " + cookie.getName());
+				LOGGER.info("refresh token for app " + appId.replaceAll("[\n\r]", "_") + " from cookie " + cookie.getName());
 			}
 		}
 		Objects.requireNonNull(refreshToken, "No refresh token cookie found");
@@ -671,7 +671,7 @@ public class AuthController {
 		ResponseWrapper<MosipUserListDto> responseWrapper = new ResponseWrapper<>();
 		MosipUserListDto mosipUsers = authService.getListOfUsersDetails(appId, roleName, pageStart, pageFetch, email,
 				firstName, lastName, userName, search);
-		LOGGER.info("Get userdetails for " + appId + ". Total users:  " + mosipUsers.getMosipUserDtoList().size());
+		LOGGER.info("Get userdetails for " + appId.replaceAll("[\n\r]", "_") + ". Total users:  " + mosipUsers.getMosipUserDtoList().size());
 		responseWrapper.setResponse(mosipUsers);
 		return responseWrapper;
 	}
