@@ -74,7 +74,13 @@ public class TokenValidationHelper {
 
     private MosipUserDto doOfflineEnvTokenValidation(String jwtToken, RestTemplate restTemplate) {
 
-        DecodedJWT decodedJWT = JWT.decode(jwtToken);
+        DecodedJWT decodedJWT;
+        try {
+            decodedJWT = JWT.decode(jwtToken);
+        }catch (Exception e){
+            throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+                    AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
+        }
 
         PublicKey publicKey = validateTokenHelper.getPublicKey(decodedJWT);
         // Still not able to get the public key either from server or local cache,
