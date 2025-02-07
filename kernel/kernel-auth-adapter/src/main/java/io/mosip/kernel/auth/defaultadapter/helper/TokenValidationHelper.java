@@ -4,6 +4,8 @@ import java.security.PublicKey;
 import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,8 @@ public class TokenValidationHelper {
 
     @Autowired
     private ValidateTokenHelper validateTokenHelper;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TokenValidationHelper.class);
 
     public MosipUserDto getTokenValidatedUserResponse(String token, RestTemplate restTemplate) {
 
@@ -74,7 +78,14 @@ public class TokenValidationHelper {
 
     private MosipUserDto doOfflineEnvTokenValidation(String jwtToken, RestTemplate restTemplate) {
 
-        DecodedJWT decodedJWT = JWT.decode(jwtToken);
+        DecodedJWT decodedJWT;
+        try {
+            decodedJWT = JWT.decode(jwtToken);
+        }catch (Exception e){
+            LOGGER.error("JWT decode failure :{}",e.getMessage());
+            throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+                    AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
+        }
 
         PublicKey publicKey = validateTokenHelper.getPublicKey(decodedJWT);
         // Still not able to get the public key either from server or local cache,
