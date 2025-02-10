@@ -1,12 +1,8 @@
 package io.mosip.kernel.auth.defaultadapter.helper;
 
 import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Objects;
 
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,9 +78,6 @@ public class TokenValidationHelper {
 
     private MosipUserDto doOfflineEnvTokenValidation(String jwtToken, RestTemplate restTemplate) {
 
-        DecodedJWT decodedJWT;
-        PublicKey publicKey;
-
         try {
             // Ensure token is in correct format (header.payload.signature)
             if (!jwtToken.contains(".") || jwtToken.split("\\.").length != 3) {
@@ -92,18 +85,18 @@ public class TokenValidationHelper {
                 throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
                         AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
             }
-            decodedJWT = JWT.decode(jwtToken);
-            publicKey = validateTokenHelper.getPublicKey(decodedJWT);
-            if (Objects.isNull(publicKey)) {
-                return doOnlineTokenValidation(jwtToken, restTemplate);
-            }
-            Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) publicKey, null);
-            JWTVerifier verifier = JWT.require(algorithm).build();
-            verifier.verify(jwtToken);
-        } catch (JWTVerificationException e) {
-            LOGGER.error("JWT verification failed: {}", e.getMessage());
+        }catch (Exception e){
+            LOGGER.error("JWT decode failure :{}",e.getMessage());
             throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
                     AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
+        }
+
+        DecodedJWT decodedJWT = JWT.decode(jwtToken);
+        PublicKey publicKey = validateTokenHelper.getPublicKey(decodedJWT);
+        // Still not able to get the public key either from server or local cache,
+        // proceed with online token validation.
+        if (Objects.isNull(publicKey)) {
+            return doOnlineTokenValidation(jwtToken, restTemplate);
         }
 
         ImmutablePair<Boolean, AuthAdapterErrorCode> validateResp = validateTokenHelper.isTokenValid(decodedJWT, publicKey);
