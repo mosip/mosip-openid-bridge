@@ -94,12 +94,9 @@ public class TokenValidationHelper {
             }
             decodedJWT = JWT.decode(jwtToken);
             publicKey = validateTokenHelper.getPublicKey(decodedJWT);
-            // Still not able to get the public key either from server or local cache,
-            // proceed with online token validation.
             if (Objects.isNull(publicKey)) {
                 return doOnlineTokenValidation(jwtToken, restTemplate);
             }
-            // 6️⃣ Verify JWT signature using the correct public key
             Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) publicKey, null);
             JWTVerifier verifier = JWT.require(algorithm).build();
             verifier.verify(jwtToken);
