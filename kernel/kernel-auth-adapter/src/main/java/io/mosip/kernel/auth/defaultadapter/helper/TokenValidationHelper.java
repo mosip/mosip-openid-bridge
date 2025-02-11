@@ -4,6 +4,8 @@ import java.security.PublicKey;
 import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,8 @@ public class TokenValidationHelper {
 
     @Autowired
     private ValidateTokenHelper validateTokenHelper;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TokenValidationHelper.class);
 
     public MosipUserDto getTokenValidatedUserResponse(String token, RestTemplate restTemplate) {
 
@@ -74,8 +78,14 @@ public class TokenValidationHelper {
 
     private MosipUserDto doOfflineEnvTokenValidation(String jwtToken, RestTemplate restTemplate) {
 
-        DecodedJWT decodedJWT = JWT.decode(jwtToken);
+            // Ensure token is in correct format (header.payload.signature)
+            if (!jwtToken.contains(".") || jwtToken.split("\\.").length != 3) {
+                LOGGER.error("Invalid JWT format: {}", jwtToken);
+                throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+                        AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
+            }
 
+        DecodedJWT decodedJWT = JWT.decode(jwtToken);
         PublicKey publicKey = validateTokenHelper.getPublicKey(decodedJWT);
         // Still not able to get the public key either from server or local cache,
         // proceed with online token validation.
