@@ -235,9 +235,26 @@ public class TokenValidationHelperTest {
 		MosipUserDto res= tokenValidationHelper.getTokenValidatedUserResponse(token, new RestTemplate());
 		assertThat(res.getUserId(), is(mosipUserDto.getUserId()));
 	}
-	
-	
-	
+
+	@Test(expected = AuthManagerException.class)
+	public void getTokenValidatedUserResponseValidateTokenHelperTestFailure() throws Exception {
+		ReflectionTestUtils.setField(tokenValidationHelper, "activeProfile", "dev");
+		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+		kpg.initialize(2048);
+		KeyPair kp = kpg.generateKeyPair();
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("alg", "RSA256");
+		String token = "xyz";
+		MosipUserDto mosipUserDto = new MosipUserDto();
+		mosipUserDto.setRole("PROCESSOR");
+		mosipUserDto.setUserId("110005");
+		mosipUserDto.setToken(token);
+		when(validateTokenHelper.doOfflineLocalTokenValidation(Mockito.anyString())).thenReturn(mosipUserDto);
+		MosipUserDto res= tokenValidationHelper.getTokenValidatedUserResponse(token, new RestTemplate());
+	}
+
+
+
 
 
 }
