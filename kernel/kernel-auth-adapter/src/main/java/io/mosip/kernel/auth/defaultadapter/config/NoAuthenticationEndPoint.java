@@ -1,10 +1,10 @@
 package io.mosip.kernel.auth.defaultadapter.config;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import io.mosip.kernel.auth.defaultadapter.model.ServiceEndPoint;
-import io.mosip.kernel.auth.defaultadapter.model.GlobalEndPoint;
 import lombok.Data;
 
 /**
@@ -20,4 +20,14 @@ public class NoAuthenticationEndPoint {
 	private GlobalEndPoint global;
 	private ServiceEndPoint service;
 	private String serviceContext;
+	
+	@Data
+	public static class GlobalEndPoint {
+		List<String> endPoints;
+	}
+	
+	@Data
+	public static class ServiceEndPoint {
+		List<String> endPoints;
+	}
 }
