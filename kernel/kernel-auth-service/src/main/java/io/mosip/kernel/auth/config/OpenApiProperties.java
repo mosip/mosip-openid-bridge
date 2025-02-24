@@ -12,29 +12,29 @@ import lombok.Data;
 public class OpenApiProperties {
     private InfoProperty info;
     private Service service;
-}
 
-@Data
-class InfoProperty {
-    private String title;
-    private String description;
-    private String version;
-    private LicenseProperty license;
-}
+    @Data
+    public static class InfoProperty {
+        private String title;
+        private String description;
+        private String version;
+        private LicenseProperty license;
+    }
 
-@Data
-class LicenseProperty {
-    private String name;
-    private String url;
-}
+    @Data
+    public static class LicenseProperty {
+        private String name;
+        private String url;
+    }
 
-@Data
-class Service {
-    private List<Server> servers;
-}
+    @Data
+    public static class Service {
+        private List<Server> servers;
+    }
 
-@Data
-class Server {
-    private String description;
-    private String url;
+    @Data
+    public static class Server {
+        private String description;
+        private String url;
+    }
 }
