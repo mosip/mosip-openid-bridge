@@ -38,12 +38,12 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
+import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint.GlobalEndPoint;
+import io.mosip.kernel.auth.defaultadapter.config.NoAuthenticationEndPoint.ServiceEndPoint;
 import io.mosip.kernel.auth.defaultadapter.filter.AuthFilter;
 import io.mosip.kernel.auth.defaultadapter.filter.CorsFilter;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthHandler;
 import io.mosip.kernel.auth.defaultadapter.handler.AuthSuccessHandler;
-import io.mosip.kernel.auth.defaultadapter.model.GlobalEndPoint;
-import io.mosip.kernel.auth.defaultadapter.model.ServiceEndPoint;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
