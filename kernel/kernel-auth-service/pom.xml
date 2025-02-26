@@ -32,7 +32,8 @@
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**,"**/ProxyAuthServiceImpl.java","**/ProxyTokenGenerator.java"</sonar.cpd.exclusions>
 		
 		<apache.directory.api.version>2.0.0.AM2</apache.directory.api.version>
-
+		<maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
+		<nexus.staging.maven.plugin.version>1.6.14</nexus.staging.maven.plugin.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -184,26 +185,32 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8.1</version>
+				<version>${maven.deploy.plugin.version}</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 				<executions>
 					<execution>
 						<id>default-deploy</id>
-						<phase>deploy</phase>
+						<phase>none</phase>
 						<goals>
 							<goal>deploy</goal>
 						</goals>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.14</version>
+				<version>${nexus.staging.maven.plugin.version}</version>
 				<extensions>true</extensions>
 				<executions>
 					<execution>
 						<id>default-deploy</id>
-						<phase>deploy</phase>
+						<phase>none</phase>
 						<goals>
 							<goal>deploy</goal>
 						</goals>
@@ -215,7 +222,6 @@
 					<autoReleaseAfterClose>false</autoReleaseAfterClose>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
