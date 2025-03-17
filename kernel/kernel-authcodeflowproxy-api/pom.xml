@@ -40,9 +40,9 @@
 		<maven.javadoc.version>3.2.0</maven.javadoc.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 
-		<kernel.core.version>1.3.0-beta.1</kernel.core.version>
+		<kernel.core.version>1.3.0-SNAPHSOT</kernel.core.version>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
-		<kernel-openid-bridge-api.version>1.3.0-beta.1</kernel-openid-bridge-api.version>
+		<kernel-openid-bridge-api.version>1.3.0-SNAPHSOT</kernel-openid-bridge-api.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
