@@ -226,8 +226,12 @@ public class LoginController {
 			LOGGER.error("Url {} was not part of allowed url's", redirectURL.replaceAll("[\n\r]", "_"));
 			throw new ServiceException(Errors.ALLOWED_URL_EXCEPTION.getErrorCode(), Errors.ALLOWED_URL_EXCEPTION.getErrorMessage());
 		}
-		String uri = loginService.logoutUser(token,redirectURI);
-		
+		String uri = "";
+		if(offlineLogout) {
+		   uri = loginService.logoutUser(token,redirectURI);
+		} else {
+		   uri = loginService.logoutUser(token,redirectURL);
+		}	
 		if(offlineLogout) {
 			Cookie cookie = loginService.createExpiringCookie();
 			res.addCookie(cookie);
