@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.mosip.kernel</groupId>
 	<artifactId>kernel-openid-bridge-api</artifactId>
-	<version>1.2.1-rc1</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>kernel-openid-bridge-api</name>
 	<description>Mosip Open-ID-Connect bridge API</description>
@@ -29,8 +29,8 @@
 		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
 		<maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
 		<!-- Mosip -->
-		<kernel.bom.version>1.2.1-rc1</kernel.bom.version>
-		<kernel.core.version>1.2.1-rc1</kernel.core.version>
+		<kernel.bom.version>1.2.1-SNAPSHOT</kernel.bom.version>
+		<kernel.core.version>1.2.1-SNAPSHOT</kernel.core.version>
 
 	</properties>
 	<dependencyManagement>

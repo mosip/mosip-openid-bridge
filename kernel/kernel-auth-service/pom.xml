@@ -8,7 +8,7 @@
 
 	<artifactId>kernel-auth-service</artifactId>
 	<packaging>jar</packaging>
-	<version>1.2.1-rc1</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
@@ -25,7 +25,7 @@
 		<maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 
-		<kernel-openid-bridge-api.version>1.2.1-rc1</kernel-openid-bridge-api.version>
+		<kernel-openid-bridge-api.version>1.2.1-SNAPSHOT</kernel-openid-bridge-api.version>
 		<sonar.coverage.exclusions>**/constant/**,**/config/**,**/httpfilter/**,**/cache/**,**/entity/**,**/model/**,**/exception/**,**/repository/**,**/verticle/**,**/spi/**,"**/proxy/**","**/ProxyAuthServiceImpl.java","**/ProxyOTPServiceImpl.java","**/dto/**","**/util/**","**/filter/**","**/intercepter/**","**/AuthBootApplication.java"</sonar.coverage.exclusions>
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**,"**/ProxyAuthServiceImpl.java","**/ProxyTokenGenerator.java"</sonar.cpd.exclusions>
 		
@@ -39,8 +39,8 @@
 		<spring.boot.maven.plugin.version>3.2.0</spring.boot.maven.plugin.version>
 
 		<!-- Mosip -->
-		<kernel.bom.version>1.2.1-rc1</kernel.bom.version>
-		<kernel.core.version>1.2.1-rc1</kernel.core.version>
+		<kernel.bom.version>1.2.1-SNAPSHOT</kernel.bom.version>
+		<kernel.core.version>1.2.1-SNAPSHOT</kernel.core.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -117,7 +117,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-templatemanager-velocity</artifactId>
-			<version>1.2.1-rc1</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -135,7 +135,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>1.2.1-rc1</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
