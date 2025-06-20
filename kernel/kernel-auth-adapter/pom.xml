@@ -28,7 +28,7 @@
 		<maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
 		<maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
 		<central.publishing.maven.plugin.version>0.7.0</central.publishing.maven.plugin.version>
-		<maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+		<maven.source.plugin>3.3.1</maven.source.plugin>
 		<maven.gpg.plugin.version>3.2.3</maven.gpg.plugin.version>
 		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
 		<maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
@@ -230,7 +230,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<inherited>true</inherited>
-				<version>${maven.source.plugin.version}</version>
+				<version>${maven.source.plugin}</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
