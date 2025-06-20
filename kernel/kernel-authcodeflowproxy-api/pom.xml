@@ -22,8 +22,7 @@
         <maven.war.plugin.version>3.1.0</maven.war.plugin.version>
         <!-- <maven.jacoco.plugin.version>0.8.1</maven.jacoco.plugin.version> -->
         <!-- <maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version> -->
-        <maven.javadoc.version>3.2.0</maven.javadoc.version>
-        <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
+        <maven.shade.plugin.version>2.3</maven.shade.plugin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -37,13 +36,11 @@
         <maven.war.plugin.version>3.1.0</maven.war.plugin.version>
         <!-- <maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version> -->
         <maven.javadoc.version>3.2.0</maven.javadoc.version>
-        <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
         <central.publishing.maven.plugin.version>0.7.0</central.publishing.maven.plugin.version>
         <maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <maven.gpg.plugin.version>3.2.3</maven.gpg.plugin.version>
         <git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
-        <maven.javadoc.version>3.2.0</maven.javadoc.version>
 
         <kernel.bom.version>1.2.1-rc1</kernel.bom.version>
         <kernel.core.version>1.2.1-rc1</kernel.core.version>
@@ -152,7 +149,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven.javadoc.plugin.version}</version>
+                <version>${maven.javadoc.version}</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
