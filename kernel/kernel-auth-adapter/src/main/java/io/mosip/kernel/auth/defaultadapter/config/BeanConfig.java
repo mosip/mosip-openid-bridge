@@ -78,7 +78,7 @@ public class BeanConfig {
 	private Integer plainRestTemplateTotalMaxConnections;
 
 	@Value("${mosip.kernel.http.selftoken.restTemplate.socket-timeout:0}")
-	private Integer selfSocketTimeout;
+	private Integer selfTokenRestTemplateSocketTimeout;
 
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
@@ -159,9 +159,10 @@ public class BeanConfig {
 			});
 			httpClientBuilder.setSSLSocketFactory(csf);
 		}
-		if(selfSocketTimeout != 0){
-			LOGGER.info("Setting response timeout for the registration processor :"+ selfSocketTimeout);
-			RequestConfig config = RequestConfig.custom().setSocketTimeout(selfSocketTimeout).build();
+		//Setting the timeout in case reading data from socket takes more time
+		if(selfTokenRestTemplateSocketTimeout != 0){
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom().setSocketTimeout(selfTokenRestTemplateSocketTimeout).build();
 			httpClientBuilder.setDefaultRequestConfig(config);
 		}
 		String applName = getApplicationName();
