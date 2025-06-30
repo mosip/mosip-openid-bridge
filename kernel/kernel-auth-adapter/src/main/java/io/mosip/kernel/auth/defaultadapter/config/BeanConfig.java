@@ -184,13 +184,10 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
-
 		//Setting the timeout in case reading data from socket takes more timeAdd commentMore actions
-		if (selfTokenRestTemplateSocketTimeout != 0) {
-			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :" + selfTokenRestTemplateSocketTimeout);
-			RequestConfig config = RequestConfig.custom()
-					.setResponseTimeout(Timeout.ofMilliseconds(selfTokenRestTemplateSocketTimeout))
-					.build();
+		if(selfTokenRestTemplateSocketTimeout != 0){
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(selfTokenRestTemplateSocketTimeout)).build();
 			httpClientBuilder.setDefaultRequestConfig(config);
 		}
 		String applName = getApplicationName();
@@ -272,14 +269,4 @@ public class BeanConfig {
 			throw new RuntimeException("Property spring.application.name not found");
 		}
 	}
-	public void applyTimeout(HttpClientBuilder httpClientBuilder, int timeoutMillis) {
-		if (timeoutMillis != 0) {
-			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :" + timeoutMillis);
-			RequestConfig config = RequestConfig.custom()
-					.setResponseTimeout(Timeout.ofMilliseconds(timeoutMillis))
-					.build();
-			httpClientBuilder.setDefaultRequestConfig(config);
-		}
-	}
-
 }
