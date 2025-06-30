@@ -184,6 +184,7 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
+
 		//Setting the timeout in case reading data from socket takes more timeAdd commentMore actions
 		if(selfTokenRestTemplateSocketTimeout != 0){
 			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
