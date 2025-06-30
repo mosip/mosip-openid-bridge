@@ -13,11 +13,15 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.http.conn.ssl.TrustStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,8 +82,13 @@ public class BeanConfig {
 	@Value("${mosip.kernel.webclient.exchange.strategy.max-in-memory-size.mbs:0}")
 	private Integer exchangeStrategyMaxMemory;
 
+	@Value("${mosip.kernel.http.selftoken.restTemplate.socket-timeout:0}")
+	private Integer selfTokenRestTemplateSocketTimeout;
+
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanConfig.class);
 	
 	@Autowired(required = false)
 	private ReactorLoadBalancerExchangeFilterFunction lbFilterFunction;
@@ -177,7 +186,12 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
-		
+		//Setting the timeout in case reading data from socket takes more time
+		if(selfTokenRestTemplateSocketTimeout != 0){
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(selfTokenRestTemplateSocketTimeout)).build();
+			httpClientBuilder.setDefaultRequestConfig(config);
+		}
 		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
