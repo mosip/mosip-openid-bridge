@@ -116,10 +116,13 @@ public class BeanConfig {
 			});
 			connnectionManagerBuilder.setSSLSocketFactory(csf);
 		}
+
 		var connectionManager = connnectionManagerBuilder.build();
+
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
+
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		restTemplate = new RestTemplate(requestFactory);
@@ -176,7 +179,9 @@ public class BeanConfig {
 			});
 			connnectionManagerBuilder.setSSLSocketFactory(csf);
 		}
+
 		var connectionManager = connnectionManagerBuilder.build();
+
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
