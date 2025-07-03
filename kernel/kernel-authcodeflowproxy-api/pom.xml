@@ -30,6 +30,7 @@
 		<maven.source.plugin.version>3.3.1</maven.source.plugin.version>
 		<maven.gpg.plugin.version>3.2.3</maven.gpg.plugin.version>
 		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
+		<maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
 
 		<!-- spring -->
 		<spring.boot.version>2.0.2.RELEASE</spring.boot.version>
