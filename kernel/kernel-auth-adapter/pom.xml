@@ -23,9 +23,15 @@
 		<maven.war.plugin.version>3.1.0</maven.war.plugin.version>
 		<maven.jacoco.plugin.version>0.8.1</maven.jacoco.plugin.version>
 		<maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
-		<maven.javadoc.version>3.2.0</maven.javadoc.version>
+		<maven.javadoc.plugin.version>3.6.3</maven.javadoc.plugin.version>
 		<maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 		<maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+		<maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
+		<central.publishing.maven.plugin.version>0.7.0</central.publishing.maven.plugin.version>
+		<maven.source.plugin>3.3.1</maven.source.plugin>
+		<maven.gpg.plugin.version>3.2.3</maven.gpg.plugin.version>
+		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
+		<maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
 
 		<!-- spring -->
 		<spring.boot.version>2.0.2.RELEASE</spring.boot.version>
@@ -328,11 +334,11 @@
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
 		<repository>
 			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+			<url>https://central.sonatype.com/api/v1/publisher</url>
 		</repository>
 	</distributionManagement>
 	<build>
@@ -361,7 +367,7 @@
 		<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>${maven.javadoc.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -377,7 +383,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8.1</version>
+				<version>${maven.deploy.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>default-deploy</id>
@@ -389,23 +395,13 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.7</version>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>${central.publishing.maven.plugin.version}</version>
 				<extensions>true</extensions>
-				<executions>
-					<execution>
-						<id>default-deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>deploy</goal>
-						</goals>
-					</execution>
-				</executions>
 				<configuration>
-					<serverId>ossrh</serverId>
-					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>false</autoReleaseAfterClose>
+					<publishingServerId>ossrh</publishingServerId>
+					<autoPublish>false</autoPublish>
 				</configuration>
 			</plugin>
 
@@ -413,7 +409,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<inherited>true</inherited>
-				<version>2.2.1</version>
+				<version>${maven.source.plugin}</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -432,7 +428,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.5</version>
+				<version>${maven.gpg.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
@@ -452,7 +448,7 @@
 			<plugin>
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>${git.commit.id.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>get-the-git-infos</id>
@@ -477,7 +473,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.0</version>
+				<version>${maven.surefire.plugin.version}</version>
 				<configuration>
 					<skipTests>false</skipTests>
 					<skip>false</skip>
