@@ -40,6 +40,10 @@ import io.mosip.kernel.auth.defaultadapter.helper.TokenValidationHelper;
 import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.model.AuthUserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.client5.http.config.RequestConfig;
 
 @Configuration
 @EnableScheduling
@@ -77,6 +81,11 @@ public class BeanConfig {
 
 	@Value("${mosip.kernel.webclient.exchange.strategy.max-in-memory-size.mbs:0}")
 	private Integer exchangeStrategyMaxMemory;
+
+	@Value("${mosip.kernel.http.selftoken.restTemplate.socket-timeout:0}")
+	private Integer selfTokenRestTemplateSocketTimeout;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanConfig.class);
 
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
@@ -177,7 +186,13 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
-		
+
+		//Setting the timeout in case reading data from socket takes more timeAdd commentMore actions
+		if(selfTokenRestTemplateSocketTimeout != 0){
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(selfTokenRestTemplateSocketTimeout)).build();
+			httpClientBuilder.setDefaultRequestConfig(config);
+		}
 		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
