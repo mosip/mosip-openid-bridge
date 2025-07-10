@@ -29,7 +29,6 @@
 		<maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
 
 		<kernel.core.version>1.3.0-SNAPSHOT</kernel.core.version>
-		<kernel.bom.version>1.3.0-SNAPSHOT</kernel.bom.version>
 		<jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
 	</properties>
 	<dependencyManagement>
@@ -37,7 +36,7 @@
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-bom</artifactId>
-				<version>${kernel.bom.version}</version>
+				<version>${kernel.core.version}</version>
 				<type>pom</type>
 			    <scope>import</scope>
 			</dependency>
