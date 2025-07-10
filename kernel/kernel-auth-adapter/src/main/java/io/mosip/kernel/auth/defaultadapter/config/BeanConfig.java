@@ -8,11 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
-
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.core5.util.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
@@ -77,6 +79,11 @@ public class BeanConfig {
 
 	@Value("${mosip.kernel.webclient.exchange.strategy.max-in-memory-size.mbs:0}")
 	private Integer exchangeStrategyMaxMemory;
+
+	@Value("${mosip.kernel.http.selftoken.restTemplate.socket-timeout:0}")
+	private Integer selfTokenRestTemplateSocketTimeout;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanConfig.class);
 
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
@@ -177,7 +184,15 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
-		
+
+		//Setting the timeout in case reading data from socket takes more timeAdd commentMore actions
+		if (selfTokenRestTemplateSocketTimeout != 0) {
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :" + selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom()
+					.setResponseTimeout(Timeout.ofMilliseconds(selfTokenRestTemplateSocketTimeout))
+					.build();
+			httpClientBuilder.setDefaultRequestConfig(config);
+		}
 		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
@@ -257,4 +272,14 @@ public class BeanConfig {
 			throw new RuntimeException("Property spring.application.name not found");
 		}
 	}
+	public void applyTimeout(HttpClientBuilder httpClientBuilder, int timeoutMillis) {
+		if (timeoutMillis != 0) {
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :" + timeoutMillis);
+			RequestConfig config = RequestConfig.custom()
+					.setResponseTimeout(Timeout.ofMilliseconds(timeoutMillis))
+					.build();
+			httpClientBuilder.setDefaultRequestConfig(config);
+		}
+	}
+
 }
