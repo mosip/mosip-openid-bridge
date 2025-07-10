@@ -186,7 +186,7 @@ public class BeanConfig {
 				.setConnectionManager(connectionManager)
 				.disableCookieManagement();
 
-		//Setting the timeout in case reading data from socket takes more timeAdd commentMore actions
+		//Setting the timeout in case reading data from socket takes more time
 		if(selfTokenRestTemplateSocketTimeout != 0){
 			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
 			RequestConfig config = RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(selfTokenRestTemplateSocketTimeout)).build();
