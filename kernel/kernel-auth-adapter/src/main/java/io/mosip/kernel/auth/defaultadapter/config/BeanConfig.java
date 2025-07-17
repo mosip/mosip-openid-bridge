@@ -13,10 +13,13 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,11 +77,16 @@ public class BeanConfig {
 	@Value("${mosip.kernel.http.plain.restTemplate.total-max-connections:100}")
 	private Integer plainRestTemplateTotalMaxConnections;
 
+	@Value("${mosip.kernel.http.selftoken.restTemplate.socket-timeout:0}")
+	private Integer selfTokenRestTemplateSocketTimeout;
+
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
 
 	@Autowired(required = false)
 	private LoadBalancerClient loadBalancerClient;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanConfig.class);
 
 	@SuppressWarnings("java:S5527") // added suppress for sonarcloud. 
 	// Server hostname verification is not required because of 2 reasons:
@@ -150,6 +158,12 @@ public class BeanConfig {
 				}
 			});
 			httpClientBuilder.setSSLSocketFactory(csf);
+		}
+		//Setting the timeout in case reading data from socket takes more time
+		if(selfTokenRestTemplateSocketTimeout > 0){
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom().setSocketTimeout(selfTokenRestTemplateSocketTimeout).build();
+			httpClientBuilder.setDefaultRequestConfig(config);
 		}
 		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
