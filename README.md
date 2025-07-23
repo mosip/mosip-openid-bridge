@@ -1,5 +1,5 @@
-[![Maven Package upon a push](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push-trigger.yml/badge.svg?branch=release-1.3.x)](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push-trigger.yml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mosip_mosip-openid-bridge&metric=alert_status)](https://sonarcloud.io/dashboard?branch=release-1.3.x&id=mosip_mosip-openid-bridge)
+[![Maven Package upon a push](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push-trigger.yml/badge.svg?branch=release-1.3.0-beta.2)](https://github.com/mosip/mosip-openid-bridge/actions/workflows/push-trigger.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mosip_mosip-openid-bridge&metric=alert_status)](https://sonarcloud.io/dashboard?branch=release-1.3.0-beta.2&id=mosip_mosip-openid-bridge)
 
 # MOSIP OpenID Bridge
 
