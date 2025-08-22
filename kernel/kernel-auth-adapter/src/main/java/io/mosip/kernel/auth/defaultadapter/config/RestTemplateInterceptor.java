@@ -1,6 +1,7 @@
 package io.mosip.kernel.auth.defaultadapter.config;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.HttpRequest;
-import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
@@ -39,9 +38,6 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestTemplateInterceptor.class);
 
-	@Autowired
-	private ClientHttpRequestFactory requestFactory;
-
 	@Autowired(required = false)
 	private LoadBalancerClient loadBalancerClient;
 
@@ -51,20 +47,25 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 			ClientHttpRequestExecution clientHttpRequestExecution) throws IOException {
 		
 		httpRequest = resolveServiceId(httpRequest);
-		ClientHttpResponse response = clientHttpRequestExecution.execute(httpRequest, bytes);
-		return response;
+		return clientHttpRequestExecution.execute(httpRequest, bytes);
 	}
 
 	private HttpRequest resolveServiceId(HttpRequest request) {
 		try {
 			if(loadBalancerClient != null) {
-				LOGGER.info("Injected load balancer : {} ", loadBalancerClient.toString());
+				LOGGER.debug("Injected load balancer : {} ", loadBalancerClient.toString());
 				ServiceInstance instance = loadBalancerClient.choose(request.getURI().getHost());
 				if (instance != null) {
-					final ClientHttpRequest newRequest = requestFactory.createRequest(
-							loadBalancerClient.reconstructURI(instance, request.getURI()), request.getMethod());
-					newRequest.getHeaders().addAll(request.getHeaders());
-					return newRequest;
+					final URI newUri = loadBalancerClient.reconstructURI(instance, request.getURI());
+					LOGGER.debug("Resolved service [{}] -> {}", request.getURI().getHost(), newUri);
+
+					// Wrap the original request so only the URI changes
+					return new org.springframework.http.client.support.HttpRequestWrapper(request) {
+						@Override
+						public URI getURI() {
+							return newUri;
+						}
+					};
 				}
 			}
 		} catch (Exception ex) {
