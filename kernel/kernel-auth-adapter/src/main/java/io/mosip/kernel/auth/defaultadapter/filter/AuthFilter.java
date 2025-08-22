@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package io.mosip.kernel.auth.defaultadapter.filter;
 
@@ -25,7 +25,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
@@ -95,101 +94,66 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	@Autowired
 	private Environment environment;
 
-	@Value("${mosip.auth.rest.connectTimeout:200}")
-	private int connectTimeoutMs;
+	private RestTemplate restTemplate = new RestTemplate();
 
-	@Value("${mosip.auth.rest.readTimeout:500}")
-	private int readTimeoutMs;
-
-	private final RestTemplate restTemplate;
-
-	private static final String ACTUATOR_PREFIX = "/actuator";
-	private static final String OPTIONS = "OPTIONS";
-
-	private final List<AntPathRequestMatcher> globalMatchers;
-	private final List<AntPathRequestMatcher> serviceMatchers;
+	// Add this field at class level
+	private final Map<String, AntPathRequestMatcher> matcherCache = new java.util.concurrent.ConcurrentHashMap<>();
 
 	@SuppressWarnings("unchecked")
 	public AuthFilter(RequestMatcher requiresAuthenticationRequestMatcher,
 			NoAuthenticationEndPoint noAuthenticationEndPoint, Environment environment) {
 		super(requiresAuthenticationRequestMatcher);
 		this.noAuthenticationEndPoint = noAuthenticationEndPoint;
-
-		String applName = getApplicationName(environment);
-		this.allowedHttpMethods = (List<String>) environment.getProperty(
-				"mosip.service.exclude.auth.allowed.method." + applName, List.class, environment.getProperty(
+		String appName = getApplicationName(environment);
+		allowedHttpMethods = (List<String>) environment.getProperty(
+				"mosip.service.exclude.auth.allowed.method." + appName, List.class, environment.getProperty(
 						"mosip.service.exclude.auth.allowed.method", List.class, Collections.singletonList("GET")));
-
-		this.mapper = JsonMapper.builder().addModule(new AfterburnerModule()).build();
-		this.mapper.registerModule(new JavaTimeModule());
-
-		// Precompile patterns once
-		this.globalMatchers = safeList(noAuthenticationEndPoint.getGlobal() != null
-				? noAuthenticationEndPoint.getGlobal().getEndPoints() : null)
-				.stream().map(AntPathRequestMatcher::new).collect(Collectors.toList());
-
-		this.serviceMatchers = (noAuthenticationEndPoint.getService() != null)
-				? safeList(noAuthenticationEndPoint.getService().getEndPoints())
-				.stream().map(AntPathRequestMatcher::new).collect(Collectors.toList())
-				: Collections.emptyList();
-
-		// RestTemplate with timeouts
-		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-		factory.setConnectTimeout(connectTimeoutMs);
-		factory.setReadTimeout(readTimeoutMs);
-		this.restTemplate = new RestTemplate(factory);
-	}
-
-	private static List<String> safeList(List<String> l) {
-		return (l == null) ? Collections.emptyList() : l;
+		mapper = JsonMapper.builder().addModule(new AfterburnerModule()).build();
+		mapper.registerModule(new JavaTimeModule());
 	}
 
 	@Override
 	protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {
-		// 1) Cheap short-circuits
-		if (OPTIONS.equals(request.getMethod())) return false;
-
-		final String ctx = request.getContextPath() == null ? "" : request.getContextPath();
-		final String uri = request.getRequestURI();
-
-		// Bypass actuator endpoints unconditionally
-		if (uri.startsWith(ctx + ACTUATOR_PREFIX)) return false;
-
-		// 2) Global no-auth endpoints
-		if (matchesAny(request, globalMatchers)) return false;
-
-		// 3) Service-scoped no-auth endpoints (method + path + context)
-		if (isValid(noAuthenticationEndPoint)) {
-			String svcCtx = noAuthenticationEndPoint.getServiceContext();
-			if (svcCtx != null && request.getServletContext().getContextPath().equalsIgnoreCase(svcCtx)) {
-				if (allowedHttpMethods.contains(request.getMethod()) && matchesAny(request, serviceMatchers)) {
-					return false;
-				}
+		// To check the global end-points
+		if (isPresent(request, noAuthenticationEndPoint.getGlobal().getEndPoints())) {
+			return false;
+		}
+		// As the request not a part of the global end-points, check in master data
+		// end-points
+		boolean isValid = isValid(noAuthenticationEndPoint);
+		if (isValid) {
+			if (request.getServletContext().getContextPath()
+					.equalsIgnoreCase(noAuthenticationEndPoint.getServiceContext())) {
+				return (allowedHttpMethods.contains(request.getMethod())
+						&& isPresent(request, noAuthenticationEndPoint.getService().getEndPoints())) ? false : true;
 			}
 		}
-
-		// 4) Otherwise, authentication required
 		return true;
 	}
 
-	private static boolean matchesAny(HttpServletRequest req, List<AntPathRequestMatcher> matchers) {
-		for (AntPathRequestMatcher m : matchers) {
-			if (m.matches(req)) return true;
+	private boolean isPresent(HttpServletRequest request, List<String> endPoints) {
+		if (endPoints == null || endPoints.isEmpty()) {
+			return false;
+		}
+		for (String pattern : endPoints) {
+			// cache.computeIfAbsent builds matcher once per unique pattern
+			AntPathRequestMatcher matcher = matcherCache.computeIfAbsent(pattern, AntPathRequestMatcher::new);
+			if (matcher.matches(request)) {
+				return true;
+			}
 		}
 		return false;
 	}
 
-	private boolean isPresent(HttpServletRequest request, List<String> endPoints) {
-		return endPoints.stream().filter(pattern -> new AntPathRequestMatcher(pattern).matches(request)).findFirst()
-				.isPresent();
-	}
-
-	private boolean isValid(NoAuthenticationEndPoint n) {
-		if (n == null) return false;
-		if (n.getServiceContext() == null || n.getServiceContext().isEmpty()) return false;
-		if (n.getService() == null) return false;
-		List<String> eps = n.getService().getEndPoints();
-		return eps != null && !eps.isEmpty();
+	private boolean isValid(NoAuthenticationEndPoint noAuthenticationEndPoint) {
+		if (noAuthenticationEndPoint.getServiceContext() == null
+				|| noAuthenticationEndPoint.getServiceContext().isEmpty())
+			return false;
+		if (noAuthenticationEndPoint.getService() == null
+				&& noAuthenticationEndPoint.getService().getEndPoints() == null
+				&& noAuthenticationEndPoint.getService().getEndPoints().isEmpty())
+			return false;
+		return true;
 	}
 
 	@Override
@@ -206,25 +170,21 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			cookies = httpServletRequest.getCookies();
 			if (cookies != null) {
 				for (Cookie cookie : cookies) {
-					String name = cookie.getName();
-					String val = cookie.getValue();
-
-					if (name != null && name.contains(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER)) {
-						LOGGER.debug("extract token from cookie named " + name);
-						token = val;
-						if (validateIdToken) {
+					if (cookie.getName().contains(AuthAdapterConstant.AUTH_REQUEST_COOOKIE_HEADER)) {
+						LOGGER.debug("extract token from cookie named " + cookie.getName());
+						token = cookie.getValue();
+						if(validateIdToken){
 							authTokenSub = JWTUtils.
-									getSubClaimValueFromToken(val,
-											this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+									getSubClaimValueFromToken(cookie.getValue(), this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
 						}
 					} else {
-						String idTokenName = this.environment.getProperty(AuthAdapterConstant.ID_TOKEN);
-						if (idTokenName != null) {
-							if (name != null && name.contains(idTokenName)) {
-								LOGGER.debug("extract token from cookie named " + name);
-								idToken = val;
-								if (validateIdToken) {
-									if (idToken == null || idToken.isEmpty()) {
+						String idTokenName=this.environment.getProperty(AuthAdapterConstant.ID_TOKEN);
+						if(idTokenName!=null){
+							if(cookie.getName().contains(idTokenName)){
+								LOGGER.debug("extract token from cookie named " + cookie.getName());
+								idToken = cookie.getValue();
+								if(validateIdToken){
+									if(idToken == null || idToken.isEmpty()) {
 										throw new ClientException(Errors.TOKEN_NOTPRESENT_ERROR.getErrorCode(),
 												Errors.TOKEN_NOTPRESENT_ERROR.getErrorMessage() + ": " + idTokenName);
 									}
@@ -232,33 +192,47 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 									idTokenSub = JWTUtils.
 											getSubClaimValueFromToken(idToken,
 													this.environment.getProperty(Constants.TOKEN_SUBJECT_CLAIM_NAME));
+
 								}
+
 							}
 						}
 					}
 				}
 			}
+
 		} catch (Exception e) {
 			LOGGER.debug("extract token from cookie failed for request " + httpServletRequest.getRequestURI());
 		}
-
-		if (validateIdToken && !isIdTokenAvailable) {
+		if(validateIdToken && !isIdTokenAvailable){
 			LOGGER.error("Id token not available.");
 			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
-
-		if (validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))) {
+		if(validateIdToken && (idTokenSub == null || !idTokenSub.equalsIgnoreCase(authTokenSub))){
 			LOGGER.error("Sub of Id token and auth token didn't match.");
 			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
 
 		if (token == null) {
+			ResponseWrapper<ServiceError> errorResponse = setErrors(httpServletRequest);
+			ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
+					"Authentication Failed");
+			errorResponse.getErrors().add(error);
+			httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+			httpServletResponse.setContentType("application/json");
+			httpServletResponse.setCharacterEncoding("UTF-8");
+			httpServletResponse.getWriter().write(convertObjectToJson(errorResponse));
 			LOGGER.error("\n\n Exception : Authorization token not present > " + httpServletRequest.getRequestURL()
 					+ "\n\n");
 			return sendAuthenticationFailure(httpServletRequest, httpServletResponse);
 		}
+		AuthToken authToken = null;
+		if(idToken==null){
+			authToken = new AuthToken(token);
+		} else{
+			authToken = new AuthToken(token, idToken);
+		}
 
-		final AuthToken authToken = (idToken == null) ? new AuthToken(token) : new AuthToken(token, idToken);
 		LOGGER.debug("Extracted auth token for request " + httpServletRequest.getRequestURL());
 		Authentication auth = getAuthenticationManager().authenticate(authToken);
 		/*
@@ -293,10 +267,10 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	@Override
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 											  AuthenticationException failed) throws IOException, ServletException {
-		AuthManagerException ex = (failed instanceof AuthManagerException) ? (AuthManagerException) failed : null;
+		AuthManagerException exception = (AuthManagerException) failed;
 		ResponseWrapper<ServiceError> errorResponse = setErrors(request);
-		if (ex != null && ex.getList() != null && !ex.getList().isEmpty()) {
-			errorResponse.getErrors().addAll(ex.getList());
+		if (exception.getList().size() != 0) {
+			errorResponse.getErrors().addAll(exception.getList());
 		} else {
 			ServiceError error = new ServiceError(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
 					"Authentication Failed");
@@ -327,7 +301,11 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 	}
 
 	private String convertObjectToJson(Object object) throws JsonProcessingException {
-		return (object == null) ? null : mapper.writeValueAsString(object);
+		if (object == null) {
+			return null;
+		}
+
+		return mapper.writeValueAsString(object);
 	}
 
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
@@ -336,8 +314,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 		if (appNames != null && !EmptyCheckUtils.isNullEmpty(appNames)) {
 			List<String> appNamesList = Stream.of(appNames.split(",")).collect(Collectors.toList());
 			return appNamesList.get(0);
+		} else {
+			throw new RuntimeException("property spring.application.name not found");
 		}
-		throw new RuntimeException("property spring.application.name not found");
 	}
 
 	/**
@@ -397,9 +376,9 @@ public class AuthFilter extends AbstractAuthenticationProcessingFilter {
 			ResponseEntity<ResponseWrapper<String>> responseEntity = null;
 			try {
 				HttpEntity<RequestWrapper<Object>> requestEntity = new HttpEntity<>(requestWrapper, headers);
-				String tokenUrl = ctkSaveUrl;
+				String tokenUrl = new StringBuilder(ctkSaveUrl).toString();
 				if (ctkInvalidateTestCaseId != null && ctkInvalidateTestCaseId.equals(ctkTestCaseId)) {
-					tokenUrl = ctkInvalidateUrl;
+					tokenUrl = new StringBuilder(ctkInvalidateUrl).toString();
 				}
 				LOGGER.debug("Calling Compliance Toolkit URL: " + tokenUrl);
 				responseEntity = restTemplate.exchange(tokenUrl, HttpMethod.POST, requestEntity,
