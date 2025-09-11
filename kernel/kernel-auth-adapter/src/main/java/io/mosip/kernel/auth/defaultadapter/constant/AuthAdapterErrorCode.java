@@ -32,7 +32,9 @@ public enum AuthAdapterErrorCode {
 	
 	SELF_AUTH_TOKEN_NULL("KER-ATH-005","Self cached auth token is null"),
 	
-	REALM_NOT_FOUND("KER-ATH-006", "RealM Not found in configured map.");
+	REALM_NOT_FOUND("KER-ATH-006", "RealM Not found in configured map."),
+	
+	OFFLINE_AUTH_DEPRECATED("KER-ATH-007", "Offline Auth Not Supported.");
 
 	/**
 	 * The error code

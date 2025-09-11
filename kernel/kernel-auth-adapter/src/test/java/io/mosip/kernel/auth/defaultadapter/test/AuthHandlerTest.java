@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -59,7 +60,7 @@ public class AuthHandlerTest extends AuthHandler {
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("alg", "HS256");
 		headers.put("typ", "JWT");
-		String token = Jwts.builder().setHeader(headers).claim(AuthAdapterConstant.EMAIL, "mockuser!mosip.com")
+		String token = Jwts.builder().setHeader(headers).claim(AuthAdapterConstant.EMAIL, "mockuser@mosip.com")
 				.claim(AuthAdapterConstant.MOBILE, "9210283991")
 				.claim(AuthAdapterConstant.PREFERRED_USERNAME, "mock-user").claim(AuthAdapterConstant.ROLES, "ADMIN")
 				.claim("userId", "mockuserid").claim("user_name", "mock-user").setSubject("mock-user")
@@ -70,7 +71,7 @@ public class AuthHandlerTest extends AuthHandler {
 		UserDetails authUserDetails = retrieveUser("110005",authToken);
 		assertTrue(authUserDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_PROCESSOR")));
 	}
-	
+		
 	
 	
 }

@@ -13,10 +13,13 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,12 +77,23 @@ public class BeanConfig {
 	@Value("${mosip.kernel.http.plain.restTemplate.total-max-connections:100}")
 	private Integer plainRestTemplateTotalMaxConnections;
 
+	@Value("${mosip.kernel.http.selftoken.restTemplate.socket-timeout:0}")
+	private Integer selfTokenRestTemplateSocketTimeout;
+
 	@Autowired
 	private TokenValidationHelper tokenValidationHelper;
 
 	@Autowired(required = false)
 	private LoadBalancerClient loadBalancerClient;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanConfig.class);
+
+	@SuppressWarnings("java:S5527") // added suppress for sonarcloud. 
+	// Server hostname verification is not required because of 2 reasons:
+	// 1. All services will not be enabled to reach to out side network to get data.
+	// 2. All internal service will have custom host names Eg: identity.idrepo
+	// sslBypass will be set to true by default because it will be ignore only for the restTemplate object 
+	// which will be used to reach to other servcies.  
 	@Bean
 	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
@@ -112,18 +126,6 @@ public class BeanConfig {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
 				.setMaxConnPerRoute(plainRestTemplateMaxConnectionPerRoute)
 				.setMaxConnTotal(plainRestTemplateTotalMaxConnections).disableCookieManagement();
-		RestTemplate restTemplate = null;
-		if (sslBypass) {
-			TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-			SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-					.loadTrustMaterial(null, acceptingTrustStrategy).build();
-			SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
-				public boolean verify(String arg0, SSLSession arg1) {
-					return true;
-				}
-			});
-			httpClientBuilder.setSSLSocketFactory(csf);
-		}
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 		RestTemplate template = new RestTemplate(requestFactory);
@@ -136,6 +138,8 @@ public class BeanConfig {
 		return new TokenHolder<>();
 	}
 
+	@SuppressWarnings("java:S5527") // added suppress for sonarcloud.
+	// Refer comments above.
 	@Bean
 	public RestTemplate selfTokenRestTemplate(@Autowired @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
 			@Autowired TokenHolder<String> cachedTokenObject)
@@ -154,6 +158,12 @@ public class BeanConfig {
 				}
 			});
 			httpClientBuilder.setSSLSocketFactory(csf);
+		}
+		//Setting the timeout in case reading data from socket takes more time
+		if(selfTokenRestTemplateSocketTimeout > 0){
+			LOGGER.info("Setting selfTokenRestTemplateSocketTimeout :"+ selfTokenRestTemplateSocketTimeout);
+			RequestConfig config = RequestConfig.custom().setSocketTimeout(selfTokenRestTemplateSocketTimeout).build();
+			httpClientBuilder.setDefaultRequestConfig(config);
 		}
 		String applName = getApplicationName();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
@@ -209,6 +219,7 @@ public class BeanConfig {
 				cachedTokenObject, tokenHelper, tokenValidationHelper, applName)).build();
 	}
 
+	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
 	private String getApplicationName() {
 		String appNames = environment.getProperty("spring.application.name");
 		if (!EmptyCheckUtils.isNullEmpty(appNames)) {

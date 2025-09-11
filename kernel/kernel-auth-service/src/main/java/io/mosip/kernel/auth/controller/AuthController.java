@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,42 +30,29 @@ import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthErrorCode;
 import io.mosip.kernel.auth.defaultimpl.dto.ClientSecretDto;
 import io.mosip.kernel.auth.defaultimpl.dto.UserDetailsRequestDto;
-import io.mosip.kernel.auth.defaultimpl.dto.UserRegistrationResponseDto;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
-import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
 import io.mosip.kernel.core.authmanager.model.AuthNResponse;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
 import io.mosip.kernel.core.authmanager.model.AuthResponseDto;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
 import io.mosip.kernel.core.authmanager.model.ClientSecret;
 import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
-import io.mosip.kernel.core.authmanager.model.LoginUser;
 import io.mosip.kernel.core.authmanager.model.LoginUserWithClientId;
 import io.mosip.kernel.core.authmanager.model.MosipUserDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
 import io.mosip.kernel.core.authmanager.model.OtpUser;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
 import io.mosip.kernel.core.authmanager.model.RIdDto;
 import io.mosip.kernel.core.authmanager.model.RefreshTokenRequest;
 import io.mosip.kernel.core.authmanager.model.RefreshTokenResponse;
 import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
 import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserRoleDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -111,44 +97,6 @@ public class AuthController {
 	@Autowired
 	private AuthService authService;
 
-	/**
-	 * API to authenticate using userName and password
-	 * 
-	 * request is of type {@link LoginUser}
-	 * 
-	 * @return ResponseEntity Cookie value with Auth token
-	 */
-	@Deprecated
-	@ResponseFilter
-	@PostMapping(value = "/authenticate/useridPwd")
-	@Operation(summary = "Authenticate using username and password", description = "Authenticate using username and password", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<AuthNResponse> authenticateUseridPwd(@RequestBody @Valid RequestWrapper<LoginUser> request,
-			HttpServletResponse res) throws Exception {
-		ResponseWrapper<AuthNResponse> responseWrapper = new ResponseWrapper<>();
-		AuthNResponse authNResponse = null;
-		AuthNResponseDto authResponseDto = authService.authenticateUser(request.getRequest());
-		if (authResponseDto != null) {
-			LOGGER.info("Authentication for " + request.getRequest().getUserName() + " status "
-					+ authResponseDto.getStatus());
-			Cookie cookie = createCookie(authResponseDto.getToken(), mosipEnvironment.getTokenExpiry());
-			authNResponse = new AuthNResponse();
-			res.addHeader(mosipEnvironment.getAuthTokenHeader(), authResponseDto.getToken());
-			res.addCookie(cookie);
-			authNResponse.setStatus(authResponseDto.getStatus());
-			authNResponse.setMessage(authResponseDto.getMessage());
-
-		} else {
-			LOGGER.info("Authentication failed for " + request.getRequest().getUserName());
-		}
-		responseWrapper.setResponse(authNResponse);
-		return responseWrapper;
-	}
 
 	private Cookie createCookie(final String content, final int expirationTimeSeconds) {
 		final Cookie cookie = new Cookie(mosipEnvironment.getAuthTokenHeader(), content);
@@ -540,243 +488,6 @@ public class AuthController {
 	}
 
 	/**
-	 * Fetch username based on the user id.
-	 * 
-	 * @param appId  - application id
-	 * @param userId - user id
-	 * @return {@link UserNameDto}
-	 * @throws Exception - exception is thrown if
-	 */
-	@ResponseFilter
-	@GetMapping(value = "unblock/{appid}/{userid}")
-	@Operation(summary = "API to get username", description = "API to get username from userid", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<AuthZResponseDto> getUserName(@PathVariable("appid") String appId,
-			@PathVariable("userid") String userId) throws Exception {
-		AuthZResponseDto authZResponseDto = authService.unBlockUser(userId, appId);
-		LOGGER.info(
-				"unblock user " + userId + " appid " + appId + ". Response  status " + authZResponseDto.getStatus());
-		ResponseWrapper<AuthZResponseDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(authZResponseDto);
-		return responseWrapper;
-	}
-
-	/**
-	 * This API will change the password of the particular user
-	 * 
-	 * @param appId       - applicationId
-	 * @param passwordDto - {@link PasswordDto}
-	 * @return {@link AuthZResponseDto}
-	 * @throws Exception
-	 */
-	@ResponseFilter
-	@PostMapping(value = "/changepassword/{appid}")
-	@Operation(summary = "This API will change the password of the particular user", description = "This API will change the password of the particular user", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<AuthZResponseDto> changePassword(@PathVariable("appid") String appId,
-			@RequestBody @Valid RequestWrapper<PasswordDto> passwordDto) throws Exception {
-		AuthZResponseDto mosipUserDto = authService.changePassword(appId, passwordDto.getRequest());
-		LOGGER.info("changepassword appid " + appId + ". Response  status " + mosipUserDto.getStatus());
-		ResponseWrapper<AuthZResponseDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(mosipUserDto);
-		return responseWrapper;
-	}
-
-	/**
-	 * This API will reset the password of the particular user
-	 * 
-	 * @param appId       - applicationId
-	 * @param passwordDto -{@link PasswordDto}
-	 * @return {@link AuthZResponseDto}
-	 * @throws Exception
-	 */
-	@ResponseFilter
-	@PostMapping(value = "/resetpassword/{appid}")
-	@Operation(summary = "This API will reset the password of the particular user", description = "This API will reset the password of the particular user", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<AuthZResponseDto> resetPassword(@PathVariable("appid") String appId,
-			@RequestBody @Valid RequestWrapper<PasswordDto> passwordDto) throws Exception {
-		AuthZResponseDto mosipUserDto = authService.resetPassword(appId, passwordDto.getRequest());
-		LOGGER.info("resetpassword appid " + appId + ". Response  status " + mosipUserDto.getStatus());
-		ResponseWrapper<AuthZResponseDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(mosipUserDto);
-		return responseWrapper;
-	}
-
-	/**
-	 * 
-	 * @param mobile - mobile number
-	 * @param appId  - applicationId
-	 * @return {@link UserNameDto}
-	 * @throws Exception
-	 */
-	@ResponseFilter
-	@GetMapping(value = "/username/{appid}/{mobilenumber}")
-	@Operation(summary = "This API will get username", description = "This API will get username based on mobileno", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<UserNameDto> getUsernameBasedOnMobileNumber(@PathVariable("mobilenumber") String mobile,
-			@PathVariable("appid") String appId) throws Exception {
-		UserNameDto userNameDto = authService.getUserNameBasedOnMobileNumber(appId, mobile);
-		LOGGER.info("fetch username based on mobile number - appid " + appId + ". Response  status "
-				+ userNameDto.getUserName());
-		ResponseWrapper<UserNameDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(userNameDto);
-		return responseWrapper;
-	}
-
-	/**
-	 * Create a user account in Data Store
-	 * 
-	 * @param userCreationRequestDto {@link UserRegistrationRequestDto}
-	 * @return {@link UserRegistrationResponseDto}
-	 */
-	@ResponseFilter
-	@PostMapping(value = "/user/addpassword")
-	@Deprecated(forRemoval = true, since = "1.1.4")
-	@Operation(summary = "This API will add password to the user", description = "This API will add password to the user", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<UserPasswordResponseDto> addPassword(
-			@RequestBody @Valid RequestWrapper<UserPasswordRequestDto> userPasswordRequestDto) {
-		ResponseWrapper<UserPasswordResponseDto> responseWrapper = new ResponseWrapper<>();
-		UserPasswordResponseDto userPasswordResponseDto = authService
-				.addUserPassword(userPasswordRequestDto.getRequest());
-		if (userPasswordResponseDto != null
-				&& userPasswordResponseDto.getUserName().equals(userPasswordRequestDto.getRequest().getUserName())) {
-			LOGGER.info(
-					"add password " + userPasswordRequestDto.getRequest().getUserName() + ". Response  status success");
-		} else {
-
-			LOGGER.info(
-					"add password " + userPasswordRequestDto.getRequest().getUserName() + ". Response  status failed");
-		}
-
-		responseWrapper.setResponse(userPasswordResponseDto);
-		return responseWrapper;
-	}
-
-	@GetMapping("/role/{appId}/{userId}")
-	@ResponseFilter
-	@Operation(summary = "This API will get user role", description = "This API will get user role useing appid and userid", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<UserRoleDto> getUserRole(@PathVariable("appId") String appId,
-			@PathVariable("userId") String userId) throws Exception {
-		ResponseWrapper<UserRoleDto> responseWrapper = new ResponseWrapper<>();
-		UserRoleDto userRole = authService.getUserRole(appId, userId);
-		LOGGER.info("role appid " + appId + " user " + userId + ". role " + userRole.getRole());
-		responseWrapper.setResponse(userRole);
-		return responseWrapper;
-	}
-
-	/**
-	 * 
-	 * @param mobile - mobile number
-	 * @param appId  - applicationId
-	 * @return {@link MosipUserDto}
-	 * @throws Exception
-	 */
-	@ResponseFilter
-	@GetMapping(value = "/userdetail/{appid}/{mobilenumber}")
-	@Operation(summary = "This API will get userdetails", description = "This API will get userdetails based on mobileno", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<MosipUserDto> getUserDetailBasedOnMobileNumber(@PathVariable("mobilenumber") String mobile,
-			@PathVariable("appid") String appId) throws Exception {
-		MosipUserDto mosipUserDto = authService.getUserDetailBasedonMobileNumber(appId, mobile);
-		LOGGER.info("userdetail with mobile number appid " + appId + " user " + mosipUserDto.getUserId());
-		ResponseWrapper<MosipUserDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(mosipUserDto);
-		return responseWrapper;
-	}
-
-	/**
-	 * 
-	 * @param mobile - mobile number
-	 * @param appId  - applicationId
-	 * @return {@link MosipUserDto}
-	 * @throws Exception
-	 */
-	@ResponseFilter
-	@GetMapping(value = "/validate/{appid}/{userid}")
-	@Operation(summary = "This API will validate username", description = "This API will validate username based on userid", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<ValidationResponseDto> validateUserName(@PathVariable("userid") String userId,
-			@PathVariable("appid") String appId) {
-		ValidationResponseDto validationResponseDto = authService.validateUserName(appId, userId);
-		LOGGER.info(
-				"validate with appid " + appId + " user " + userId + ". Response " + validationResponseDto.getStatus());
-		ResponseWrapper<ValidationResponseDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(validationResponseDto);
-		return responseWrapper;
-	}
-
-	/**
-	 * Gets the user detail based on user id.
-	 *
-	 * @param appId  the app id
-	 * @param userId the user id
-	 * @return {@link UserDetailsDto}
-	 */
-	@ResponseFilter
-	@PostMapping(value = "/userdetail/regid/{appid}")
-	@Operation(summary = "Gets the user detail based on user id", description = "Gets the user detail based on user id", tags = {
-			"authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public ResponseWrapper<UserDetailsResponseDto> getUserDetailBasedOnUserId(@PathVariable("appid") String appId,
-			@RequestBody RequestWrapper<UserDetailsRequestDto> userDetails) {
-		UserDetailsResponseDto userDetailsDto = authService.getUserDetailBasedOnUserId(appId,
-				userDetails.getRequest().getUserDetails());
-		LOGGER.info("userdetail regid with appid " + appId + " request user count "
-				+ userDetails.getRequest().getUserDetails().size() + ". Response user count "
-				+ userDetailsDto.getUserDetails().size());
-		ResponseWrapper<UserDetailsResponseDto> responseWrapper = new ResponseWrapper<>();
-		responseWrapper.setResponse(userDetailsDto);
-		return responseWrapper;
-	}
-
-	/**
 	 * 
 	 * @param req - {@link HttpServletRequest}
 	 * @param res - {@link HttpServletResponse}
@@ -797,51 +508,6 @@ public class AuthController {
 		ResponseWrapper<AuthResponseDto> responseWrapper = new ResponseWrapper<>();
 		responseWrapper.setResponse(authResponseDto);
 		return responseWrapper;
-	}
-
-	@Deprecated
-	@GetMapping(value = "/login/{redirectURI}")
-	@Operation(summary = "Login a user", description = "internal api for auth code flow", tags = { "authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public void login(@CookieValue("state") String state, @PathVariable("redirectURI") String redirectURI,
-			HttpServletResponse res) throws IOException {
-		String uri = authService.getKeycloakURI(redirectURI, state);
-		LOGGER.info("redirect open id login uri " + uri);
-		res.setStatus(302);
-		res.sendRedirect(uri);
-	}
-
-	@Deprecated
-	@GetMapping(value = "/login-redirect/{redirectURI}")
-	@Operation(summary = "Login a user", description = "internal api for auth code flow", tags = { "authmanager" })
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Success or you may find errors in error array in response"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(hidden = true))) })
-	public void loginRedirect(@PathVariable("redirectURI") String redirectURI, @RequestParam("state") String state,
-			@RequestParam("session_state") String sessionState, @RequestParam("code") String code,
-			@CookieValue("state") String stateCookie, HttpServletResponse res) throws IOException {
-		AccessTokenResponseDTO jwtResponseDTO = authService.loginRedirect(state, sessionState, code, stateCookie,
-				redirectURI);
-
-		Cookie cookie = createCookie(jwtResponseDTO.getAccessToken(), Integer.parseInt(jwtResponseDTO.getExpiresIn()));
-		res.addCookie(cookie);
-		res.setStatus(302);
-		String uri = new String(Base64.decodeBase64(redirectURI.getBytes()));
-
-		LOGGER.info("login-redirect open id login uri " + uri);
-		if (allowedUrls.contains(uri)) {
-			res.sendRedirect(uri);
-		} else {
-			throw new AuthManagerException(AuthErrorCode.DOMAIN_EXCEPTION.getErrorCode(),
-					AuthErrorCode.DOMAIN_EXCEPTION.getErrorMessage());
-		}
-
 	}
 
 	/**

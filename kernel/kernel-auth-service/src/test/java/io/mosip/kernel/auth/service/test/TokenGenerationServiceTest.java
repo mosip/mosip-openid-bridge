@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import io.mosip.kernel.auth.defaultimpl.service.TokenGenerationService;
 import io.mosip.kernel.auth.test.AuthTestBootApplication;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 @SpringBootTest(classes = { AuthTestBootApplication.class })
 @RunWith(SpringRunner.class)

@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.auth.defaultimpl.config.MosipEnvironment;
 import io.mosip.kernel.auth.defaultimpl.constant.AuthConstant;
 import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
-import io.mosip.kernel.auth.defaultimpl.repository.UserStoreFactory;
 import io.mosip.kernel.auth.defaultimpl.repository.impl.KeycloakImpl;
 import io.mosip.kernel.auth.defaultimpl.service.OTPService;
 import io.mosip.kernel.auth.defaultimpl.service.TokenService;
@@ -32,7 +31,6 @@ import io.mosip.kernel.core.authmanager.model.AccessTokenResponseDTO;
 import io.mosip.kernel.core.authmanager.model.AuthNResponse;
 import io.mosip.kernel.core.authmanager.model.AuthNResponseDto;
 import io.mosip.kernel.core.authmanager.model.AuthResponseDto;
-import io.mosip.kernel.core.authmanager.model.AuthZResponseDto;
 import io.mosip.kernel.core.authmanager.model.ClientSecret;
 import io.mosip.kernel.core.authmanager.model.IndividualIdDto;
 import io.mosip.kernel.core.authmanager.model.LoginUser;
@@ -42,20 +40,13 @@ import io.mosip.kernel.core.authmanager.model.MosipUserListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserSaltListDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
 import io.mosip.kernel.core.authmanager.model.OtpUser;
-import io.mosip.kernel.core.authmanager.model.PasswordDto;
 import io.mosip.kernel.core.authmanager.model.RIdDto;
 import io.mosip.kernel.core.authmanager.model.RefreshTokenRequest;
 import io.mosip.kernel.core.authmanager.model.RefreshTokenResponse;
 import io.mosip.kernel.core.authmanager.model.RolesListDto;
-import io.mosip.kernel.core.authmanager.model.UserDetailsResponseDto;
-import io.mosip.kernel.core.authmanager.model.UserNameDto;
 import io.mosip.kernel.core.authmanager.model.UserOtp;
-import io.mosip.kernel.core.authmanager.model.UserPasswordRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserPasswordResponseDto;
 import io.mosip.kernel.core.authmanager.model.UserRegistrationRequestDto;
-import io.mosip.kernel.core.authmanager.model.UserRoleDto;
-import io.mosip.kernel.core.authmanager.model.ValidationResponseDto;
-import io.mosip.kernel.core.authmanager.spi.AuthService;
+import io.mosip.kernel.openid.bridge.api.service.AuthService;
 
 /**
  * Proxy Implementation of Auth service which will not use IAM just give back
@@ -91,9 +82,6 @@ public class ProxyAuthServiceImpl implements AuthService {
 
 	@Value("${mosip.admin_realm_id}")
 	private String realmId;
-
-	@Autowired
-	UserStoreFactory userStoreFactory;
 
 	@Autowired
 	KeycloakImpl keycloakImpl;
@@ -372,70 +360,17 @@ public class ProxyAuthServiceImpl implements AuthService {
 		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
 	}
 
-	@Override
-	public AuthZResponseDto unBlockUser(String userId, String appId) throws Exception {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public AuthZResponseDto changePassword(String appId, PasswordDto passwordDto) throws Exception {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public AuthZResponseDto resetPassword(String appId, PasswordDto passwordDto) throws Exception {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public UserNameDto getUserNameBasedOnMobileNumber(String appId, String mobileNumber) throws Exception {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-
-	}
 
 	@Override
 	public MosipUserDto registerUser(UserRegistrationRequestDto userCreationRequestDto) {
 		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
 	}
-
-	@Override
-	public UserPasswordResponseDto addUserPassword(UserPasswordRequestDto userPasswordRequestDto) {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public UserRoleDto getUserRole(String appId, String userId) throws Exception {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public MosipUserDto getUserDetailBasedonMobileNumber(String appId, String mobileNumber) throws Exception {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public ValidationResponseDto validateUserName(String appId, String userName) {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
-	@Override
-	public UserDetailsResponseDto getUserDetailBasedOnUserId(String appId, List<String> userIds) {
-		throw new UnsupportedOperationException("This openeration is not supported in local profile for now");
-	}
-
+	
+	
 	@Override
 	public MosipUserDto valdiateToken(String token) {
 		// this will verify token
-		DecodedJWT decodedJWT = JWT.require(Algorithm.none()).build().verify(token);
-		MosipUserDto mosipUserDto = new MosipUserDto();
-		String user = decodedJWT.getSubject();
-		mosipUserDto.setToken(token);
-		mosipUserDto.setMail(decodedJWT.getClaim(AuthConstant.EMAIL).asString());
-		mosipUserDto.setMobile(decodedJWT.getClaim(AuthConstant.MOBILE).asString());
-		mosipUserDto.setRole(decodedJWT.getClaim(AuthConstant.ROLES).asString());
-		mosipUserDto.setName(user);
-		mosipUserDto.setUserId(user);
-		return mosipUserDto;
+		throw new UnsupportedOperationException("This operation is deprecated in local profile.");
 	}
 
 	/*

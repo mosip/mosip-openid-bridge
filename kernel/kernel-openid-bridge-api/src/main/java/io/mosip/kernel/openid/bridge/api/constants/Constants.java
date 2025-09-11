@@ -58,4 +58,7 @@ public class Constants {
 	public static final String CLAIMS_PROPERTY = "mosip.iam.module.login_flow.claims";
 
 	public static final String CLIENT_ASSERTION = "client_assertion";
+	public static final String TOKEN_SUBJECT_CLAIM_NAME = "mosip.access_token.subject.claim-name";
+
+	public static final String UI_LOCALES = "ui_locales";
 }
