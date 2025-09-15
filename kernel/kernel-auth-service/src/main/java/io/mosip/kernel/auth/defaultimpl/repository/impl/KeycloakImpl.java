@@ -203,6 +203,117 @@ public class KeycloakImpl implements DataStore {
 
 	@Override
 	public MosipUserListDto getListOfUsersDetails(List<String> userDetails, String realmId) throws Exception {
+		if (userDetails == null || userDetails.isEmpty()) {
+			MosipUserListDto out = new MosipUserListDto();
+			out.setMosipUserDtoList(java.util.Collections.emptyList());
+			return out;
+		}
+		if (userDetails.size() == 1) {
+			return getSingleUserDetails(userDetails.get(0), realmId);
+		}
+		// fallback to existing multi-user path (see next fixes)
+		return getListOfUsersDetailsSlowPath(userDetails, realmId);
+	}
+
+	private MosipUserListDto getSingleUserDetails(String username, String realmId) {
+		Map<String, String> path = Map.of(AuthConstant.REALM_ID, realmId);
+		var uri = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users)
+				.queryParam("username", username)
+				.queryParam("exact", true)
+				.queryParam("briefRepresentation", true)
+				.queryParam("max", 1)
+				.buildAndExpand(path)
+				.toString();
+
+		String response = callKeycloakService(uri, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()));
+		List<MosipUserDto> list = new java.util.ArrayList<>(1);
+
+		try {
+			JsonNode node = objectMapper.readTree(response);
+			for (JsonNode json : node) {
+				if (username.equalsIgnoreCase(json.path("username").asText())) {
+					MosipUserDto dto = new MosipUserDto();
+					dto.setUserId(username);
+					dto.setMail(json.hasNonNull("email") ? json.get("email").asText() : null);
+					dto.setName(String.format("%s %s",
+							json.path("firstName").asText(""),
+							json.path("lastName").asText("")));
+					// If you really need roles for single-user:
+					String roles = getRolesAsString(json.get("id").asText(), realmId); // consider caching this
+					dto.setRole(roles);
+
+					if (json.has("attributes")) {
+						JsonNode attrs = json.get("attributes");
+						if (attrs.has("mobile") && attrs.get("mobile").has(0)) dto.setMobile(attrs.get("mobile").get(0).asText());
+						if (attrs.has("rid") && attrs.get("rid").has(0))       dto.setRId(attrs.get("rid").get(0).asText());
+						if (attrs.has("name") && attrs.get("name").has(0))     dto.setName(attrs.get("name").get(0).asText());
+					}
+					dto.setUserPassword(null);
+					list.add(dto);
+					break;
+				}
+			}
+		} catch (IOException e) {
+			LOGGER.error("Parsing single user details", e);
+			throw new AuthManagerException(AuthErrorCode.IO_EXCEPTION.getErrorCode(),
+					AuthErrorCode.IO_EXCEPTION.getErrorMessage());
+		}
+
+		MosipUserListDto out = new MosipUserListDto();
+		out.setMosipUserDtoList(list);
+		return out;
+	}
+
+	private MosipUserListDto getListOfUsersDetailsSlowPath(List<String> userDetails, String realmId) throws Exception {
+		Set<String> wanted = new HashSet<>(userDetails.size());
+		for (String u : userDetails) if (u != null) wanted.add(u.toLowerCase(Locale.ROOT));
+
+		Map<String,String> path = Map.of(AuthConstant.REALM_ID, realmId);
+		var uri = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users)
+				.queryParam("max", maxUsers)
+				.queryParam("briefRepresentation", true)
+				.buildAndExpand(path)
+				.toString();
+
+		String response = callKeycloakService(uri, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()));
+		List<MosipUserDto> mosipUserDtos = new ArrayList<>();
+
+		try {
+			JsonNode node = objectMapper.readTree(response);
+			for (JsonNode json : node) {
+				String username = json.path("username").asText();
+				if (!wanted.contains(username.toLowerCase(Locale.ROOT))) continue;
+
+				MosipUserDto dto = new MosipUserDto();
+				dto.setUserId(username);
+				dto.setMail(json.hasNonNull("email") ? json.get("email").asText() : null);
+				dto.setName(String.format("%s %s", json.path("firstName").asText(""), json.path("lastName").asText("")));
+				// Only call roles if you absolutely must:
+				String roles = getRolesAsString(json.get("id").asText(), realmId);
+				dto.setRole(roles);
+
+				if (json.has("attributes")) {
+					JsonNode attrs = json.get("attributes");
+					if (attrs.has("mobile") && attrs.get("mobile").has(0)) dto.setMobile(attrs.get("mobile").get(0).asText());
+					if (attrs.has("rid") && attrs.get("rid").has(0))       dto.setRId(attrs.get("rid").get(0).asText());
+					if (attrs.has("name") && attrs.get("name").has(0))     dto.setName(attrs.get("name").get(0).asText());
+				}
+				dto.setUserPassword(null);
+				mosipUserDtos.add(dto);
+			}
+		} catch (IOException e) {
+			LOGGER.error("Error in getListOfUsersDetails", e);
+			throw new AuthManagerException(AuthErrorCode.IO_EXCEPTION.getErrorCode(),
+					AuthErrorCode.IO_EXCEPTION.getErrorMessage());
+		}
+
+		MosipUserListDto out = new MosipUserListDto();
+		out.setMosipUserDtoList(mosipUserDtos);
+		return out;
+	}
+
+	/*@Override
+	public MosipUserListDto getListOfUsersDetails(List<String> userDetails, String realmId) throws Exception {
 		List<MosipUserDto> mosipUserDtos = null;
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, realmId);
@@ -222,7 +333,7 @@ public class KeycloakImpl implements DataStore {
 		MosipUserListDto mosipUserListDto = new MosipUserListDto();
 		mosipUserListDto.setMosipUserDtoList(mosipUserDtos);
 		return mosipUserListDto;
-	}
+	}*/
 
 	@Override
 	public MosipUserSaltListDto getAllUserDetailsWithSalt(List<String> userDetails, String appId) throws Exception {
