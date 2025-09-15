@@ -77,7 +77,7 @@ public class KeycloakImplTest {
 
 	@Value("${mosip.keycloak.max-no-of-users:100}")
 	private String maxUsers;
-	
+
 	@Value("${mosip.iam.role-based-user-url}")
 	private String roleBasedUsersurl;
 
@@ -98,11 +98,11 @@ public class KeycloakImplTest {
 		String userIDResp = "[\r\n" + "  {\r\n" + "    \"name\": \"PROCESSOR\"  }\r\n" + "]";
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		RolesListDto rolesListDto = keycloakImpl.getAllRoles("ida");
 		assertThat(rolesListDto.getRoles().get(0).getRoleName(), is("PROCESSOR"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getAllRolesIOExceptionTest() throws Exception {
 
@@ -112,7 +112,7 @@ public class KeycloakImplTest {
 		String userIDResp = "[\r\n" + "  \r\n" + "    \"name\": \"PROCESSOR\"  }\r\n" + "]";
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		RolesListDto rolesListDto = keycloakImpl.getAllRoles("ida");
 		assertThat(rolesListDto.getRoles().get(0).getRoleName(), is("PROCESSOR"));
 	}
@@ -120,57 +120,80 @@ public class KeycloakImplTest {
 	@Test
 	public void getListOfUsersDetailsTest() throws Exception {
 
+		// arrange
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, "ida");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users);
-		uriComponentsBuilder.queryParam("max", maxUsers);
-		String userIDResp = "[{\"username\": \"mock-user\",\"email\": \"mock@mosip.io\",\"firstName\": \"fname\",\"lastName\": \"lname\",\"id\": \"829329\",\"attributes\":{\"mobile\":[\"8291930201\"],\"rid\":[\"728391\"],\"name\":[\"mock-name\"]} }]";
-		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
-				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
-		// role
+
+		// Single-user exact endpoint your code builds now
+		UriComponentsBuilder ucb = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users)
+				.queryParam("username", "mock-user")
+				.queryParam("exact", true)
+				.queryParam("briefRepresentation", true)
+				.queryParam("max", 1);
+
+		String userIDResp =
+				"[{\"username\":\"mock-user\",\"email\":\"mock@mosip.io\",\"firstName\":\"fname\",\"lastName\":\"lname\",\"id\":\"829329\"," +
+						"\"attributes\":{\"mobile\":[\"8291930201\"],\"rid\":[\"728391\"],\"name\":[\"mock-name\"]}}]";
+
+		when(restTemplate.exchange(
+				Mockito.eq(ucb.buildAndExpand(pathParams).toString()),
+				Mockito.eq(HttpMethod.GET),
+				Mockito.any(),
+				Mockito.eq(String.class)))
+				.thenReturn(ResponseEntity.ok(userIDResp));
+
+		// role mapping (unchanged)
 		Map<String, String> rolePathParams = new HashMap<>();
 		rolePathParams.put(AuthConstant.REALM_ID, "ida");
 		rolePathParams.put("userId", "829329");
 
-		UriComponentsBuilder rolePathParamsUriComponentsBuilder = UriComponentsBuilder
+		UriComponentsBuilder roleUcb = UriComponentsBuilder
 				.fromUriString(keycloakAdminUrl + users + roleUserMappingurl);
-		String roleResp = "[\r\n" + "  {\r\n" + "    \"name\": \"PROCESSOR\"  }\r\n" + "]";
-		String roleUrl = rolePathParamsUriComponentsBuilder.buildAndExpand(rolePathParams).toString();
-		when(restTemplate.exchange(Mockito.eq(roleUrl), Mockito.eq(HttpMethod.GET), Mockito.any(),
-				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(roleResp));
-		List<String> userd = new ArrayList<>();
-		userd.add("mock-user");
-		MosipUserListDto rolesListDto = keycloakImpl.getListOfUsersDetails(userd, "ida");
-		assertThat(rolesListDto.getMosipUserDtoList().get(0).getName(), is("mock-name"));
+
+		String roleResp = "[{\"name\":\"PROCESSOR\"}]";
+		when(restTemplate.exchange(
+				Mockito.eq(roleUcb.buildAndExpand(rolePathParams).toString()),
+				Mockito.eq(HttpMethod.GET),
+				Mockito.any(),
+				Mockito.eq(String.class)))
+				.thenReturn(ResponseEntity.ok(roleResp));
+
+		// act
+		List<String> userd = java.util.Arrays.asList("mock-user");
+		MosipUserListDto dto = keycloakImpl.getListOfUsersDetails(userd, "ida");
+
+		// assert
+		assertThat(dto.getMosipUserDtoList().get(0).getName(), is("mock-name"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getListOfUsersDetailsIOExceptionTest() throws Exception {
 
+		// Arrange: realm path
 		Map<String, String> pathParams = new HashMap<>();
 		pathParams.put(AuthConstant.REALM_ID, "ida");
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users);
-		uriComponentsBuilder.queryParam("max", maxUsers);
-		String userIDResp = "[\"username\": \"mock-user\",\"email\": \"mock@mosip.io\",\"firstName\": \"fname\",\"lastName\": \"lname\",\"id\": \"829329\",\"attributes\":{\"mobile\":[\"8291930201\"],\"rid\":[\"728391\"],\"name\":[\"mock-name\"]} }]";
-		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
-				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
-		// role
-		Map<String, String> rolePathParams = new HashMap<>();
-		rolePathParams.put(AuthConstant.REALM_ID, "ida");
-		rolePathParams.put("userId", "829329");
 
-		UriComponentsBuilder rolePathParamsUriComponentsBuilder = UriComponentsBuilder
-				.fromUriString(keycloakAdminUrl + users + roleUserMappingurl);
-		String roleResp = "[\r\n" + "  {\r\n" + "    \"name\": \"PROCESSOR\"  }\r\n" + "]";
-		String roleUrl = rolePathParamsUriComponentsBuilder.buildAndExpand(rolePathParams).toString();
-		when(restTemplate.exchange(Mockito.eq(roleUrl), Mockito.eq(HttpMethod.GET), Mockito.any(),
-				Mockito.eq(String.class))).thenReturn(ResponseEntity.ok(roleResp));
-		List<String> userd = new ArrayList<>();
-		userd.add("mock-user");
-		MosipUserListDto rolesListDto = keycloakImpl.getListOfUsersDetails(userd, "ida");
-		assertThat(rolesListDto.getMosipUserDtoList().get(0).getName(), is("mock-name"));
+		// The NEW URL your code builds for single-user exact lookup
+		UriComponentsBuilder ucb = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users)
+				.queryParam("username", "mock-user")
+				.queryParam("exact", true)
+				.queryParam("briefRepresentation", true)
+				.queryParam("max", 1);
+
+		// Malformed JSON to force Jackson IOException
+		String badJson = "[{\"username\":\"mock-user\""; // truncated JSON
+
+		when(restTemplate.exchange(
+				Mockito.eq(ucb.buildAndExpand(pathParams).toString()),
+				Mockito.eq(HttpMethod.GET),
+				Mockito.any(),                 // HttpEntity
+				Mockito.eq(String.class)))
+				.thenReturn(ResponseEntity.ok(badJson));
+
+		// Act: should throw AuthManagerException before any roles call
+		keycloakImpl.getListOfUsersDetails(java.util.Collections.singletonList("mock-user"), "ida");
+
+		// No asserts needed; expected exception ends the test
 	}
 
 	@Test
@@ -182,11 +205,11 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		RIdDto rolesListDto = keycloakImpl.getRidFromUserId("mock-user", "ida");
 		assertThat(rolesListDto.getRId(), is("8291930201"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getRidFromUserIdNullRespTest() throws Exception {
 		String userIDResp = "[{\"username\": \"mock-user\",\"attributes\":{\"rid\":[\"8291930201\"]} }]";
@@ -196,11 +219,11 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(null));
+				.thenReturn(ResponseEntity.ok(null));
 		RIdDto rolesListDto = keycloakImpl.getRidFromUserId("mock-user", "ida");
 		assertThat(rolesListDto.getRId(), is("8291930201"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getRidFromUserIdUserNotFoundTest() throws Exception {
 		String userIDResp = "[{\"username\": \"mock-user1\",\"attributes\":{\"rid\":[\"8291930201\"]} }]";
@@ -210,11 +233,11 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		RIdDto rolesListDto = keycloakImpl.getRidFromUserId("mock-user", "ida");
 		assertThat(rolesListDto.getRId(), is("8291930201"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getRidFromUserIdIOExpTest() throws Exception {
 		String userIDResp = "[\"username\": \"mock-user\",\"attributes\":{\"rid\":[\"8291930201\"]} }]";
@@ -224,7 +247,7 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		RIdDto rolesListDto = keycloakImpl.getRidFromUserId("mock-user", "ida");
 		assertThat(rolesListDto.getRId(), is("8291930201"));
 	}
@@ -240,7 +263,7 @@ public class KeycloakImplTest {
 	 * Mockito.eq(uriComponentsBuilder.buildAndExpand(registerPathParams).toString()
 	 * ), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
 	 * .thenReturn(null);
-	 * 
+	 *
 	 * // get useridfrom id String userIDResp = "[\r\n" + "  {\r\n" +
 	 * "    \"username\": \"112211\",\r\n" + "    \"id\": \"8282828282\"\r\n" +
 	 * "  }\r\n" + "]"; UriComponentsBuilder getUserIDUriComponentsBuilder =
@@ -250,9 +273,9 @@ public class KeycloakImplTest {
 	 * Mockito.eq(getUserIDUriComponentsBuilder.buildAndExpand(registerPathParams).
 	 * toString()), Mockito.eq(HttpMethod.GET), Mockito.any(),
 	 * Mockito.eq(String.class))) .thenReturn(ResponseEntity.ok(userIDResp));
-	 * 
+	 *
 	 * // get role ID
-	 * 
+	 *
 	 * Map<String, String> roleIDPathParams = new HashMap<>();
 	 * roleIDPathParams.put(AuthConstant.REALM_ID, "preregistration");
 	 * roleIDPathParams.put("roleName", "INDIVIDUAL"); UriComponentsBuilder
@@ -263,7 +286,7 @@ public class KeycloakImplTest {
 	 * Mockito.eq(rolIDUriComponentsBuilder.buildAndExpand(roleIDPathParams).
 	 * toString()), Mockito.eq(HttpMethod.GET), Mockito.any(),
 	 * Mockito.eq(String.class))) .thenReturn(ResponseEntity.ok(roleIDResp));
-	 * 
+	 *
 	 * // map roles UriComponentsBuilder roleMapperUriComponentsBuilder
 	 * =UriComponentsBuilder.fromUriString(keycloakBaseUrl.concat(
 	 * "/users/{userID}/role-mappings/realm")); registerPathParams.put("userID",
@@ -272,15 +295,15 @@ public class KeycloakImplTest {
 	 * buildAndExpand(registerPathParams).toString()), Mockito.eq(HttpMethod.POST),
 	 * Mockito.any(), Mockito.eq(String.class)))
 	 * .thenReturn(ResponseEntity.ok("{}"));
-	 * 
+	 *
 	 * UserRegistrationRequestDto userRegistrationRequestDto = new
 	 * UserRegistrationRequestDto(); userRegistrationRequestDto.setAppId("prereg");
 	 * userRegistrationRequestDto.setUserName("112211");
-	 * 
+	 *
 	 * MosipUserDto rolesListDto =
 	 * keycloakImpl.registerUser(userRegistrationRequestDto);
 	 * assertThat(rolesListDto.getUserId(), is("112211"));
-	 * 
+	 *
 	 * }
 	 */
 
@@ -293,11 +316,11 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		IndividualIdDto rolesListDto = keycloakImpl.getIndividualIdFromUserId("mock-user", "ida");
 		assertThat(rolesListDto.getIndividualId(), is("8291930201"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getIndividualIdFromUserIdAuthManagerExceptionTest() throws Exception {
 		String userIDResp = "[{\"username\": \"mock-user1\",\"attributes\":{\"individualId\":[\"8291930201\"]} }]";
@@ -307,11 +330,11 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		IndividualIdDto rolesListDto = keycloakImpl.getIndividualIdFromUserId("mock-user", "ida");
 		rolesListDto.getIndividualId();
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getIndividualIdFromUserIdIOTest() throws Exception {
 		String userIDResp = "[\"username\": \"mock-user\",\"attributes\":{\"individualId\":[\"8291930201\"]} }]";
@@ -321,11 +344,11 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 		IndividualIdDto rolesListDto = keycloakImpl.getIndividualIdFromUserId("mock-user", "ida");
 		rolesListDto.getIndividualId();
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getIndividualIdFromUserIdNullRespTest() throws Exception {
 		String userIDResp = "[{\"username\": \"mock-user1\",\"attributes\":{\"individualId\":[\"8291930201\"]} }]";
@@ -335,7 +358,7 @@ public class KeycloakImplTest {
 				.fromUriString(keycloakAdminUrl + users + "?username=" + "mock-user");
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(null));
+				.thenReturn(ResponseEntity.ok(null));
 		IndividualIdDto rolesListDto = keycloakImpl.getIndividualIdFromUserId("mock-user", "ida");
 		rolesListDto.getIndividualId();
 	}
@@ -355,7 +378,7 @@ public class KeycloakImplTest {
 		uriComponentsBuilder.queryParam("max", 10);
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 
 		// role
 		Map<String, String> rolePathParams = new HashMap<>();
@@ -385,7 +408,7 @@ public class KeycloakImplTest {
 		uriComponentsBuilder.queryParam("max", 10);
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 
 		// role
 		Map<String, String> rolePathParams = new HashMap<>();
@@ -402,7 +425,7 @@ public class KeycloakImplTest {
 				"lname", "username", "search");
 		assertThat(rolesListDto.getMosipUserDtoList().get(0).getName(), is("mock-name"));
 	}
-	
+
 	@Test(expected = AuthManagerException.class)
 	public void getListOfUsersDetailsRoleSearchIoExceptionTest() throws Exception {
 		String userIDResp = "[\"username\": \"mock-user\",\"email\": \"mock@mosip.io\",\"firstName\": \"fname\",\"lastName\": \"lname\",\"id\": \"829329\",\"attributes\":{\"mobile\":[\"8291930201\"],\"rid\":[\"728391\"],\"name\":[\"mock-name\"]} }]";
@@ -415,7 +438,7 @@ public class KeycloakImplTest {
 		uriComponentsBuilder.queryParam("max", 10);
 		when(restTemplate.exchange(Mockito.eq(uriComponentsBuilder.buildAndExpand(pathParams).toString()),
 				Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class)))
-						.thenReturn(ResponseEntity.ok(userIDResp));
+				.thenReturn(ResponseEntity.ok(userIDResp));
 
 		// role
 		Map<String, String> rolePathParams = new HashMap<>();
