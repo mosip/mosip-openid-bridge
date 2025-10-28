@@ -187,7 +187,7 @@ public class KeycloakImpl implements DataStore {
 			JsonNode node = objectMapper.readTree(response);
 			for (JsonNode jsonNode : node) {
 				Role role = new Role();
-				String name = jsonNode.get("name").textValue();
+				String name = jsonNode.get(AuthConstant.NAME).textValue();
 				role.setRoleId(name);
 				role.setRoleName(name);
 				rolesList.add(role);
@@ -218,10 +218,10 @@ public class KeycloakImpl implements DataStore {
 	private MosipUserListDto getSingleUserDetails(String username, String realmId) {
 		Map<String, String> path = Map.of(AuthConstant.REALM_ID, realmId);
 		var uri = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users)
-				.queryParam("username", username)
-				.queryParam("exact", true)
-				.queryParam("briefRepresentation", true)
-				.queryParam("max", 1)
+				.queryParam(AuthConstant.USER_NAME, username)
+				.queryParam(AuthConstant.EXACT, true)
+				.queryParam(AuthConstant.BRIEF_REPRESENTATION, true)
+				.queryParam(AuthConstant.MAX, 1)
 				.buildAndExpand(path)
 				.toString();
 
@@ -231,22 +231,22 @@ public class KeycloakImpl implements DataStore {
 		try {
 			JsonNode node = objectMapper.readTree(response);
 			for (JsonNode json : node) {
-				if (username.equalsIgnoreCase(json.path("username").asText())) {
+				if (username.equalsIgnoreCase(json.path(AuthConstant.USER_NAME).asText())) {
 					MosipUserDto dto = new MosipUserDto();
 					dto.setUserId(username);
-					dto.setMail(json.hasNonNull("email") ? json.get("email").asText() : null);
+					dto.setMail(json.hasNonNull(AuthConstant.EMAIL) ? json.get(AuthConstant.EMAIL).asText() : null);
 					dto.setName(String.format("%s %s",
-							json.path("firstName").asText(""),
-							json.path("lastName").asText("")));
+							json.path(AuthConstant.FIRST_NAME).asText(""),
+							json.path(AuthConstant.LAST_NAME).asText("")));
 					// If you really need roles for single-user:
 					String roles = getRolesAsString(json.get("id").asText(), realmId); // consider caching this
 					dto.setRole(roles);
 
-					if (json.has("attributes")) {
-						JsonNode attrs = json.get("attributes");
-						if (attrs.has("mobile") && attrs.get("mobile").has(0)) dto.setMobile(attrs.get("mobile").get(0).asText());
-						if (attrs.has("rid") && attrs.get("rid").has(0))       dto.setRId(attrs.get("rid").get(0).asText());
-						if (attrs.has("name") && attrs.get("name").has(0))     dto.setName(attrs.get("name").get(0).asText());
+					if (json.has(AuthConstant.ATTRIBUTES)) {
+						JsonNode attrs = json.get(AuthConstant.ATTRIBUTES);
+						if (attrs.has(AuthConstant.MOBILE) && attrs.get(AuthConstant.MOBILE).has(0)) dto.setMobile(attrs.get(AuthConstant.MOBILE).get(0).asText());
+						if (attrs.has(AuthConstant.RID) && attrs.get(AuthConstant.RID).has(0))       dto.setRId(attrs.get(AuthConstant.RID).get(0).asText());
+						if (attrs.has(AuthConstant.NAME) && attrs.get(AuthConstant.NAME).has(0))     dto.setName(attrs.get(AuthConstant.NAME).get(0).asText());
 					}
 					dto.setUserPassword(null);
 					list.add(dto);
@@ -270,8 +270,8 @@ public class KeycloakImpl implements DataStore {
 
 		Map<String,String> path = Map.of(AuthConstant.REALM_ID, realmId);
 		var uri = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users)
-				.queryParam("max", maxUsers)
-				.queryParam("briefRepresentation", true)
+				.queryParam(AuthConstant.MAX, maxUsers)
+				.queryParam(AuthConstant.BRIEF_REPRESENTATION, true)
 				.buildAndExpand(path)
 				.toString();
 
@@ -281,22 +281,22 @@ public class KeycloakImpl implements DataStore {
 		try {
 			JsonNode node = objectMapper.readTree(response);
 			for (JsonNode json : node) {
-				String username = json.path("username").asText();
+				String username = json.path(AuthConstant.USER_NAME).asText();
 				if (!wanted.contains(username.toLowerCase(Locale.ROOT))) continue;
 
 				MosipUserDto dto = new MosipUserDto();
 				dto.setUserId(username);
-				dto.setMail(json.hasNonNull("email") ? json.get("email").asText() : null);
-				dto.setName(String.format("%s %s", json.path("firstName").asText(""), json.path("lastName").asText("")));
+				dto.setMail(json.hasNonNull(AuthConstant.EMAIL) ? json.get(AuthConstant.EMAIL).asText() : null);
+				dto.setName(String.format("%s %s", json.path(AuthConstant.FIRST_NAME).asText(""), json.path(AuthConstant.LAST_NAME).asText("")));
 				// Only call roles if you absolutely must:
 				String roles = getRolesAsString(json.get("id").asText(), realmId);
 				dto.setRole(roles);
 
-				if (json.has("attributes")) {
-					JsonNode attrs = json.get("attributes");
-					if (attrs.has("mobile") && attrs.get("mobile").has(0)) dto.setMobile(attrs.get("mobile").get(0).asText());
-					if (attrs.has("rid") && attrs.get("rid").has(0))       dto.setRId(attrs.get("rid").get(0).asText());
-					if (attrs.has("name") && attrs.get("name").has(0))     dto.setName(attrs.get("name").get(0).asText());
+				if (json.has(AuthConstant.ATTRIBUTES)) {
+					JsonNode attrs = json.get(AuthConstant.ATTRIBUTES);
+					if (attrs.has(AuthConstant.MOBILE) && attrs.get(AuthConstant.MOBILE).has(0)) dto.setMobile(attrs.get(AuthConstant.MOBILE).get(0).asText());
+					if (attrs.has(AuthConstant.RID) && attrs.get(AuthConstant.RID).has(0))       dto.setRId(attrs.get(AuthConstant.RID).get(0).asText());
+					if (attrs.has(AuthConstant.NAME) && attrs.get(AuthConstant.NAME).has(0))     dto.setName(attrs.get(AuthConstant.NAME).get(0).asText());
 				}
 				dto.setUserPassword(null);
 				mosipUserDtos.add(dto);
@@ -338,7 +338,7 @@ public class KeycloakImpl implements DataStore {
 	@Override
 	public MosipUserSaltListDto getAllUserDetailsWithSalt(List<String> userDetails, String appId) throws Exception {
 
-		return jdbcTemplate.query(FETCH_ALL_SALTS, new MapSqlParameterSource("username", userDetails),
+		return jdbcTemplate.query(FETCH_ALL_SALTS, new MapSqlParameterSource(AuthConstant.USER_NAME, userDetails),
 				new ResultSetExtractor<MosipUserSaltListDto>() {
 
 					@Override
@@ -347,7 +347,7 @@ public class KeycloakImpl implements DataStore {
 						List<MosipUserSalt> mosipUserSaltList = new ArrayList<>();
 						while (rs.next()) {
 							MosipUserSalt mosipUserSalt = new MosipUserSalt();
-							mosipUserSalt.setUserId(rs.getString("username"));
+							mosipUserSalt.setUserId(rs.getString(AuthConstant.USER_NAME));
 							PasswordDetails password = PasswordUtil
 									.splitCredentials(CryptoUtil.decodeBase64(rs.getString("value")));
 							mosipUserSalt.setSalt(CryptoUtil.encodeBase64String(password.getSalt()));
@@ -379,7 +379,7 @@ public class KeycloakImpl implements DataStore {
 			JsonNode node = objectMapper.readTree(response);
 			for (JsonNode jsonNode : node) {
 				if (jsonNode.get(AuthConstant.USER_NAME).textValue().equals(userId)) {
-					JsonNode attriNode = jsonNode.get("attributes");
+					JsonNode attriNode = jsonNode.get(AuthConstant.ATTRIBUTES);
 					String rid = attriNode.get(AuthConstant.RID).get(0).textValue();
 					rIdDto.setRId(rid);
 					break;
@@ -473,7 +473,7 @@ public class KeycloakImpl implements DataStore {
 		}
 		if (jsonNodes.size() > 0) {
 			for (JsonNode jsonNode : jsonNodes) {
-				if (userName.equals(jsonNode.get("username").asText())) {
+				if (userName.equals(jsonNode.get(AuthConstant.USER_NAME).asText())) {
 					return jsonNode.get("id").asText();
 				}
 			}
@@ -508,7 +508,7 @@ public class KeycloakImpl implements DataStore {
 		}
 		if (jsonNodes.size() > 0) {
 			for (JsonNode jsonNode : jsonNodes) {
-				if (userName.equals(jsonNode.get("username").asText())) {
+				if (userName.equals(jsonNode.get(AuthConstant.USER_NAME).asText())) {
 					return true;
 				}
 			}
@@ -538,7 +538,7 @@ public class KeycloakImpl implements DataStore {
 		genderList.add(userRegDto.getGender());
 		contactNoList.add(userRegDto.getContactNo());
 		HashMap<String, List<Object>> attributes = new HashMap<>();
-		attributes.put("mobile", contactNoList);
+		attributes.put(AuthConstant.MOBILE, contactNoList);
 
 		attributes.put("gender", genderList);
 		keycloakRequestDto.setUsername(userRegDto.getUserName());
@@ -689,13 +689,13 @@ public class KeycloakImpl implements DataStore {
 
 		for (JsonNode jsonNode : node) {
 			MosipUserDto mosipUserDto = new MosipUserDto();
-			String username = jsonNode.get("username").textValue();
+			String username = jsonNode.get(AuthConstant.USER_NAME).textValue();
 			if (userDetails.stream().anyMatch(user -> user.equalsIgnoreCase(username))) {
 				mosipUserDto.setUserId(username);
-				mosipUserDto.setMail(jsonNode.hasNonNull("email") ? jsonNode.get("email").textValue() : null);
+				mosipUserDto.setMail(jsonNode.hasNonNull(AuthConstant.EMAIL) ? jsonNode.get(AuthConstant.EMAIL).textValue() : null);
 				mosipUserDto.setName(String.format("%s %s",
-						(jsonNode.hasNonNull("firstName") ? jsonNode.get("firstName").textValue() : ""),
-						(jsonNode.hasNonNull("lastName") ? jsonNode.get("lastName").textValue() : "")));
+						(jsonNode.hasNonNull(AuthConstant.FIRST_NAME) ? jsonNode.get(AuthConstant.FIRST_NAME).textValue() : ""),
+						(jsonNode.hasNonNull(AuthConstant.LAST_NAME) ? jsonNode.get(AuthConstant.LAST_NAME).textValue() : "")));
 				try {
 					String roles = getRolesAsString(jsonNode.get("id").textValue(), realmId);
 					mosipUserDto.setRole(roles);
@@ -705,16 +705,16 @@ public class KeycloakImpl implements DataStore {
 							AuthErrorCode.IO_EXCEPTION.getErrorMessage());
 				}
 
-				if (jsonNode.hasNonNull("attributes")) {
-					JsonNode attributeNodes = jsonNode.get("attributes");
-					if (attributeNodes.hasNonNull("mobile") && attributeNodes.get("mobile").hasNonNull(0)) {
-						mosipUserDto.setMobile(attributeNodes.get("mobile").get(0).textValue());
+				if (jsonNode.hasNonNull(AuthConstant.ATTRIBUTES)) {
+					JsonNode attributeNodes = jsonNode.get(AuthConstant.ATTRIBUTES);
+					if (attributeNodes.hasNonNull(AuthConstant.MOBILE) && attributeNodes.get(AuthConstant.MOBILE).hasNonNull(0)) {
+						mosipUserDto.setMobile(attributeNodes.get(AuthConstant.MOBILE).get(0).textValue());
 					}
-					if (attributeNodes.hasNonNull("rid") && attributeNodes.get("rid").hasNonNull(0)) {
-						mosipUserDto.setRId(attributeNodes.get("rid").get(0).textValue());
+					if (attributeNodes.hasNonNull(AuthConstant.RID) && attributeNodes.get(AuthConstant.RID).hasNonNull(0)) {
+						mosipUserDto.setRId(attributeNodes.get(AuthConstant.RID).get(0).textValue());
 					}
-					if (attributeNodes.hasNonNull("name") && attributeNodes.get("name").hasNonNull(0)) {
-						mosipUserDto.setName(attributeNodes.get("name").get(0).textValue());
+					if (attributeNodes.hasNonNull(AuthConstant.NAME) && attributeNodes.get(AuthConstant.NAME).hasNonNull(0)) {
+						mosipUserDto.setName(attributeNodes.get(AuthConstant.NAME).get(0).textValue());
 					}
 				}
 				mosipUserDto.setUserPassword(null);
@@ -746,7 +746,7 @@ public class KeycloakImpl implements DataStore {
 				HttpMethod.GET, httpEntity);
 		JsonNode jsonNode = objectMapper.readTree(response);
 		for (JsonNode node : jsonNode) {
-			String role = node.get("name").textValue();
+			String role = node.get(AuthConstant.NAME).textValue();
 			Objects.nonNull(role);
 			roleBuilder.append(role).append(AuthConstant.COMMA);
 		}
@@ -797,7 +797,7 @@ public class KeycloakImpl implements DataStore {
 			JsonNode node = objectMapper.readTree(response);
 			for (JsonNode jsonNode : node) {
 				if (jsonNode.get(AuthConstant.USER_NAME).textValue().equals(userId)) {
-					JsonNode attriNode = jsonNode.get("attributes");
+					JsonNode attriNode = jsonNode.get(AuthConstant.ATTRIBUTES);
 					String individualId = null;
 					if (attriNode.has(AuthConstant.INDIVIDUAL_ID))
 						individualId = attriNode.get(AuthConstant.INDIVIDUAL_ID).get(0).textValue();
@@ -840,23 +840,23 @@ public class KeycloakImpl implements DataStore {
 			pathParams.put(AuthConstant.REALM_ID, realmId);
 			uriComponentsBuilder = UriComponentsBuilder.fromUriString(keycloakAdminUrl + users);
 			if (StringUtils.isNotBlank(email)) {
-				uriComponentsBuilder.queryParam("email", email);
+				uriComponentsBuilder.queryParam(AuthConstant.EMAIL, email);
 			}
 			if (StringUtils.isNotBlank(firstName)) {
-				uriComponentsBuilder.queryParam("firstName", firstName);
+				uriComponentsBuilder.queryParam(AuthConstant.FIRST_NAME, firstName);
 			}
 			if (StringUtils.isNotBlank(lastName)) {
-				uriComponentsBuilder.queryParam("lastName", lastName);
+				uriComponentsBuilder.queryParam(AuthConstant.LAST_NAME, lastName);
 			}
 			if (StringUtils.isNotBlank(username)) {
-				uriComponentsBuilder.queryParam("username", username);
+				uriComponentsBuilder.queryParam(AuthConstant.USER_NAME, username);
 			}
 			if (StringUtils.isNotBlank(search)) {
-				uriComponentsBuilder.queryParam("search", search);
+				uriComponentsBuilder.queryParam(AuthConstant.SEARCH, search);
 			}
 		}
-		uriComponentsBuilder.queryParam("first", pageStart);
-		uriComponentsBuilder.queryParam("max", pageFetch == 0 ? maxUsers : pageFetch);
+		uriComponentsBuilder.queryParam(AuthConstant.FIRST, pageStart);
+		uriComponentsBuilder.queryParam(AuthConstant.MAX, pageFetch == 0 ? maxUsers : pageFetch);
 		String response = callKeycloakService(uriComponentsBuilder.buildAndExpand(pathParams).toString(),
 				HttpMethod.GET, httpEntity);
 		List<MosipUserDto> mosipUserDtos = null;
@@ -883,12 +883,12 @@ public class KeycloakImpl implements DataStore {
 
 		for (JsonNode jsonNode : node) {
 			MosipUserDto mosipUserDto = new MosipUserDto();
-			String username = jsonNode.get("username").textValue();
+			String username = jsonNode.get(AuthConstant.USER_NAME).textValue();
 			mosipUserDto.setUserId(username);
-			mosipUserDto.setMail(jsonNode.hasNonNull("email") ? jsonNode.get("email").textValue() : null);
+			mosipUserDto.setMail(jsonNode.hasNonNull(AuthConstant.EMAIL) ? jsonNode.get(AuthConstant.EMAIL).textValue() : null);
 			mosipUserDto.setName(String.format("%s %s",
-					(jsonNode.hasNonNull("firstName") ? jsonNode.get("firstName").textValue() : ""),
-					(jsonNode.hasNonNull("lastName") ? jsonNode.get("lastName").textValue() : "")));
+					(jsonNode.hasNonNull(AuthConstant.FIRST_NAME) ? jsonNode.get(AuthConstant.FIRST_NAME).textValue() : ""),
+					(jsonNode.hasNonNull(AuthConstant.LAST_NAME) ? jsonNode.get(AuthConstant.LAST_NAME).textValue() : "")));
 			mosipUserDto.setRole(roleName);
 			if (!isRoleBasedSearch) {
 				try {
@@ -901,16 +901,16 @@ public class KeycloakImpl implements DataStore {
 				}
 			}
 
-			if (jsonNode.hasNonNull("attributes")) {
-				JsonNode attributeNodes = jsonNode.get("attributes");
-				if (attributeNodes.hasNonNull("mobile") && attributeNodes.get("mobile").hasNonNull(0)) {
-					mosipUserDto.setMobile(attributeNodes.get("mobile").get(0).textValue());
+			if (jsonNode.hasNonNull(AuthConstant.ATTRIBUTES)) {
+				JsonNode attributeNodes = jsonNode.get(AuthConstant.ATTRIBUTES);
+				if (attributeNodes.hasNonNull(AuthConstant.MOBILE) && attributeNodes.get(AuthConstant.MOBILE).hasNonNull(0)) {
+					mosipUserDto.setMobile(attributeNodes.get(AuthConstant.MOBILE).get(0).textValue());
 				}
-				if (attributeNodes.hasNonNull("rid") && attributeNodes.get("rid").hasNonNull(0)) {
-					mosipUserDto.setRId(attributeNodes.get("rid").get(0).textValue());
+				if (attributeNodes.hasNonNull(AuthConstant.RID) && attributeNodes.get(AuthConstant.RID).hasNonNull(0)) {
+					mosipUserDto.setRId(attributeNodes.get(AuthConstant.RID).get(0).textValue());
 				}
-				if (attributeNodes.hasNonNull("name") && attributeNodes.get("name").hasNonNull(0)) {
-					mosipUserDto.setName(attributeNodes.get("name").get(0).textValue());
+				if (attributeNodes.hasNonNull(AuthConstant.NAME) && attributeNodes.get(AuthConstant.NAME).hasNonNull(0)) {
+					mosipUserDto.setName(attributeNodes.get(AuthConstant.NAME).get(0).textValue());
 				}
 			}
 			mosipUserDto.setUserPassword(null);
