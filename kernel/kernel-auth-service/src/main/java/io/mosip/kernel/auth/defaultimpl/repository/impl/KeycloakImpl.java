@@ -239,7 +239,7 @@ public class KeycloakImpl implements DataStore {
 							json.path(AuthConstant.FIRST_NAME).asText(""),
 							json.path(AuthConstant.LAST_NAME).asText("")));
 					// If you really need roles for single-user:
-					String roles = getRolesAsString(json.get("id").asText(), realmId); // consider caching this
+					String roles = getRolesAsString(json.get(AuthConstant.ID).asText(), realmId); // consider caching this
 					dto.setRole(roles);
 
 					if (json.has(AuthConstant.ATTRIBUTES)) {
