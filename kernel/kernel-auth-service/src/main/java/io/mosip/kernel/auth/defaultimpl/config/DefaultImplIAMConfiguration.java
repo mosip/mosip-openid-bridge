@@ -14,7 +14,7 @@ import io.mosip.kernel.auth.defaultimpl.util.MemoryCache;
 
 @Configuration
 public class DefaultImplIAMConfiguration {
-	
+
 	@Autowired
 	private RestInterceptor restInterceptor;
 
