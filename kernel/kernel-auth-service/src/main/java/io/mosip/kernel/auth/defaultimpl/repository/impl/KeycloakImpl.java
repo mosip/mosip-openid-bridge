@@ -102,7 +102,6 @@ public class KeycloakImpl implements DataStore {
 	@Value("${mosip.iam.role-user-mapping-url}")
 	private String roleUserMappingurl;
 
-	@Qualifier(value = "keycloakRestTemplate")
 	@Autowired
 	private RestTemplate restTemplate;
 
