@@ -45,6 +45,7 @@ import io.mosip.kernel.core.authmanager.model.RolesListDto;
 public class KeycloakImplTest {
 
 	@MockBean
+	@Qualifier("keycloakRestTemplate")
 	private RestTemplate restTemplate;
 
 	@Autowired
