@@ -27,7 +27,7 @@ import io.mosip.kernel.auth.defaultimpl.exception.AuthManagerException;
 import io.mosip.kernel.auth.defaultimpl.service.TokenService;
 import io.mosip.kernel.core.authmanager.model.MosipUserDto;
 import io.mosip.kernel.core.authmanager.model.MosipUserTokenDto;
-import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.DateUtils2;
 
 /**
  * Token validator
@@ -98,7 +98,7 @@ public class TokenValidator {
 	public boolean isExpired(String token) {
 		DecodedJWT decodedJWT = JWT.decode(token);
 		long expiryEpochTime = decodedJWT.getClaim("exp").asLong();
-		long currentEpoch = DateUtils.getUTCCurrentDateTime().toEpochSecond(ZoneOffset.UTC);
+		long currentEpoch = DateUtils2.getUTCCurrentDateTime().toEpochSecond(ZoneOffset.UTC);
 		LOGGER.debug("invoked isExpired token " + expiryEpochTime + " currentEpoch " + currentEpoch);
 		return currentEpoch > expiryEpochTime;
 	}

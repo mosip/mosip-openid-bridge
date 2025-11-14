@@ -64,7 +64,7 @@ import io.mosip.kernel.authcodeflowproxy.api.validator.ValidateTokenUtil;
 import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.DateUtils2;
 import io.mosip.kernel.openid.bridge.api.constants.AuthConstant;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
 import io.mosip.kernel.openid.bridge.api.constants.Errors;
@@ -234,7 +234,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -262,7 +262,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_signatureVerification_negative() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -290,7 +290,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_expiredToken() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().minusDays(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().minusDays(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -317,7 +317,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_domain_match_positive() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -346,7 +346,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_invalid_issuer() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "~!::#@///wrongurl");
 		ReflectionTestUtils.setField(validateTokenHelper, "validateIssuerDomain", true);
 
@@ -374,7 +374,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_domain_match_negative() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://someotherdomain");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -402,7 +402,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_aud_match_positive() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withAudience("myapp-client");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -431,7 +431,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_aud_match_negative_azp_positive() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withAudience("somether-app-client");
 		withExpiresAt.withClaim(AuthConstant.AZP, "myapp-client");
 		
@@ -461,7 +461,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_aud_match_null_azp_null() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
 		ReflectionTestUtils.setField(validateTokenHelper, "validateAudClaim", true);
@@ -488,7 +488,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectTest_aud_match_negative_azp_negative() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withAudience("someother-app-client");
 		withExpiresAt.withClaim(AuthConstant.AZP, "someother-app-client");
 		
@@ -671,7 +671,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void loginRedirectWithClaimTest() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -702,7 +702,7 @@ public class AuthProxyControllerTests {
 	public void loginRedirectWithPrivateKeyJwtAuthEnabled() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
 
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 		ReflectionTestUtils.setField(loginService, "isJwtAuthEnabled", true);
 		when(mockAlgo.getName()).thenReturn("RSA256");
@@ -710,7 +710,7 @@ public class AuthProxyControllerTests {
 		String token = withExpiresAt.withClaim("scope", "aaa bbb").sign(mockAlgo);
 		JWTSignatureResponseDto jwtSignatureResponseDto = new JWTSignatureResponseDto();
 		jwtSignatureResponseDto.setJwtSignedData("abc");
-		jwtSignatureResponseDto.setTimestamp(DateUtils.getUTCCurrentDateTime());
+		jwtSignatureResponseDto.setTimestamp(DateUtils2.getUTCCurrentDateTime());
 		ResponseWrapper<JWTSignatureResponseDto> responseWrapper = new ResponseWrapper<>();
 		responseWrapper.setResponse(jwtSignatureResponseDto);
 		when(selfTokenRestTemplate.exchange((URI) any(), (HttpMethod) any(), (HttpEntity<?>) any(), (Class<Object>) any()))
@@ -779,7 +779,7 @@ public class AuthProxyControllerTests {
 	@Test
 	public void logoutRedirectHostCheckTest() throws Exception {
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
-		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
+		Builder withExpiresAt = JWT.create().withExpiresAt(Date.from(DateUtils2.getUTCCurrentDateTime().plusHours(1).toInstant(ZoneOffset.UTC)));
 		withExpiresAt.withClaim(AuthConstant.ISSUER, "http://localhost");
 		
 		when(mockAlgo.getName()).thenReturn("RSA256");
