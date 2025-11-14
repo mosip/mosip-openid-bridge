@@ -35,7 +35,7 @@ import com.auth0.jwt.impl.NullClaim;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.DateUtils2;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.api.constants.AuthConstant;
 import io.mosip.kernel.openid.bridge.api.constants.AuthErrorCode;
@@ -102,10 +102,10 @@ public class ValidateTokenUtil {
 	public ImmutablePair<Boolean, AuthErrorCode> isTokenValid(DecodedJWT decodedJWT) {
 		PublicKey publicKey = getPublicKey(decodedJWT);
 		// First, token expire
-		LocalDateTime expiryTime = DateUtils
-				.convertUTCToLocalDateTime(DateUtils.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
+		LocalDateTime expiryTime = DateUtils2
+				.convertUTCToLocalDateTime(DateUtils2.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
 		String userName = decodedJWT.getClaim(AuthConstant.PREFERRED_USERNAME).asString();
-		if (!DateUtils.before(DateUtils.getUTCCurrentDateTime(), expiryTime)) {
+		if (!DateUtils2.before(DateUtils2.getUTCCurrentDateTime(), expiryTime)) {
 			LOGGER.error("Provided Auth Token expired. Throwing Authentication Exception. UserName: " + userName);
 			return ImmutablePair.of(Boolean.FALSE, AuthErrorCode.UNAUTHORIZED);
 		}

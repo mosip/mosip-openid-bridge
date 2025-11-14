@@ -45,7 +45,7 @@ import io.mosip.kernel.core.exception.ServiceError;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.http.ResponseWrapper;
 import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.DateUtils2;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.api.constants.AuthErrorCode;
 import io.mosip.kernel.openid.bridge.api.constants.Constants;
@@ -307,7 +307,7 @@ public class LoginServiceImpl implements LoginServiceV2 {
 
 			RequestWrapper<JWSSignatureRequestDto> requestWrapper = new RequestWrapper<>();
 			requestWrapper.setRequest(jwsSignatureRequestDto);
-			requestWrapper.setRequesttime(DateUtils.getUTCCurrentDateTime());
+			requestWrapper.setRequesttime(DateUtils2.getUTCCurrentDateTime());
 			HttpEntity<RequestWrapper<JWSSignatureRequestDto>> requestWrapperHttpEntity = new HttpEntity<>(requestWrapper);
 			ResponseWrapper<?> responseWrapper =
 					selfTokenRestTemplate.exchange(URI.create(Objects.requireNonNull(this.environment.getProperty(Constants.KEYMANAGER_JWT_SIGN_END_POINT))),
