@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -236,7 +237,7 @@ public class TokenValidationHelperTest {
 		assertThat(res.getUserId(), is(mosipUserDto.getUserId()));
 	}
 
-	@Test(expected = AuthManagerException.class)
+	@Test(expected = JWTDecodeException.class)
 	public void getTokenValidatedUserResponseValidateTokenHelperTestFailure() throws Exception {
 		ReflectionTestUtils.setField(tokenValidationHelper, "activeProfile", "dev");
 		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
@@ -252,9 +253,5 @@ public class TokenValidationHelperTest {
 		when(validateTokenHelper.doOfflineLocalTokenValidation(Mockito.anyString())).thenReturn(mosipUserDto);
 		MosipUserDto res= tokenValidationHelper.getTokenValidatedUserResponse(token, new RestTemplate());
 	}
-
-
-
-
-
+    
 }
