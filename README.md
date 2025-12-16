@@ -9,7 +9,7 @@ The **MOSIP OpenID Bridge** provides authentication services and adapters for MO
 
 ## Services
 
-The MOSIP OpenID Bridge repository contains the following modules:
+The MOSIP OpenID Bridge repository contains the following services:
 
 1. **[Kernel Auth Service](kernel/kernel-auth-service/README.md)** (`kernel-auth-service`) - REST API service to authenticate MOSIP services.
 2. **[Kernel Auth Adapter](kernel/kernel-auth-adapter/README.md)** (`kernel-auth-adapter`) - Adapter for authentication.
