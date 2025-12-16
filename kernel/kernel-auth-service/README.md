@@ -43,7 +43,7 @@ The project can be set up in two ways:
 
 2. Navigate to the kernel directory and build:
 
-```bash
+```text
 cd kernel
 mvn install -Dgpg.skip=true
 ```
@@ -52,7 +52,7 @@ mvn install -Dgpg.skip=true
 
 1. Build the Docker image:
 
-```bash
+```text
 cd kernel/kernel-auth-service
 docker build -f Dockerfile .
 ```
