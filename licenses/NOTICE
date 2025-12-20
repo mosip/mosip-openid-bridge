@@ -1,0 +1,253 @@
+================================================================================
+COPYRIGHT NOTICES
+================================================================================
+
+This software incorporates components from the projects listed below. The
+original copyright notices have been preserved in accordance with the terms
+of their respective licenses:
+
+--------------------------------------------------------------------------------
+APACHE LICENSE 2.0 COMPONENTS
+--------------------------------------------------------------------------------
+
+Spring Framework & Spring Boot
+  Copyright © 2002-2024 Pivotal Software, Inc.
+  Copyright © 2002-2024 VMware, Inc. or its affiliates.
+  Licensed under the Apache License, Version 2.0
+
+Spring Cloud (spring-cloud-starter-config, spring-cloud-starter-loadbalancer)
+  Copyright © 2013-2024 the original authors
+  Copyright © 2013-2024 Pivotal Software, Inc.
+  Licensed under the Apache License, Version 2.0
+
+Spring Security
+  Copyright © 2002-2024 Pivotal Software, Inc.
+  Copyright © 2002-2024 VMware, Inc. or its affiliates.
+  Licensed under the Apache License, Version 2.0
+
+SpringDoc OpenAPI (springdoc-openapi-starter-webmvc-ui, springdoc-openapi-maven-plugin)
+  Copyright © 2019-2024 springdoc.org
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven Compiler Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven Surefire Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven Source Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven Javadoc Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven Assembly Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven WAR Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven JAR Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Maven GPG Plugin
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache HttpComponents (httpclient)
+  Copyright © 1999-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Directory API (api-all)
+  Copyright © 2003-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Apache Commons Collections
+  Copyright © 2001-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+Jackson Libraries (jackson-databind, jackson-annotations, jackson-core)
+  Copyright © 2007-2024 Tatu Saloranta (tatu.saloranta@iki.fi)
+  Copyright © 2008-2024 FasterXML.com
+  Licensed under the Apache License, Version 2.0
+
+JSON Simple (com.googlecode.json-simple:json-simple)
+  Copyright © 2006 Yidong Fang
+  Copyright © 2006 Chris Nokleberg and Contributors
+  Licensed under the Apache License, Version 2.0
+
+Hibernate Validator
+  Copyright © 2009-2024 Red Hat, Inc.
+  Copyright © 2009-2013 Gunnar Morling
+  Licensed under the Apache License, Version 2.0
+
+Keycloak Adapter BOM
+  Copyright © 2016-2025 Red Hat, Inc. and/or its affiliates
+  Licensed under the Apache License, Version 2.0
+
+JJWT (io.jsonwebtoken:jjwt)
+  Copyright © 2014-2024 Stormpath, Inc. and JJWT Contributors
+  Licensed under the Apache License, Version 2.0
+
+Eclipse Vert.x Web (io.vertx:vertx-web)
+  Copyright © 2011-2024 Contributors to the Eclipse Foundation
+  Dual Licensed under the Apache License, Version 2.0 OR Eclipse Public License 2.0
+
+Powermock (powermock-api-mockito2, powermock-module-junit4)
+  Copyright © 2007-2017 PowerMock Contributors
+  Licensed under the Apache License, Version 2.0
+
+Spring Boot Maven Plugin
+  Copyright © 2012-2024 Pivotal Software, Inc.
+  Licensed under the Apache License, Version 2.0
+
+Sonatype Central Publishing Maven Plugin
+  Copyright © 2022-2024 Sonatype, Inc.
+  Licensed under the Apache License, Version 2.0
+
+--------------------------------------------------------------------------------
+MIT LICENSE COMPONENTS
+--------------------------------------------------------------------------------
+
+Mockito (mockito-core)
+  Copyright © 2007-2024 Mockito contributors
+  Licensed under the MIT License
+
+SLF4J API
+  Copyright © 2004-2025 QOS.ch
+  All rights reserved.
+  Licensed under the MIT License
+
+Auth0 JWKS RSA (com.auth0:jwks-rsa)
+  Copyright © 2016 Auth0, Inc. and Auth0 Contributors
+  Licensed under the MIT License
+
+Auth0 Java JWT (com.auth0:java-jwt)
+  Copyright © 2015 Auth0, Inc. and Auth0 Contributors
+  Licensed under the MIT License
+
+Bouncy Castle (bcprov-jdk18on)
+  Copyright © 2000-2023 The Legion of the Bouncy Castle Inc.
+  (https://www.bouncycastle.org)
+  Licensed under the MIT License (Bouncy Castle License)
+
+--------------------------------------------------------------------------------
+ECLIPSE PUBLIC LICENSE COMPONENTS
+--------------------------------------------------------------------------------
+
+JUnit 4 (junit:junit)
+  Copyright © 2002-2024 JUnit Team and Contributors
+  Licensed under the Eclipse Public License 1.0
+
+JaCoCo Maven Plugin (org.jacoco:jacoco-maven-plugin)
+  Copyright © 2009-2024 Mountainminds GmbH & Co. KG and Contributors
+  Licensed under the Eclipse Public License 2.0
+
+Jakarta Servlet API
+  Copyright © 2012-2024 Eclipse Foundation, Inc.
+  Copyright © 2017-2024 Oracle and/or its affiliates
+  Licensed under the Eclipse Public License 2.0
+
+H2 Database Engine
+  Copyright © 2004-2024 H2 Group
+  Dual licensed under the Mozilla Public License 2.0 OR Eclipse Public License 1.0
+
+--------------------------------------------------------------------------------
+BSD LICENSE COMPONENTS
+--------------------------------------------------------------------------------
+
+PostgreSQL JDBC Driver
+  Copyright © 1997-2024 PostgreSQL Global Development Group
+  All rights reserved.
+  Licensed under the BSD 2-Clause License
+
+--------------------------------------------------------------------------------
+GNU LGPL 3.0 COMPONENTS
+--------------------------------------------------------------------------------
+
+Git Commit ID Maven Plugin (pl.project13.maven:git-commit-id-plugin)
+  Copyright © 2010-2024 Konrad Malawski and Contributors
+  Licensed under the GNU Lesser General Public License v3.0
+
+SonarQube Scanner for Maven (org.sonarsource.scanner.maven:sonar-maven-plugin)
+  Copyright © 2011-2024 SonarSource SA
+  Copyright © 2007 Free Software Foundation, Inc.
+  Licensed under the GNU Lesser General Public License v3.0
+
+--------------------------------------------------------------------------------
+MOZILLA PUBLIC LICENSE 2.0 COMPONENTS
+--------------------------------------------------------------------------------
+
+MOSIP OpenID Bridge (com.github.Rakshithasai123/mosip-openid-bridge)
+  Copyright © 2021-2024 MOSIP
+  Licensed under the Mozilla Public License 2.0
+
+MOSIP Kernel Components (kernel-core, kernel-auth-adapter, kernel-openid-bridge-api, 
+kernel-logger-logback, kernel-templatemanager-velocity, kernel-bom)
+  Copyright © 2021-2024 MOSIP
+  Licensed under the Mozilla Public License 2.0
+
+--------------------------------------------------------------------------------
+SPECIAL LICENSE - JSON LICENSE
+--------------------------------------------------------------------------------
+
+JSON-java (org.json:json)
+  Copyright © 2002 JSON.org
+  Copyright © 2002 Douglas Crockford
+  Licensed under the JSON License
+  
+  Note: This license includes the clause "The Software shall be used for Good,
+  not Evil" which may not be compatible with some use cases. The Free Software
+  Foundation considers this a non-free license. Consider replacing with Jackson.
+
+================================================================================
+
+FULL LICENSE TEXTS
+
+For complete license texts, please refer to:
+- Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
+- MIT License: https://opensource.org/licenses/MIT
+- Eclipse Public License 1.0: https://www.eclipse.org/legal/epl-v10.html
+- Eclipse Public License 2.0: https://www.eclipse.org/legal/epl-2.0/
+- BSD 2-Clause License: https://opensource.org/licenses/BSD-2-Clause
+- GNU LGPL 3.0: https://www.gnu.org/licenses/lgpl-3.0.html
+- Mozilla Public License 2.0: https://www.mozilla.org/en-US/MPL/2.0/
+- JSON License: https://www.json.org/license.html
+- Bouncy Castle License: https://www.bouncycastle.org/licence.html
+
+Individual project homepages and license files are available at the URLs
+specified in the THIRD-PARTY-NOTICES.txt file.
+
+================================================================================
+ATTRIBUTION NOTICES
+================================================================================
+
+This product includes software developed by:
+- The Apache Software Foundation (http://www.apache.org/)
+- Pivotal Software, Inc. / VMware, Inc. (https://spring.io/)
+- FasterXML.com / Tatu Saloranta (https://github.com/FasterXML)
+- Auth0, Inc. (https://auth0.com/)
+- Red Hat, Inc. (https://www.redhat.com/)
+- The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org/)
+- PostgreSQL Global Development Group (https://www.postgresql.org/)
+- QOS.ch (http://www.slf4j.org/)
+- Eclipse Foundation (https://www.eclipse.org/)
+- H2 Group (https://www.h2database.com/)
+- MOSIP (https://mosip.io/)
+- SonarSource SA (https://www.sonarsource.com/)
+- JSON.org / Douglas Crockford (https://www.json.org/)
+
+For complete license texts, dependency details, and additional legal
+information, please refer to the THIRD-PARTY-NOTICES.txt file and the
+respective project homepages listed above.
+
+================================================================================
+END OF COPYRIGHT NOTICES
+================================================================================
