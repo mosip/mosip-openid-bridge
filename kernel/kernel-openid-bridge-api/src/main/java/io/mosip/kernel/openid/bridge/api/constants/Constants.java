@@ -13,7 +13,8 @@ public class Constants {
 	public static final Object EXP = "exp";
 	public static final Object ISS = "iss";
 	public static final Object IAT = "iat";
-	public static final String JWT_EXPIRY_TIME = "mosip.iam.module.token.endpoint.private-key-jwt.expiry.seconds";
+	public static final Object JTI = "jti";
+    public static final String JWT_EXPIRY_TIME = "mosip.iam.module.token.endpoint.private-key-jwt.expiry.seconds";
 	public static final String BASE_URL = "mosip.iam.base.url";
 	public static final String APPLICATION_ID = "APPLICATION_Id";
 	public static final String CLIENT_ASSERTION_REFERENCE_ID = "mosip.client.assertion.reference.id";
