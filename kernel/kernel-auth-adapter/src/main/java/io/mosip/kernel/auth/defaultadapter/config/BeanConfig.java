@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -37,6 +38,8 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 
 import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterConstant;
 import io.mosip.kernel.auth.defaultadapter.helper.TokenHelper;
@@ -57,6 +60,8 @@ public class BeanConfig {
 
 	@Autowired 
 	private RestTemplateInterceptor defaultInterceptor;
+
+	private PoolingHttpClientConnectionManager selfTokenRestTemplateConnManager;
 
 	@Value("${mosip.kernel.auth.adapter.ssl-bypass:true}")
 	private boolean sslBypass;
@@ -181,10 +186,10 @@ public class BeanConfig {
 			connnectionManagerBuilder.setSSLSocketFactory(csf);
 		}
 		
-		var connectionManager = connnectionManagerBuilder.build();
+		selfTokenRestTemplateConnManager = connnectionManagerBuilder.build();
 		
 		HttpClientBuilder httpClientBuilder = HttpClients.custom()
-				.setConnectionManager(connectionManager)
+				.setConnectionManager(selfTokenRestTemplateConnManager)
 				.disableCookieManagement();
 		//Setting the timeout in case reading data from socket takes more time
 		if(selfTokenRestTemplateSocketTimeout > 0){
@@ -259,6 +264,12 @@ public class BeanConfig {
 								cachedTokenObject, tokenHelper, tokenValidationHelper, applName))
 						.exchangeStrategies(strategies)
 						.build();
+	}
+
+	@Bean
+	@DependsOn("selfTokenRestTemplate")
+	public ConnectionPoolStatsLogger connectionPoolStatsLogger() {
+		return new ConnectionPoolStatsLogger(selfTokenRestTemplateConnManager);
 	}
 
 	@SuppressWarnings("java:S2259") // added suppress for sonarcloud. Null check is performed at line # 211
