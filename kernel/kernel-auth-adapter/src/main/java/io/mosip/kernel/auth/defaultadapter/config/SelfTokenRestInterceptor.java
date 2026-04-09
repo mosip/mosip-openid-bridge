@@ -24,7 +24,7 @@ import io.mosip.kernel.auth.defaultadapter.model.TokenHolder;
 
 /**
  * This class intercepts and renew client token.
- * 
+ *
  * @author Urvil Joshi
  *
  */
@@ -41,14 +41,14 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SelfTokenRestInterceptor.class);
 
 	private RestTemplate restTemplate;
-	
+
 	private TokenHelper tokenHelper;
 
 	private TokenValidationHelper tokenValidationHelper;
 
 	public SelfTokenRestInterceptor(Environment environment, RestTemplate restTemplate,
-			TokenHolder<String> cachedToken, TokenHelper tokenHelper, TokenValidationHelper tokenValidationHelper,
-			String applName) {
+	                                TokenHolder<String> cachedToken, TokenHelper tokenHelper, TokenValidationHelper tokenValidationHelper,
+	                                String applName) {
 		clientID = environment.getProperty("mosip.iam.adapter.clientid." + applName, environment.getProperty("mosip.iam.adapter.clientid", ""));
 		clientSecret = environment.getProperty("mosip.iam.adapter.clientsecret." + applName, environment.getProperty("mosip.iam.adapter.clientsecret", ""));
 		appID = environment.getProperty("mosip.iam.adapter.appid." + applName, environment.getProperty("mosip.iam.adapter.appid", ""));
@@ -61,42 +61,91 @@ public class SelfTokenRestInterceptor implements ClientHttpRequestInterceptor {
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
 			throws IOException {
-		// null check if job is not able to fetch client id secret
-		if (cachedToken.getToken() == null) {
-			// try requesting new token. Added because IDA need the token before it gets created by the scheduler thread.
-            String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate);
-			if (Objects.isNull(authToken)) {
-				LOGGER.error("there is some issue with getting token with clienid and secret");
-				throw new AuthAdapterException(AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorCode(),
-						AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorMessage());
-			}
-			cachedToken.setToken(authToken);
-		}
-		request.getHeaders().add(AuthAdapterConstant.AUTH_HEADER_COOKIE,
-				AuthAdapterConstant.AUTH_HEADER + cachedToken.getToken());
+		String token = getValidToken();
+		request.getHeaders().set(AuthAdapterConstant.AUTH_HEADER_COOKIE,
+				AuthAdapterConstant.AUTH_HEADER + token);
 
-		ClientHttpResponse clientHttpResponse = execution.execute(request, body);
-		if(clientHttpResponse.getStatusCode() != HttpStatus.UNAUTHORIZED) {
-			return clientHttpResponse;
+		// Execute the actual request
+		ClientHttpResponse response = execution.execute(request, body);
+
+		// Handle token expiration gracefully (only on 401)
+		if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+			LOGGER.warn("Received 401 Unauthorized. Attempting token refresh.");
+
+			synchronized (this) {
+				// Double-check after acquiring lock
+				if (!isTokenValid(cachedToken.getToken())) {
+					String newToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate);
+					if (Objects.isNull(newToken)) {
+						LOGGER.error("Failed to obtain new auth token from IAM");
+						throw new AuthAdapterException(AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorCode(),
+								AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorMessage());
+					}
+					cachedToken.setToken(newToken);
+					LOGGER.info("Successfully refreshed auth token");
+				}
+			}
+
+			// Re-execute request with fresh token
+			addAuthTokenToHeader(request, cachedToken.getToken());
+			return execution.execute(request, body);
 		}
-		
+
+		return response;
+	}
+
+	// Clean and efficient way to handle other cookies
+	private void addAuthTokenToHeader(HttpRequest request, String token) {
+		List<String> existingCookies = request.getHeaders().get(AuthAdapterConstant.AUTH_HEADER_COOKIE);
+
+		// If no cookies exist or only auth-related, just set the new one
+		if (existingCookies == null || existingCookies.isEmpty()) {
+			request.getHeaders().set(AuthAdapterConstant.AUTH_HEADER_COOKIE,
+					AuthAdapterConstant.AUTH_HEADER + token);
+			return;
+		}
+
+		// Remove only the old auth token entries, keep other cookies
+		List<String> cleanedCookies = existingCookies.stream()
+				.filter(cookie -> !cookie.contains(AuthAdapterConstant.AUTH_HEADER))
+				.collect(Collectors.toList());
+
+		// Add the new auth token
+		cleanedCookies.add(AuthAdapterConstant.AUTH_HEADER + token);
+
+		// Replace with cleaned + new token
+		request.getHeaders().replace(AuthAdapterConstant.AUTH_HEADER_COOKIE, cleanedCookies);
+	}
+
+	/**
+	 * Returns a valid token with minimal synchronization.
+	 * This is the hot path called on every request.
+	 */
+	private String getValidToken() {
+		String token = cachedToken.getToken();
+
+		// Fast path - token exists and appears valid
+		if (token != null) {
+			return token;
+		}
+
+		// Token is missing or invalid - need to refresh (rare after initial setup)
 		synchronized (this) {
-			// online validation
-			if(!isTokenValid(cachedToken.getToken())) {
-				String authToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate);
-				cachedToken.setToken(authToken);		
-			}
-		}
-		
-		List<String> cookies = request.getHeaders().get(AuthAdapterConstant.AUTH_HEADER_COOKIE);
-		if (cookies != null && !cookies.isEmpty()) {
-			cookies=cookies.stream().filter(str -> !str.contains(AuthAdapterConstant.AUTH_HEADER)).collect(Collectors.toList());
-		}
-		request.getHeaders().replace(AuthAdapterConstant.AUTH_HEADER_COOKIE, cookies);
-		request.getHeaders().add(AuthAdapterConstant.AUTH_HEADER_COOKIE,
-				AuthAdapterConstant.AUTH_HEADER + cachedToken.getToken());
-		return execution.execute(request, body);
+			token = cachedToken.getToken();
+			if (token == null || !isTokenValid(token)) {
+				LOGGER.info("Fetching new auth token for client: {}", clientID);
 
+				String newToken = tokenHelper.getClientToken(clientID, clientSecret, appID, restTemplate);
+				if (Objects.isNull(newToken)) {
+					LOGGER.error("there is some issue with getting token with clienid and secret");
+					throw new AuthAdapterException(AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorCode(),
+							AuthAdapterErrorCode.SELF_AUTH_TOKEN_NULL.getErrorMessage());
+				}
+				cachedToken.setToken(newToken);
+				return newToken;
+			}
+			return cachedToken.getToken();
+		}
 	}
 
 	// Updated to use common code to validate the token online.
