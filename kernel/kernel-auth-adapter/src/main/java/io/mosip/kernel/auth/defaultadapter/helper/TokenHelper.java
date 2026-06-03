@@ -136,7 +136,7 @@ public class TokenHelper {
 				return accessToken;
 			}
 		} 
-		
+
 		LOGGER.error("Error connecting to OIDC service (WebClient) {} or UNKNOWN Error.", AuthAdapterErrorCode.CANNOT_CONNECT_TO_AUTH_SERVICE.getErrorMessage());
 		return null;
 	}
