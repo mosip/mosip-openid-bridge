@@ -14,7 +14,7 @@ import io.mosip.kernel.auth.defaultimpl.util.TokenValidator;
 
 @Configuration
 public class DefaultImplConfiguration {
-	
+
 
 	@Primary
 	@Bean(name = "authRestTemplate")
@@ -26,7 +26,7 @@ public class DefaultImplConfiguration {
 	public MemoryCache<String, AccessTokenResponse> memoryCache() {
 		return new MemoryCache<>(1);
 	}
-	
+
 
 	@Bean
 	public RestInterceptor restInterceptor(@Autowired  MemoryCache<String, AccessTokenResponse> memoryCache,@Autowired TokenValidator tokenValidator,@Qualifier("authRestTemplate") @Autowired RestTemplate restTemplate) {
