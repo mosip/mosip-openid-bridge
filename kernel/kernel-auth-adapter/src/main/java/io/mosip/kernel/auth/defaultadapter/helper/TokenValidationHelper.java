@@ -77,14 +77,7 @@ public class TokenValidationHelper {
     }
 
     private MosipUserDto doOfflineEnvTokenValidation(String jwtToken, RestTemplate restTemplate) {
-
-            // Ensure token is in correct format (header.payload.signature)
-            if (!jwtToken.contains(".") || jwtToken.split("\\.").length != 3) {
-                LOGGER.error("Invalid JWT format: {}", jwtToken);
-                throw new AuthManagerException(AuthAdapterErrorCode.UNAUTHORIZED.getErrorCode(),
-                        AuthAdapterErrorCode.UNAUTHORIZED.getErrorMessage());
-            }
-
+        
         DecodedJWT decodedJWT = JWT.decode(jwtToken);
         PublicKey publicKey = validateTokenHelper.getPublicKey(decodedJWT);
         // Still not able to get the public key either from server or local cache,
@@ -94,7 +87,7 @@ public class TokenValidationHelper {
         }
 
         ImmutablePair<Boolean, AuthAdapterErrorCode> validateResp = validateTokenHelper.isTokenValid(decodedJWT, publicKey);
-        if (validateResp.getLeft() == Boolean.FALSE) {
+        if (validateResp.getLeft() == Boolean.FALSE) { 
             throw new AuthManagerException(validateResp.getRight().getErrorCode(), validateResp.getRight().getErrorMessage());
         }
         return validateTokenHelper.buildMosipUser(decodedJWT, jwtToken);
