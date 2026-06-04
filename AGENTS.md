@@ -1,12 +1,11 @@
 # AGENTS.md — mosip-openid-bridge
+This file provides guidance to AI agents when working with code in this repository.
 
 ## Project Overview
 MOSIP OpenID Bridge provides authentication and authorization services for the MOSIP (Modular Open-Source Identification Platform). It bridges MOSIP's internal auth mechanisms with OpenID Connect / OAuth 2.0 flows, supporting ID lifecycle management (registration, update, authentication, deactivation of identities via Keycloak).
 
 **GitHub:** https://github.com/mosip/mosip-openid-bridge  
-**License:** Mozilla Public License 2.0  
-**Current version:** 1.4.0-SNAPSHOT
-
+**License:** Mozilla Public License 2.0 
 ---
 
 ## Module Structure
@@ -109,17 +108,16 @@ helm install authmanager mosip/authmanager
 ## Key Dependencies
 
 | Dependency | Version |
-|-----------|---------|
+|-----------|--------|
 | Java | 21 |
-| Spring Boot | 3.2.3 (via kernel-bom) |
-| kernel-bom / kernel-core | 1.4.0-SNAPSHOT |
+| Spring Boot | 3.2.3 |
 | com.auth0:java-jwt | via kernel-bom |
 | jwks-rsa | via kernel-bom |
 | Apache HttpComponents 5 (HC5) | via kernel-bom |
 | Keycloak adapter BOM | 6.0.1 |
 | springdoc-openapi | 2.6.0 |
 
-**Note:** `DateUtils2` (not `DateUtils`) is used throughout — it is from `kernel-core`. Ensure `kernel.core.version` resolves to a version that includes `DateUtils2` (1.3.0+).
+**Note:** `DateUtils2` (not `DateUtils`) is used throughout — it is from `kernel-core`. Ensure `kernel.core.version` resolves to a version that includes `DateUtils2`.
 
 ---
 
@@ -139,13 +137,10 @@ This service supports identity lifecycle management for MOSIP:
 | Branch | Purpose |
 |--------|---------|
 | `master` | Stable release |
-| `develop` | Active development (SNAPSHOT) |
+| `develop` | Active development  |
 | `release-*` / `1.*` | Release branches |
 | `rel-*-test` | Test branches for merge validation |
 
-- Latest release tag version: `1.3.1`
-- Develop SNAPSHOT version: `1.4.0-SNAPSHOT`
-- Helm chart version stays `0.0.1-develop` on develop; bumped to release tag on release branches
 
 ---
 
@@ -169,8 +164,6 @@ Test classes are under `src/test/java/` in each module. Framework: JUnit 4, Mock
 
 ## Common Pitfalls
 
-- `Constants.JTI` was removed in release 1.3.1 — do not reference it in `LoginServiceImpl.getClientAssertionData()`
 - `DateUtils` was replaced by `DateUtils2` across the codebase — always use `DateUtils2` for date operations
 - GPG signing is enabled for Maven Central publishing — pass `-Dgpg.skip=true` for all local builds
-- Helm `Chart.yaml` version is `0.0.1-develop` on develop — do NOT bump it to release version when working on develop branch
 - pom.xml parent versions for `kernel-bom` use `${kernel.core.version}` — keep this property consistent with the project version line
