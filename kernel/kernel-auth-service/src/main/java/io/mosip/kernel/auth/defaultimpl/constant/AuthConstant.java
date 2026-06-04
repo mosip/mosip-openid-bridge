@@ -109,4 +109,24 @@ public class AuthConstant {
 	
 	public static final String ROLE_NAME="role-name";
 
+	public static final String EXACT = "exact";
+
+	public static final String BRIEF_REPRESENTATION = "briefRepresentation";
+
+	public static final String MAX = "max";
+
+	public static final String FIRST_NAME = "firstName";
+
+	public static final String LAST_NAME = "lastName";
+
+	public static final String ATTRIBUTES = "attributes";
+
+	public static final String NAME = "name";
+
+	public static final String SEARCH = "search";
+
+	public static final String FIRST = "first";
+
+	public static final String ID = "id";
+
 }

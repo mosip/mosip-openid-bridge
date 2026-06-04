@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodyUriSpec;
+import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -114,29 +115,34 @@ public class TokenHelperTest {
 		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
 		String resp= "{\"access_token\":\"mock-token\"}";
 		ObjectNode actualObj = (ObjectNode)mapper.readTree(resp);
-		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
-		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
-		when(webClient.post()).thenReturn(requestBodyUriSpec);
-		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodyUriSpec);
-		when(requestBodyUriSpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodyUriSpec);
-		when(requestBodyUriSpec.body(Mockito.any())).thenReturn(requestHeadersSpec);
-		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-		when(responseSpec.bodyToMono(ObjectNode.class)).thenReturn(Mono.just(actualObj));
+		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class);
+		RequestBodySpec requestBodySpec = Mockito.mock(RequestBodySpec.class);
+		RequestHeadersSpec<?> requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class);
+		ClientResponse clientResponse = Mockito.mock(ClientResponse.class);
+		when(webClient.method(HttpMethod.POST)).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodySpec);
+		Mockito.doReturn(requestHeadersSpec).when(requestBodySpec).body(Mockito.any());
+		Mockito.doReturn(Mono.just(clientResponse)).when(requestHeadersSpec).exchange();
+		when(clientResponse.statusCode()).thenReturn(HttpStatus.OK);
+		when(clientResponse.bodyToMono(ObjectNode.class)).thenReturn(Mono.just(actualObj));
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
 	    assertTrue(token.equals("mock-token"));
 	}
-	
+
 	@Test
 	public void getClientTokenWebClientErrorTest() throws Exception {
 		String tokenUrl = new StringBuilder(issuerInternalURI).append("mosip").append(tokenPath).toString();
-		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class); 
-		RequestHeadersSpec  requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class); 
-		when(webClient.post()).thenReturn(requestBodyUriSpec);
-		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodyUriSpec);
-		when(requestBodyUriSpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodyUriSpec);
-		when(requestBodyUriSpec.body(Mockito.any())).thenReturn(requestHeadersSpec);
-		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-		when(responseSpec.bodyToMono(ObjectNode.class)).thenReturn(Mono.just(mapper.createObjectNode()));
+		RequestBodyUriSpec requestBodyUriSpec = Mockito.mock(RequestBodyUriSpec.class);
+		RequestBodySpec requestBodySpec = Mockito.mock(RequestBodySpec.class);
+		RequestHeadersSpec<?> requestHeadersSpec = Mockito.mock(RequestHeadersSpec.class);
+		ClientResponse clientResponse = Mockito.mock(ClientResponse.class);
+		when(webClient.method(HttpMethod.POST)).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(UriComponentsBuilder.fromUriString(tokenUrl).toUriString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.contentType(MediaType.APPLICATION_FORM_URLENCODED)).thenReturn(requestBodySpec);
+		Mockito.doReturn(requestHeadersSpec).when(requestBodySpec).body(Mockito.any());
+		Mockito.doReturn(Mono.just(clientResponse)).when(requestHeadersSpec).exchange();
+		when(clientResponse.statusCode()).thenReturn(HttpStatus.UNAUTHORIZED);
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
 	    assertNull(token);
 	}

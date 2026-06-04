@@ -54,7 +54,7 @@ import io.mosip.kernel.auth.defaultadapter.constant.AuthAdapterErrorCode;
 import io.mosip.kernel.auth.defaultadapter.exception.AuthManagerException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.ServiceError;
-import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.DateUtils2;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.kernel.openid.bridge.model.MosipUserDto;
 import jakarta.annotation.PostConstruct;
@@ -142,10 +142,10 @@ public class ValidateTokenHelper {
 
 	public ImmutablePair<Boolean, AuthAdapterErrorCode> isTokenValid(DecodedJWT decodedJWT, PublicKey publicKey) {
 		// First, token expire
-		LocalDateTime expiryTime = DateUtils
-				.convertUTCToLocalDateTime(DateUtils.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
+		LocalDateTime expiryTime = DateUtils2
+				.convertUTCToLocalDateTime(DateUtils2.getUTCTimeFromDate(decodedJWT.getExpiresAt()));
 		String userName = decodedJWT.getClaim(AuthAdapterConstant.PREFERRED_USERNAME).asString();
-		if (!DateUtils.before(DateUtils.getUTCCurrentDateTime(), expiryTime)) {
+		if (!DateUtils2.before(DateUtils2.getUTCCurrentDateTime(), expiryTime)) {
 			LOGGER.error("Provided Auth Token expired. Throwing Authentication Exception. UserName: " + userName);
 			return ImmutablePair.of(Boolean.FALSE, AuthAdapterErrorCode.UNAUTHORIZED);
 		}
