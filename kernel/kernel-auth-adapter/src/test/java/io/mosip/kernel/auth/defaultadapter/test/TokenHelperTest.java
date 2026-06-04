@@ -140,6 +140,4 @@ public class TokenHelperTest {
 		String token=tokenHelper.getClientToken("mock-clientID", "mock-clientSecret", "ida", webClient);
 	    assertNull(token);
 	}
-	
-	
 }
