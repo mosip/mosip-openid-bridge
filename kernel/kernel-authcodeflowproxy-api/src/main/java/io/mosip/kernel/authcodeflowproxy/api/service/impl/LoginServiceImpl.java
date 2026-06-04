@@ -328,7 +328,7 @@ public class LoginServiceImpl implements LoginServiceV2 {
 		dataToSignMap.put(Constants.AUD, tokenEndpoint);
 		dataToSignMap.put(Constants.EXP, getExpiryTime());
 		dataToSignMap.put(Constants.IAT, getEpochTime());
-		String jsonObject = null;
+		dataToSignMap.put(Constants.JTI, java.util.UUID.randomUUID().toString());
 		try {
 			jsonObject = objectMapper.writeValueAsString(dataToSignMap);
 		} catch (JsonProcessingException e) {
