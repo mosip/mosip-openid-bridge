@@ -45,6 +45,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.mosip.kernel.openid.bridge.api.utils.PssAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -266,6 +267,8 @@ public class ValidateTokenHelper {
 			return Algorithm.RSA384((RSAPublicKey) publicKey, null);
 		case "RS512":
 			return Algorithm.RSA512((RSAPublicKey) publicKey, null);
+		case "PS256":
+			return PssAlgorithm.PS256(publicKey);
 		default:
 			return Algorithm.RSA256((RSAPublicKey) publicKey, null);
 		}

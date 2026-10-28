@@ -6,12 +6,17 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
+import java.security.Signature;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PSSParameterSpec;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -237,6 +242,32 @@ public class ValidateTokenHelperTest {
 		ImmutablePair<Boolean, AuthAdapterErrorCode> res = validateTokenHelper.isTokenValid(
 				JWT.require(Algorithm.RSA512((RSAPublicKey) kp.getPublic(), (RSAPrivateKey) kp.getPrivate())).build()
 						.verify(token),
+				kp.getPublic());
+		assertThat(res.left, is(true));
+	}
+
+	@Test
+	public void isTokenValidPS256Test() throws Exception {
+		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+		kpg.initialize(2048);
+		KeyPair kp = kpg.generateKeyPair();
+		// java-jwt 3.8.1 cannot sign PS256, so the payload is built with it and signed here.
+		String payload = JWT.create().withClaim(AuthAdapterConstant.EMAIL, "mockuser!mosip.com")
+				.withClaim(AuthAdapterConstant.MOBILE, "9210283991")
+				.withClaim(AuthAdapterConstant.PREFERRED_USERNAME, "mock-user")
+				.withClaim(AuthAdapterConstant.ROLES, "ADMIN").withClaim(AuthAdapterConstant.AZP, "account")
+				.withClaim(AuthAdapterConstant.ISSUER, "https://iam.mosip.net/auth/realms/").withSubject("mock-user")
+				.withIssuedAt(Date.from(Instant.now())).withExpiresAt(Date.from(Instant.now().plusSeconds(345600)))
+				.withAudience(new String[] { "account" }).sign(Algorithm.none()).split("\\.")[1];
+		String signingInput = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("{\"alg\":\"PS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8)) + "." + payload;
+		Signature signature = Signature.getInstance("RSASSA-PSS");
+		signature.setParameter(new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1));
+		signature.initSign(kp.getPrivate());
+		signature.update(signingInput.getBytes(StandardCharsets.US_ASCII));
+		String token = signingInput + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(signature.sign());
+
+		ImmutablePair<Boolean, AuthAdapterErrorCode> res = validateTokenHelper.isTokenValid(JWT.decode(token),
 				kp.getPublic());
 		assertThat(res.left, is(true));
 	}
