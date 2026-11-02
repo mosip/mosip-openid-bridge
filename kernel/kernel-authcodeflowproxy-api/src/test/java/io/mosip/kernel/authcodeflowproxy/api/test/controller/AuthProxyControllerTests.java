@@ -119,6 +119,7 @@ public class AuthProxyControllerTests {
 		mockServer = MockRestServiceServer.createServer(restTemplate);
 		PowerMockito.mockStatic(Algorithm.class);
 		when(Algorithm.RSA256(any(), any())).thenReturn(mockAlgo);
+		when(mockAlgo.sign(any(byte[].class), any(byte[].class))).thenReturn(new byte[0]);
 		ReflectionTestUtils.setField(validateTokenHelper, "validateIssuerDomain", false);
 		ReflectionTestUtils.setField(validateTokenHelper, "validateAudClaim", false);
 		ReflectionTestUtils.setField(loginService, "isJwtAuthEnabled", false);
@@ -524,6 +525,7 @@ public class AuthProxyControllerTests {
 		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
 		Algorithm alg = mock(Algorithm.class);
 		when(alg.getName()).thenReturn("none");
+		when(alg.sign(any(byte[].class), any(byte[].class))).thenReturn(new byte[0]);
 		String jwtToken = jwtbuilder.sign(alg);
 		
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
@@ -562,6 +564,7 @@ public class AuthProxyControllerTests {
 		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
 		Algorithm alg = mock(Algorithm.class);
 		when(alg.getName()).thenReturn("none");
+		when(alg.sign(any(byte[].class), any(byte[].class))).thenReturn(new byte[0]);
 		String jwtToken = jwtbuilder.sign(alg);
 		
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
@@ -600,6 +603,7 @@ public class AuthProxyControllerTests {
 		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
 		Algorithm alg = mock(Algorithm.class);
 		when(alg.getName()).thenReturn("none");
+		when(alg.sign(any(byte[].class), any(byte[].class))).thenReturn(new byte[0]);
 		String jwtToken = jwtbuilder.sign(alg);
 		
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
@@ -638,6 +642,7 @@ public class AuthProxyControllerTests {
 		jwtbuilder.withClaim(AuthConstant.ISSUER, "http://localhost");
 		Algorithm alg = mock(Algorithm.class);
 		when(alg.getName()).thenReturn("none");
+		when(alg.sign(any(byte[].class), any(byte[].class))).thenReturn(new byte[0]);
 		String jwtToken = jwtbuilder.sign(alg);
 		
 		AccessTokenResponse accessTokenResponse = new AccessTokenResponse();
