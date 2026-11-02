@@ -74,6 +74,7 @@ public class ValidateTokenUtil {
 	private Map<String, PublicKey> publicKeys = new HashMap<>();
 
 	private static final String ED25519_ALGORITHM = "Ed25519";
+	private static final String EDDSA_ALGORITHM = "EdDSA";
 	private static final String ES256K_ALGORITHM = "ES256K";
 	private static final int JWKS_TIMEOUT_MS = 5000;
 	private static final int JWKS_SIZE_LIMIT = 51200;
@@ -220,7 +221,7 @@ public class ValidateTokenUtil {
 		try {
 			boolean signatureValid = true;
 			String tokenAlgo = decodedJWT.getAlgorithm();
-			if (ED25519_ALGORITHM.equals(tokenAlgo) || ES256K_ALGORITHM.equals(tokenAlgo)) {
+			if (isEd25519(tokenAlgo) || ES256K_ALGORITHM.equals(tokenAlgo)) {
 				signatureValid = isNimbusSignatureValid(decodedJWT);
 			} else {
 				PublicKey publicKey = getPublicKey(decodedJWT);
@@ -241,13 +242,18 @@ public class ValidateTokenUtil {
 
 	}
 
+	// "Ed25519" is the current name; "EdDSA" is the older name still sent by some servers.
+	private static boolean isEd25519(String tokenAlgo) {
+		return ED25519_ALGORITHM.equals(tokenAlgo) || EDDSA_ALGORITHM.equals(tokenAlgo);
+	}
+
 	private boolean isNimbusSignatureValid(DecodedJWT decodedJWT) {
 		String tokenAlgo = decodedJWT.getAlgorithm();
 		try {
 			JWK jwk = getPublicJWK(decodedJWT);
 			JWSVerifier verifier;
 			JWSAlgorithm algorithm;
-			if (ED25519_ALGORITHM.equals(tokenAlgo) && jwk instanceof OctetKeyPair octetKeyPair) {
+			if (isEd25519(tokenAlgo) && jwk instanceof OctetKeyPair octetKeyPair) {
 				verifier = new Ed25519Verifier(octetKeyPair);
 				algorithm = JWSAlgorithm.EdDSA; // the name nimbus knows its Ed25519 verifier by
 			} else if (ES256K_ALGORITHM.equals(tokenAlgo) && jwk instanceof ECKey ecKey) {

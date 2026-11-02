@@ -437,8 +437,17 @@ public class ValidateTokenHelperTest {
 
 	@Test
 	public void isTokenValidWithEd25519ThenPassTest() throws Exception {
+		assertEd25519Family("Ed25519");
+	}
+
+	@Test
+	public void isTokenValidWithEdDSAThenPassTest() throws Exception {
+		assertEd25519Family("EdDSA");
+	}
+
+	private void assertEd25519Family(String alg) throws Exception {
 		OctetKeyPair key = new OctetKeyPairGenerator(Curve.Ed25519).keyID("ed-key").generate();
-		String header = Base64URL.encode("{\"alg\":\"Ed25519\",\"kid\":\"ed-key\"}").toString();
+		String header = Base64URL.encode("{\"alg\":\"" + alg + "\",\"kid\":\"ed-key\"}").toString();
 		String payload = Base64URL.encode(nimbusClaims()).toString();
 		String signature = new Ed25519Signer(key).sign(new JWSHeader(JWSAlgorithm.EdDSA),
 				(header + "." + payload).getBytes(StandardCharsets.US_ASCII)).toString();
